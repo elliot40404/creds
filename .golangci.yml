@@ -1,0 +1,49 @@
+version: "2"
+linters:
+  enable:
+    - bodyclose
+    - errorlint
+    - gosec
+    - misspell
+    - nilerr
+    - revive
+    - unconvert
+    - unparam
+  settings:
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+  exclusions:
+    paths:
+      - vendor
+    rules:
+      - path: internal/clipboard/native_windows.go
+        linters:
+          - gosec
+        text: G103
+      - path: internal/clipboard/tool.go
+        linters:
+          - gosec
+        text: G204
+      - path: internal/editor/editor.go
+        linters:
+          - gosec
+        text: G204
+      - path: internal/testutil/testutil.go
+        linters:
+          - gosec
+        text: G204
+      - path: internal/fsutil/perms_windows.go
+        linters:
+          - gosec
+        text: G103
+      - path: internal/detach/job_windows_test.go
+        linters:
+          - gosec
+        text: G103
+formatters:
+  enable:
+    - gofumpt

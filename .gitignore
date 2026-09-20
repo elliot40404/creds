@@ -1,0 +1,10 @@
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.*
+.env
+.env.*
+*.stackdump
+/plans/

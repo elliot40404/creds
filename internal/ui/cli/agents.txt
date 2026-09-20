@@ -1,0 +1,63 @@
+Using creds from scripts and AI agents
+
+1. A person unlocks first, in a terminal:
+     creds unlock
+   This starts a session. Commands run by scripts or agents use it.
+   Without a terminal creds never prompts. A locked vault gives exit code 3.
+
+2. Read data as JSON with --json:
+     creds list --json
+     creds search mail --json
+     creds get web/mail --json                 secret values left out
+     creds get web/mail --json --show          secret values included
+     creds get web/mail --field password --json
+     creds get db/prod --formats --json
+     creds get db/prod --as url --json
+     creds env proj/api --json                 {"KEY":"value"}
+     creds status --json
+     creds sync --json
+     creds paths --json                        where every creds file lives
+     creds config --json                       all settings with defaults
+     creds config get session.idle --json
+     creds trust list --json                   {"trusted":["/path/.creds.toml"]}
+   Data goes to stdout. With --json every stderr line is JSON too:
+     {"note":"added web/mail"}
+     {"error":"vault is locked","hint":"run creds unlock","code":3}
+
+3. Write by flags, secrets by stdin:
+     printf '%s\n' "$PW" | creds add web/mail --type login --username bob --url https://mail.example --secret-field password
+     printf '%s\n' "$URL" | creds add db/prod --type database --engine postgres --conn -
+     creds edit web/mail --username carol --tag work --field region=eu
+     creds edit web/mail --rename web/old-mail
+   Flags: --name --username --host --url --notes --tag (repeat, replaces tags)
+          --field key=value (visible, repeat) --secret-field key (repeat)
+          --engine and --conn - for database entries
+   stdin gives one value per line: the --conn value first, then each
+   --secret-field in flag order.
+   Never pass secrets as arguments. creds refuses --secret-field key=value,
+   --conn <url> and --field password=value.
+
+4. Change settings and trust without prompts:
+     creds config set clipboard.clear 45s
+     creds config unset render.formats.postgres.url
+     creds trust /path/to/project --yes
+     creds trust remove /path/to/project/.creds.toml --yes
+   config set validates the value and saves config.toml.
+
+5. Skip questions with --yes: rm, env -o, export, import --overwrite,
+   trust, resolve, join. Plain export also needs
+   --confirm-plaintext "yes, export plaintext".
+   Without them and without a terminal, exit code 2.
+   Never use -i: it is for people at a terminal and fails without one.
+
+6. Exit codes:
+     0 ok
+     1 error
+     2 usage: bad flags or args, or a prompt is needed
+     3 locked: run creds unlock in a terminal
+     4 not found
+     5 conflict: run creds status, then creds resolve <path> --mine|--theirs
+     6 no vault: run creds init or creds join <url>
+   creds run returns the exit code of the command it ran.
+
+7. Every error has a fix line naming the command to run next.

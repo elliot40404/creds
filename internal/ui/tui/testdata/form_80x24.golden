@@ -1,0 +1,24 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  v…
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Add login                                                                    │
+│                                                                              │
+│ ▌ path                 _                                                     │
+│   username                                                                   │
+│   password (secret)                                                          │
+│   url                                                                        │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+tab complete path or next field  down next field  shift+tab/up previous field

@@ -1,0 +1,48 @@
+version: 2
+
+project_name: creds
+
+builds:
+  - id: creds
+    main: ./cmd/creds
+    binary: creds
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/elliot40404/creds/internal/buildinfo.version={{ .Version }}
+      - -X github.com/elliot40404/creds/internal/buildinfo.commit={{ .FullCommit }}
+      - -X github.com/elliot40404/creds/internal/buildinfo.date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: creds
+    ids: [creds]
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  draft: false
+  prerelease: auto

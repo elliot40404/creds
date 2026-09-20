@@ -1,0 +1,40 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  vault /v
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Keys                                                                                                                 │
+│                                                                                                                      │
+│ enter        open                                                                                                    │
+│ y            copy default                                                                                            │
+│ /            filter, try type:database engine:postgres tag:work                                                      │
+│ t            cycle the type filter                                                                                   │
+│ o            cycle the order                                                                                         │
+│ a            add                                                                                                     │
+│ d            delete                                                                                                  │
+│ s            sync now                                                                                                │
+│ L            lock and quit                                                                                           │
+│ up/down j/k  move                                                                                                    │
+│ q esc        quit                                                                                                    │
+│ ,            settings                                                                                                │
+│ any key closes this help, ctrl+c quits                                                                               │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+any key close help

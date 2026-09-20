@@ -1,0 +1,7 @@
+*
+!.gitignore
+!vault.json
+!identity.pw.age
+!identity.recovery.age
+!entries/
+!entries/*.enc

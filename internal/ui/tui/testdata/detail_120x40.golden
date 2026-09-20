@@ -1,0 +1,40 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  vault /v
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ web/mail  login                                                                                                      │
+│ created never  updated never                                                                                         │
+│                                                                                                                      │
+│   username  me                                                                                                       │
+│ ▌ password  ********                                                                                                 │
+│   pin       ********                                                                                                 │
+│   notes     line1 ...                                                                                                │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+? help  c copy field  r reveal field  esc back  y copy default  e edit  d delete  up/down j/k move  s sync now

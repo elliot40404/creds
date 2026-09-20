@@ -1,0 +1,40 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  vault /v
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ / to filter                                                                                                      3/3 │
+│                                                                                                                      │
+│ ▌ db/prod                                         database  h                                                        │
+│   web/mail                                        login     me                                                       │
+│   work/very/long/path/that/keeps/going/and/goin…  login     someone.with.a.long.name@a-very-long-hostname.internal.… │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+? help  enter open  y copy default  / filter, try type:database engine:postgres tag:work  t cycle the type filter

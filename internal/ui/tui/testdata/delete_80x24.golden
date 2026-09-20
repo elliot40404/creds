@@ -1,0 +1,24 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  v…
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  Delete this entry? This cannot be undone.                                   │
+│                                                                              │
+│ entry db/prod                                                                │
+│                                                                              │
+│ y yes   any other key keep as is                                             │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+? help  y yes  any other key keep as is
