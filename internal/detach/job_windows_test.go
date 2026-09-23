@@ -1,9 +1,10 @@
 package detach
 
 import (
-	"os/exec"
+	"os"
 	"slices"
 	"testing"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -41,13 +42,24 @@ func inJob(t *testing.T, job windows.Handle, pid int) bool {
 	return slices.Contains(list.pids[:list.listed], uintptr(pid))
 }
 
+const sleeperEnv = "CREDS_DETACH_SLEEPER"
+
+func TestSleeper(t *testing.T) {
+	if os.Getenv(sleeperEnv) == "" {
+		t.Skip("helper process for spawnSleeper")
+	}
+	time.Sleep(3 * time.Second)
+}
+
 func spawnSleeper(t *testing.T) int {
 	t.Helper()
-	shell, err := exec.LookPath("cmd")
+	exe, err := os.Executable()
 	if err != nil {
-		t.Skip("no cmd.exe")
+		t.Fatal(err)
 	}
-	p, err := start(Command(shell, "/c", "ping -n 3 127.0.0.1 >nul"))
+	cmd := Command(exe, "-test.run=^TestSleeper$")
+	cmd.Env = append(os.Environ(), sleeperEnv+"=1")
+	p, err := start(cmd)
 	if err != nil {
 		t.Fatal(err)
 	}
