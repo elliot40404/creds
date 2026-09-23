@@ -102,3 +102,19 @@ func TestLoadReadError(t *testing.T) {
 		t.Fatal("expected error reading directory")
 	}
 }
+
+func TestLoadBadNamesTheGivenPath(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "dotfiles.toml")
+	if err := os.WriteFile(target, []byte(`[session`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "config.toml")
+	if err := os.Symlink(target, link); err != nil {
+		t.Skipf("symlink unsupported: %v", err)
+	}
+	_, err := Load(link)
+	if err == nil || !strings.Contains(err.Error(), link) {
+		t.Fatalf("error %v does not name %s", err, link)
+	}
+}

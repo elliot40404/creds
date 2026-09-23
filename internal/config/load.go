@@ -19,10 +19,11 @@ const maxConfigSize = 1 << 20
 
 func Load(path string) (Config, error) {
 	c := Default()
+	read := path
 	if target, err := filepath.EvalSymlinks(path); err == nil {
-		path = target
+		read = target
 	}
-	data, err := fsutil.ReadFileLimit(path, maxConfigSize)
+	data, err := fsutil.ReadFileLimit(read, maxConfigSize)
 	if errors.Is(err, fs.ErrNotExist) {
 		return c, nil
 	}
