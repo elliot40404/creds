@@ -4,9 +4,11 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/elliot40404/creds/internal/app"
+	"github.com/elliot40404/creds/internal/vault"
 )
 
 func startSync(t *testing.T, f *fakeBackend) Model {
@@ -143,5 +145,41 @@ func TestSyncKeyDoesNotStackOnABackgroundSync(t *testing.T) {
 	}
 	if !strings.Contains(view(next.(Model)), "sync already running") {
 		t.Fatalf("no note: %q", view(next.(Model)))
+	}
+}
+
+func openWith(t *testing.T, f *fakeBackend, c *fakeConfig) {
+	t.Helper()
+	m := New(Options{Backend: f, Config: c, Copy: f.copy, VaultPath: "/v", Now: func() time.Time { return testNow }})
+	m = step(m, tea.WindowSizeMsg{Width: 120, Height: 30})
+	run(m, m.Init())
+}
+
+func TestOpenSyncsWhenDue(t *testing.T) {
+	f := newFake()
+	c := newFakeConfig()
+	c.due = true
+	openWith(t, f, c)
+	if f.syncs != 1 {
+		t.Fatalf("Sync called %d times on open, want 1", f.syncs)
+	}
+}
+
+func TestOpenSkipsSyncWhenFresh(t *testing.T) {
+	f := newFake()
+	openWith(t, f, newFakeConfig())
+	if f.syncs != 0 {
+		t.Fatalf("Sync called %d times on open, want 0", f.syncs)
+	}
+}
+
+func TestAutoSyncedReloadsItems(t *testing.T) {
+	f := newFake()
+	m := startSync(t, f)
+	f.entries = append(f.entries, vault.Entry{Path: "aws/prod", Name: "prod", Type: "api"})
+	next, cmd, _ := m.handle(autoSyncedMsg{result: "pulled"})
+	m = run(next.(Model), cmd)
+	if !strings.Contains(view(m), "aws/prod") {
+		t.Fatalf("pulled entry not shown: %q", view(m))
 	}
 }

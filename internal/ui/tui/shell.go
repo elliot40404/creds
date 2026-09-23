@@ -91,7 +91,7 @@ func New(opts Options) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(m.loadItems(), m.loadStatus())
+	return tea.Batch(m.loadItems(), m.loadStatus(), m.syncIfDue())
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

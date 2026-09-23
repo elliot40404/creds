@@ -47,14 +47,19 @@ func (s *Service) afterRead() {
 		return
 	}
 	now := s.now()
-	cfg := s.CurrentConfig().Sync
-	if now.Sub(st.LastSync) < cfg.Stale || gitsync.Locked(s.Paths.SyncLock(), now) || !s.hasRemote() {
-		return
-	}
-	if !shouldSpawn(st, now, cfg) {
+	if !s.syncDue(st, now) || !shouldSpawn(st, now, s.CurrentConfig().Sync) {
 		return
 	}
 	s.spawn(now)
+}
+
+func (s *Service) SyncDue() bool {
+	st, err := gitsync.LoadState(s.Paths.State())
+	return err == nil && s.syncDue(st, s.now())
+}
+
+func (s *Service) syncDue(st gitsync.State, now time.Time) bool {
+	return now.Sub(st.LastSync) >= s.CurrentConfig().Sync.Stale && !gitsync.Locked(s.Paths.SyncLock(), now) && s.hasRemote()
 }
 
 func (s *Service) spawn(now time.Time) {

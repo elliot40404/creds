@@ -23,6 +23,7 @@ type fakeConfig struct {
 	probeErr error
 	previews int
 	block    chan struct{}
+	due      bool
 }
 
 func (f *fakeConfig) wait() {
@@ -561,6 +562,8 @@ func rowIndex(t *testing.T, m Model, key string) int {
 func (c *fakeConfig) SyncAfter() time.Duration {
 	return 10 * time.Millisecond
 }
+
+func (c *fakeConfig) SyncDue() bool { return c.due }
 
 func TestSettingsShowsDetectedValues(t *testing.T) {
 	c := newFakeConfig()

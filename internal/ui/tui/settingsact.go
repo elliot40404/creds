@@ -22,6 +22,7 @@ type ConfigBackend interface {
 	TrustList() ([]string, error)
 	Untrust(file string) error
 	SyncAfter() time.Duration
+	SyncDue() bool
 }
 
 type (

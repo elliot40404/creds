@@ -106,6 +106,30 @@ func TestReadSpawnsOnlyWhenStale(t *testing.T) {
 	}
 }
 
+func TestSyncDue(t *testing.T) {
+	t.Parallel()
+	s, _, c, _ := initVault(t)
+	if s.SyncDue() {
+		t.Fatal("due without remote")
+	}
+	withRemote(t, s)
+	if !s.SyncDue() {
+		t.Fatal("not due after never syncing")
+	}
+	if err := gitsync.SaveState(s.Paths.State(), gitsync.State{LastSync: c.t.Add(-time.Minute)}); err != nil {
+		t.Fatal(err)
+	}
+	if s.SyncDue() {
+		t.Fatal("due one minute after a sync")
+	}
+	if err := gitsync.SaveState(s.Paths.State(), gitsync.State{LastSync: c.t.Add(-time.Hour)}); err != nil {
+		t.Fatal(err)
+	}
+	if !s.SyncDue() {
+		t.Fatal("not due an hour after a sync")
+	}
+}
+
 func TestShouldSpawn(t *testing.T) {
 	t.Parallel()
 	at := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
