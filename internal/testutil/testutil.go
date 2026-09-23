@@ -24,10 +24,10 @@ func Pop[T any](q *[]T) (T, error) {
 }
 
 func Main(m *testing.M) {
-	os.Exit(runIsolated(m))
+	os.Exit(Run(m))
 }
 
-func runIsolated(m *testing.M) int {
+func Run(m *testing.M) int {
 	dir, err := os.MkdirTemp("", "creds-git-")
 	if err != nil {
 		return 1

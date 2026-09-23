@@ -16,16 +16,18 @@ const (
 func seeded(t *testing.T) *harness {
 	t.Helper()
 	h := newHarness(t)
-	h.init()
-	h.ok(&fake{
-		passwords: []string{loginHidden},
-		inputs:    []string{"alice", "https://mail.example", ""},
-	}, "add", "--type", "login", "web/mail")
-	h.ok(&fake{
-		passwords: []string{dbConn, extraHidden},
-		inputs:    []string{"token_ref", "region", "eu-west", ""},
-		confirms:  []bool{true, false},
-	}, "add", "--type", "database", "db/prod")
+	h.fromFixture("seeded", func(b *harness) {
+		b.init()
+		b.ok(&fake{
+			passwords: []string{loginHidden},
+			inputs:    []string{"alice", "https://mail.example", ""},
+		}, "add", "--type", "login", "web/mail")
+		b.ok(&fake{
+			passwords: []string{dbConn, extraHidden},
+			inputs:    []string{"token_ref", "region", "eu-west", ""},
+			confirms:  []bool{true, false},
+		}, "add", "--type", "database", "db/prod")
+	})
 	return h
 }
 

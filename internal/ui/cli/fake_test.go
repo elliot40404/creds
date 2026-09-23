@@ -137,7 +137,9 @@ func (h *harness) fail(f *fake, args ...string) result {
 
 func (h *harness) init() {
 	h.t.Helper()
-	h.ok(&fake{passwords: []string{mainWord, mainWord}, inputs: []string{shownCode}}, "init")
+	h.fromFixture("init", func(b *harness) {
+		b.ok(&fake{passwords: []string{mainWord, mainWord}, inputs: []string{shownCode}}, "init")
+	})
 }
 
 func (h *harness) expire() {
