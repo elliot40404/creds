@@ -10,6 +10,9 @@ build:
 install:
     go install -trimpath ./cmd/creds
 
+hooks:
+    git config core.hooksPath .githooks
+
 [unix]
 uninstall:
     #!/usr/bin/env sh
