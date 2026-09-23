@@ -45,6 +45,7 @@ func TestRunForcedConfig(t *testing.T) {
 		"user.email":           g.userEmail(),
 		"core.autocrlf":        "false",
 		"core.symlinks":        "false",
+		"maintenance.auto":     "false",
 		"protocol.allow":       "never",
 		"protocol.https.allow": "always",
 		"protocol.ssh.allow":   "always",

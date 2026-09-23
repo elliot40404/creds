@@ -168,6 +168,7 @@ func (g *Git) args(args []string) []string {
 		"-c", "core.hooksPath=" + os.DevNull,
 		"-c", "core.fsmonitor=false",
 		"-c", "core.symlinks=false",
+		"-c", "maintenance.auto=false",
 		"-c", "user.name=" + g.userName(),
 		"-c", "user.email=" + g.userEmail(),
 		"-c", "protocol.allow=never",
