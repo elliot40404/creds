@@ -10,8 +10,8 @@ build:
 install:
     go install -trimpath ./cmd/creds
 
-hooks:
-    git config core.hooksPath .githooks
+push *args: verify
+    git push {{args}}
 
 [unix]
 uninstall:

@@ -96,12 +96,12 @@ service to run and no account to make.
 ```sh
 just verify       # format, lint, vuln check, tests
 just test         # tests only
-just hooks        # run just verify before every git push
+just push         # just verify, then git push (extra args go to git push)
 ```
 
 CI runs on pull requests, on `v*` tags before a release, and by hand
-(`gh workflow run ci.yml`). Pushes to `master` do not run it, so run `just hooks`
-once per clone. Skip the hook for one push with `git push --no-verify`.
+(`gh workflow run ci.yml`). Pushes to `master` do not run it, so push with
+`just push`. The checks finish before git connects, so a slow run cannot time out the push.
 
 `just test-linux` runs the tests on linux inside a throwaway `golang:1.27`
 container. The repo is mounted read only, copied into the container, and the
