@@ -44,6 +44,14 @@ linters:
         linters:
           - gosec
         text: G103
+      - path: internal/fsutil/syncdir_unix.go
+        linters:
+          - gosec
+        text: G304
+      - path: _unix_test\.go
+        linters:
+          - gosec
+        text: G30[12]
 formatters:
   enable:
     - gofumpt
