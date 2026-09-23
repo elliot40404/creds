@@ -123,13 +123,30 @@ func TestCommitIdentityDefaultsAndOverrides(t *testing.T) {
 	}
 }
 
+func forgetCommitter() {
+	who.Lock()
+	defer who.Unlock()
+	who.c = nil
+}
+
+func freshGlobal(t *testing.T) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(t.TempDir(), ".gitconfig"))
+	forgetCommitter()
+	t.Cleanup(forgetCommitter)
+}
+
+func setGlobal(t *testing.T, key, value string) {
+	t.Helper()
+	if _, err := NewGit(t.TempDir()).Run(context.Background(), "config", "--global", key, value); err != nil {
+		t.Fatal(err)
+	}
+	forgetCommitter()
+}
+
 func TestIdentityPrecedence(t *testing.T) {
 	needGit(t)
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	t.Setenv("USERPROFILE", home)
-	t.Setenv("XDG_CONFIG_HOME", home)
-	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, ".gitconfig"))
+	freshGlobal(t)
 
 	bare := NewGit(t.TempDir())
 	if bare.userName() != UserName || bare.userEmail() != UserEmail {
@@ -137,13 +154,8 @@ func TestIdentityPrecedence(t *testing.T) {
 			bare.userName(), bare.userEmail())
 	}
 
-	g := NewGit(t.TempDir())
-	if _, err := g.Run(context.Background(), "config", "--global", "user.name", "Global Person"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := g.Run(context.Background(), "config", "--global", "user.email", "global@example.com"); err != nil {
-		t.Fatal(err)
-	}
+	setGlobal(t, "user.name", "Global Person")
+	setGlobal(t, "user.email", "global@example.com")
 
 	found := NewGit(t.TempDir())
 	if found.userName() != "Global Person" || found.userEmail() != "global@example.com" {
@@ -162,16 +174,23 @@ func TestIdentityPrecedence(t *testing.T) {
 
 func TestGlobalIdentityIgnoresBrokenValues(t *testing.T) {
 	needGit(t)
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	t.Setenv("USERPROFILE", home)
-	t.Setenv("XDG_CONFIG_HOME", home)
-	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, ".gitconfig"))
-	g := NewGit(t.TempDir())
-	if _, err := g.Run(context.Background(), "config", "--global", "user.email", "a<b>@example.com"); err != nil {
-		t.Fatal(err)
-	}
+	freshGlobal(t)
+	setGlobal(t, "user.email", "a<b>@example.com")
 	if got := NewGit(t.TempDir()).userEmail(); got != UserEmail {
 		t.Fatalf("angle brackets got through: %q", got)
+	}
+}
+
+func TestCommitterLookedUpOncePerProcess(t *testing.T) {
+	needGit(t)
+	freshGlobal(t)
+	if got := NewGit(t.TempDir()).userName(); got != UserName {
+		t.Fatalf("name %q", got)
+	}
+	if _, err := NewGit(t.TempDir()).Run(context.Background(), "config", "--global", "user.name", "Later"); err != nil {
+		t.Fatal(err)
+	}
+	if got := NewGit(t.TempDir()).userName(); got != UserName {
+		t.Fatalf("second Git looked the committer up again: %q", got)
 	}
 }

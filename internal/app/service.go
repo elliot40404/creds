@@ -8,7 +8,6 @@ import (
 
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/crypto"
-	"github.com/elliot40404/creds/internal/gitsync"
 	"github.com/elliot40404/creds/internal/session"
 )
 
@@ -32,7 +31,6 @@ type Service struct {
 
 	mu           sync.Mutex
 	readChecked  bool
-	committer    *gitsync.Committer
 	strayChecked bool
 	warnings     []string
 }

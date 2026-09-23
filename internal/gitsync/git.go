@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/elliot40404/creds/internal/config"
@@ -26,6 +27,11 @@ const (
 )
 
 var ErrGitStart = errors.New("git could not start")
+
+var who struct {
+	sync.Mutex
+	c *Committer
+}
 
 var dropEnv = []string{
 	"GIT_DIR=", "GIT_WORK_TREE=", "GIT_INDEX_FILE=", "GIT_OBJECT_DIRECTORY=", "GIT_NAMESPACE=", "GIT_CEILING_DIRECTORIES=",
@@ -210,15 +216,33 @@ func (g *Git) userEmail() string {
 
 func (g *Git) committer() Committer {
 	if g.who == nil {
-		g.who = &Committer{Name: UserName, Email: UserEmail}
-		if n := g.globalValue("user.name"); n != "" {
-			g.who.Name, g.who.NameGlobal = n, true
-		}
-		if e := g.globalValue("user.email"); e != "" {
-			g.who.Email, g.who.EmailGlobal = e, true
-		}
+		c := LookupCommitter()
+		g.who = &c
 	}
 	return *g.who
+}
+
+func LookupCommitter() Committer {
+	who.Lock()
+	defer who.Unlock()
+	if who.c == nil {
+		c := lookupGlobal()
+		who.c = &c
+	}
+	return *who.c
+}
+
+func lookupGlobal() Committer {
+	c := Committer{Name: UserName, Email: UserEmail}
+	g := &Git{Dir: os.TempDir(), who: &c}
+	name, email := g.globalValue("user.name"), g.globalValue("user.email")
+	if name != "" {
+		c.Name, c.NameGlobal = name, true
+	}
+	if email != "" {
+		c.Email, c.EmailGlobal = email, true
+	}
+	return c
 }
 
 func (g *Git) globalValue(key string) string {
@@ -264,8 +288,4 @@ func exitCode(err error) int {
 		return gerr.ExitCode
 	}
 	return -1
-}
-
-func LookupCommitter(dir string) Committer {
-	return NewGit(dir).committer()
 }

@@ -47,25 +47,15 @@ func (s *Service) ConfigFields() []ConfigField {
 func (s *Service) derived(key string) (value, source string) {
 	switch key {
 	case "sync.name":
-		c := s.lookupCommitter()
+		c := gitsync.LookupCommitter()
 		return c.Name, gitSource(c.NameGlobal)
 	case "sync.email":
-		c := s.lookupCommitter()
+		c := gitsync.LookupCommitter()
 		return c.Email, gitSource(c.EmailGlobal)
 	case "vault.machine":
 		return config.DefaultMachine(), SourceHostname
 	}
 	return "", ""
-}
-
-func (s *Service) lookupCommitter() gitsync.Committer {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.committer == nil {
-		c := gitsync.LookupCommitter(s.Paths.Vault())
-		s.committer = &c
-	}
-	return *s.committer
 }
 
 func gitSource(global bool) string {
