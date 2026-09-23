@@ -5,11 +5,15 @@ package fsutil
 import (
 	"io/fs"
 	"os"
-	"path/filepath"
 )
 
 func secureTree(dir string) error {
-	return filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = root.Close() }()
+	return fs.WalkDir(root.FS(), ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || !d.Type().IsRegular() && !d.IsDir() {
 			return err
 		}
@@ -21,6 +25,6 @@ func secureTree(dir string) error {
 		if err != nil || info.Mode().Perm()&^want == 0 {
 			return err
 		}
-		return os.Chmod(path, want)
+		return root.Chmod(path, want)
 	})
 }
