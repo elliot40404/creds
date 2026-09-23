@@ -23,6 +23,26 @@ func Pop[T any](q *[]T) (T, error) {
 	return v, nil
 }
 
+func Main(m *testing.M) {
+	os.Exit(runIsolated(m))
+}
+
+func runIsolated(m *testing.M) int {
+	dir, err := os.MkdirTemp("", "creds-git-")
+	if err != nil {
+		return 1
+	}
+	defer func() { _ = os.RemoveAll(dir) }()
+	global := filepath.Join(dir, "gitconfig")
+	if err := os.WriteFile(global, nil, 0o600); err != nil {
+		return 1
+	}
+	if os.Setenv("GIT_CONFIG_GLOBAL", global) != nil || os.Setenv("GIT_CONFIG_NOSYSTEM", "1") != nil {
+		return 1
+	}
+	return m.Run()
+}
+
 func Identity(tb testing.TB) *crypto.Identity {
 	tb.Helper()
 	id, err := crypto.NewIdentity()

@@ -129,6 +129,7 @@ func TestIdentityPrecedence(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	t.Setenv("XDG_CONFIG_HOME", home)
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, ".gitconfig"))
 
 	bare := NewGit(t.TempDir())
 	if bare.userName() != UserName || bare.userEmail() != UserEmail {
@@ -165,6 +166,7 @@ func TestGlobalIdentityIgnoresBrokenValues(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	t.Setenv("XDG_CONFIG_HOME", home)
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, ".gitconfig"))
 	g := NewGit(t.TempDir())
 	if _, err := g.Run(context.Background(), "config", "--global", "user.email", "a<b>@example.com"); err != nil {
 		t.Fatal(err)
