@@ -239,3 +239,36 @@ func TestPickDoesNotSpawnSyncChildren(t *testing.T) {
 		t.Fatalf("spawned %d children", n)
 	}
 }
+
+func TestPickDeviceUnlockAndRelockFallback(t *testing.T) {
+	h := seeded(t)
+	h.ok(&fake{passwords: []string{mainWord}}, "device", "trust", "--identity", keyFile(t))
+	h.ok(&fake{}, "lock")
+	f := &fake{}
+	var steps []string
+	pk := picker{
+		interactive: func() bool { return true },
+		open: func(opts tui.Options) error {
+			h.expire()
+			_, err := opts.Copy("web/mail", "", "", "")
+			steps = append(steps, fmt.Sprint(err))
+			h.expire()
+			t.Setenv(testutil.PluginModeEnv, "cancel")
+			_, err = opts.Copy("web/mail", "", "", "")
+			steps = append(steps, fmt.Sprint(errors.Is(err, tui.ErrNeedPassword)))
+			steps = append(steps, fmt.Sprint(opts.Unlock(mainWord)))
+			_, err = opts.Copy("web/mail", "", "", "")
+			steps = append(steps, fmt.Sprint(err))
+			warned := strings.Join(opts.Backend.Warnings(), "\n")
+			steps = append(steps, fmt.Sprint(strings.Contains(warned, "device unlock skipped")))
+			return nil
+		},
+	}
+	r := h.pick(f, pk)
+	if r.code != 0 || strings.Join(steps, ",") != "<nil>,true,<nil>,<nil>,true" {
+		t.Fatalf("code %d steps %v", r.code, steps)
+	}
+	if len(f.prompts) != 0 || len(f.warned) != 0 {
+		t.Fatalf("terminal used under the TUI: prompts %v warned %v", f.prompts, f.warned)
+	}
+}
