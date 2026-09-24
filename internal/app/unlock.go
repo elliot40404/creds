@@ -44,7 +44,10 @@ func (s *Service) resetSecret(file, prompt string, canon func(string) string) er
 	if err != nil {
 		return err
 	}
-	return s.replacePassword(id)
+	if err := s.replacePassword(id); err != nil {
+		return err
+	}
+	return s.offerUntrust()
 }
 
 func (s *Service) replacePassword(id *crypto.Identity) error {
@@ -107,18 +110,18 @@ func (s *Service) hasVault() (bool, error) {
 func (s *Service) UnlockWith(pw string) error {
 	_, err := s.loadIdentity(func() (*crypto.Identity, error) {
 		return s.unwrap(vaultfiles.PasswordFile, pw)
-	})
+	}, false)
 	return err
 }
 
 func (s *Service) identity() (*crypto.Identity, error) {
 	return s.loadIdentity(func() (*crypto.Identity, error) {
 		return s.askUnwrap(vaultfiles.PasswordFile, "Master password", asTyped)
-	})
+	}, true)
 }
 
-func (s *Service) loadIdentity(ask func() (*crypto.Identity, error)) (*crypto.Identity, error) {
-	id, upgraded, err := s.openIdentity(ask)
+func (s *Service) loadIdentity(ask func() (*crypto.Identity, error), device bool) (*crypto.Identity, error) {
+	id, upgraded, err := s.openIdentity(ask, device)
 	if err != nil || !upgraded {
 		return id, err
 	}
@@ -142,7 +145,7 @@ func (s *Service) migrate() (bool, error) {
 	return from < format.CurrentVersion, nil
 }
 
-func (s *Service) openIdentity(ask func() (*crypto.Identity, error)) (*crypto.Identity, bool, error) {
+func (s *Service) openIdentity(ask func() (*crypto.Identity, error), device bool) (*crypto.Identity, bool, error) {
 	if err := s.requireVault(); err != nil {
 		return nil, false, err
 	}
@@ -159,11 +162,25 @@ func (s *Service) openIdentity(ask func() (*crypto.Identity, error)) (*crypto.Id
 	case !errors.Is(err, session.ErrNoSession) && !errors.Is(err, session.ErrExpired) && !errors.Is(err, session.ErrUnprotected):
 		return nil, false, err
 	}
-	if id, err = ask(); err != nil {
+	if id, err = s.freshIdentity(ask, device); err != nil {
 		return nil, false, err
 	}
-	s.ackPasswordChange()
 	return id, upgraded, s.sessions().Save(id.String())
+}
+
+func (s *Service) freshIdentity(ask func() (*crypto.Identity, error), device bool) (*crypto.Identity, error) {
+	if device {
+		if id := s.deviceIdentity(); id != nil {
+			return id, nil
+		}
+	}
+	id, err := ask()
+	if err != nil {
+		return nil, err
+	}
+	s.ackPasswordChange()
+	s.confirmDevice()
+	return id, nil
 }
 
 func (s *Service) sessionIdentity() (*crypto.Identity, error) {

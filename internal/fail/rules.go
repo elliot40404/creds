@@ -41,6 +41,7 @@ var vaultRules = []Rule{
 	{Target: device.ErrUnprotected, Code: General, Hint: "run creds device trust again"},
 	{Target: device.ErrCorrupt, Code: General, Hint: "run creds device trust again"},
 	{Target: device.ErrMismatch, Code: Usage, Hint: "run creds device trust --identity <file> with the file the plugin keygen made"},
+	{Target: device.ErrBadKey, Code: Usage, Hint: "run creds device trust --identity <file> with the file the plugin keygen made"},
 	{Target: device.ErrNoPlugin, Code: General, Hint: "install the age plugin on PATH, or run creds device untrust"},
 	{Target: app.ErrJoinUndone, Code: General, Hint: "run creds join <url> again"},
 	{Target: app.ErrRemoteHasVault, Code: Conflict, Hint: "run creds join <url> to use that vault"},

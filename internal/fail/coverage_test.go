@@ -89,6 +89,7 @@ var known = map[string]error{
 	"config.ErrUnknownKey":       config.ErrUnknownKey,
 	"crypto.ErrWrongKey":         crypto.ErrWrongKey,
 	"crypto.ErrWrongSecret":      crypto.ErrWrongSecret,
+	"device.ErrBadKey":           device.ErrBadKey,
 	"device.ErrCorrupt":          device.ErrCorrupt,
 	"device.ErrMismatch":         device.ErrMismatch,
 	"device.ErrNoPlugin":         device.ErrNoPlugin,
