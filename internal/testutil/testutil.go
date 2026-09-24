@@ -40,6 +40,9 @@ func Run(m *testing.M) int {
 	if os.Setenv("GIT_CONFIG_GLOBAL", global) != nil || os.Setenv("GIT_CONFIG_NOSYSTEM", "1") != nil {
 		return 1
 	}
+	if addPluginDir(dir) != nil {
+		return 1
+	}
 	return m.Run()
 }
 

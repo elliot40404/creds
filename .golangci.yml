@@ -32,7 +32,7 @@ linters:
         linters:
           - gosec
         text: G204
-      - path: internal/testutil/testutil.go
+      - path: internal/testutil/(testutil|plugin)\.go
         linters:
           - gosec
         text: G204
