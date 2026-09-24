@@ -28,6 +28,10 @@ func wrap(id *Identity, secret string, logN int) ([]byte, error) {
 		return nil, fmt.Errorf("wrap identity: %w", err)
 	}
 	r.SetWorkFactor(logN)
+	return encryptIdentity(id, r)
+}
+
+func encryptIdentity(id *Identity, r age.Recipient) ([]byte, error) {
 	var buf bytes.Buffer
 	w, err := age.Encrypt(&buf, r)
 	if err != nil {
