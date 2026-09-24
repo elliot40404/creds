@@ -20,6 +20,7 @@ Using creds from scripts and AI agents
      creds config --json                       all settings with defaults
      creds config get session.idle --json
      creds trust list --json                   {"trusted":["/path/.creds.toml"]}
+     creds device status --json                {"trusted":true,"plugin":"se",...}
    Data goes to stdout. With --json every stderr line is JSON too:
      {"note":"added web/mail"}
      {"error":"vault is locked","hint":"run creds unlock","code":3}

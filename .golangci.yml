@@ -28,6 +28,10 @@ linters:
         linters:
           - gosec
         text: G204
+      - path: internal/device/touchid.go
+        linters:
+          - gosec
+        text: G204
       - path: internal/editor/editor.go
         linters:
           - gosec

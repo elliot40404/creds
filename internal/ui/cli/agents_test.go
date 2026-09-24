@@ -12,7 +12,7 @@ func TestHelpAgents(t *testing.T) {
 	for _, want := range []string{
 		"creds unlock", "--json", "--secret-field", "--yes", "3 locked", "6 no vault",
 		"creds paths --json", "creds config --json", "creds trust list --json",
-		"creds config set", "creds trust remove",
+		"creds config set", "creds trust remove", "creds device status --json",
 	} {
 		if !strings.Contains(r.out, want) {
 			t.Fatalf("missing %q", want)

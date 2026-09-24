@@ -10,11 +10,13 @@ import (
 )
 
 const (
-	actionEntry   = "whole entry"
-	actionField   = "one field"
-	actionAs      = "database format"
-	actionFormats = "list database formats"
-	projectEntry  = "(use .creds.toml in this folder)"
+	actionEntry    = "whole entry"
+	actionField    = "one field"
+	actionAs       = "database format"
+	actionFormats  = "list database formats"
+	projectEntry   = "(use .creds.toml in this folder)"
+	deviceTouchID  = "Touch ID (macOS)"
+	deviceIdentity = "age plugin identity file"
 )
 
 var clipKey = clipboard.ClearCommand
@@ -33,45 +35,49 @@ func plans() map[string]plan {
 	entryForm := []string{"name", "tag", "field", "secret-field", "engine", "conn"}
 	layout := []string{flagInline, flagFullscreen, flagHeight, flagAltScreen}
 	return map[string]plan{
-		"":              {skip: layout, run: (*interview).pickCommand},
-		"remote":        {run: (*interview).pickCommand},
-		"init":          {},
-		"unlock":        {},
-		"lock":          {},
-		"recover":       {},
-		"passwd":        {},
-		"pick":          {skip: layout},
-		"setup":         {},
-		"agents":        {},
-		"paths":         {},
-		"version":       {},
-		"remote remove": {},
-		"sync":          {skip: []string{"quiet"}},
-		clipKey:         {skip: []string{"after", "mode"}},
-		"add":           {asks: append([]string{"<path>", "type"}, builtinFlags...), skip: entryForm, run: askAdd, vault: true},
-		"edit":          {asks: append([]string{"<path>", flagRename}, builtinFlags...), skip: entryForm, run: askEdit, vault: true},
-		"get":           {asks: []string{"<path>", "show", "field", "as", "formats"}, skip: []string{"shell"}, run: askGet, vault: true},
-		"copy":          {asks: []string{"<path>", "field", "as"}, skip: []string{"osc52", "native", "shell"}, run: askCopy, vault: true},
-		"rm":            {asks: []string{"<path>"}, skip: yes, run: askEntryOnly, vault: true},
-		"list":          {skip: []string{"sort"}, run: askList, vault: true},
-		"search":        {asks: []string{"<query>"}, skip: []string{"sort"}, run: askList, vault: true},
-		"env":           {asks: []string{"[path]", "output"}, skip: []string{"yes", "format"}, run: askEnv, vault: true},
-		"run":           {asks: []string{"[path]", "<command>", "[args...]", "lock"}, run: askRun, vault: true},
-		"import-env":    {asks: []string{"<file>", "<path>"}, run: askImportEnv, vault: true},
-		"trust":         {asks: []string{"[dir]"}, skip: yes, run: askTrust},
-		"trust list":    {},
-		"trust remove":  {asks: []string{"<file>"}, skip: yes, run: askTrustFile},
-		"export":        {asks: []string{"plain", "encrypted", "format", "output", "<file>"}, skip: []string{"confirm-plaintext", "yes"}, run: askExport},
-		"import":        {asks: []string{"<file.json>", "overwrite"}, skip: yes, run: askImport, vault: true},
-		"join":          {asks: []string{"<url>"}, skip: yes, run: askURL},
-		"remote add":    {asks: []string{"<url>"}, run: askURL},
-		"status":        {run: askStatus},
-		"config":        {run: askConfig},
-		"config edit":   {},
-		"config get":    {asks: []string{"<key>"}, run: askConfigKey},
-		"config unset":  {asks: []string{"<key>"}, run: askConfigKey},
-		"config set":    {asks: []string{"<key>", "<value>"}, run: askConfigSet},
-		"resolve":       {asks: []string{"<path>", "mine", "theirs"}, skip: yes, run: askResolve, vault: true},
+		"":               {skip: layout, run: (*interview).pickCommand},
+		"remote":         {run: (*interview).pickCommand},
+		"init":           {},
+		"unlock":         {},
+		"lock":           {},
+		"recover":        {},
+		"passwd":         {},
+		"pick":           {skip: layout},
+		"setup":          {},
+		"agents":         {},
+		"paths":          {},
+		"version":        {},
+		"remote remove":  {},
+		"sync":           {skip: []string{"quiet"}},
+		clipKey:          {skip: []string{"after", "mode"}},
+		"add":            {asks: append([]string{"<path>", "type"}, builtinFlags...), skip: entryForm, run: askAdd, vault: true},
+		"edit":           {asks: append([]string{"<path>", flagRename}, builtinFlags...), skip: entryForm, run: askEdit, vault: true},
+		"get":            {asks: []string{"<path>", "show", "field", "as", "formats"}, skip: []string{"shell"}, run: askGet, vault: true},
+		"copy":           {asks: []string{"<path>", "field", "as"}, skip: []string{"osc52", "native", "shell"}, run: askCopy, vault: true},
+		"rm":             {asks: []string{"<path>"}, skip: yes, run: askEntryOnly, vault: true},
+		"list":           {skip: []string{"sort"}, run: askList, vault: true},
+		"search":         {asks: []string{"<query>"}, skip: []string{"sort"}, run: askList, vault: true},
+		"env":            {asks: []string{"[path]", "output"}, skip: []string{"yes", "format"}, run: askEnv, vault: true},
+		"run":            {asks: []string{"[path]", "<command>", "[args...]", "lock"}, run: askRun, vault: true},
+		"import-env":     {asks: []string{"<file>", "<path>"}, run: askImportEnv, vault: true},
+		"trust":          {asks: []string{"[dir]"}, skip: yes, run: askTrust},
+		"trust list":     {},
+		"trust remove":   {asks: []string{"<file>"}, skip: yes, run: askTrustFile},
+		"export":         {asks: []string{"plain", "encrypted", "format", "output", "<file>"}, skip: []string{"confirm-plaintext", "yes"}, run: askExport},
+		"import":         {asks: []string{"<file.json>", "overwrite"}, skip: yes, run: askImport, vault: true},
+		"join":           {asks: []string{"<url>"}, skip: yes, run: askURL},
+		"remote add":     {asks: []string{"<url>"}, run: askURL},
+		"status":         {run: askStatus},
+		"config":         {run: askConfig},
+		"config edit":    {},
+		"config get":     {asks: []string{"<key>"}, run: askConfigKey},
+		"config unset":   {asks: []string{"<key>"}, run: askConfigKey},
+		"config set":     {asks: []string{"<key>", "<value>"}, run: askConfigSet},
+		"resolve":        {asks: []string{"<path>", "mine", "theirs"}, skip: yes, run: askResolve, vault: true},
+		"device":         {run: (*interview).pickCommand},
+		"device trust":   {asks: []string{"touchid", "identity"}, run: askDeviceTrust},
+		"device untrust": {},
+		"device status":  {},
 	}
 }
 
@@ -263,6 +269,20 @@ func askExport(iv *interview) error {
 		}
 	}
 	return iv.text("output", "Output file", "")
+}
+
+func askDeviceTrust(iv *interview) error {
+	if iv.anyChanged("touchid", "identity") {
+		return nil
+	}
+	kind, err := iv.choose("Unlock this device with", []string{deviceTouchID, deviceIdentity})
+	switch {
+	case err != nil:
+		return err
+	case kind == deviceIdentity:
+		return iv.text("identity", "Plugin identity file", "")
+	}
+	return iv.set("touchid", "true")
 }
 
 func askImport(iv *interview) error {

@@ -95,6 +95,7 @@ func NewRoot(env Env) *cobra.Command {
 	root.AddCommand(configCommands(env)...)
 	root.AddCommand(setupCmd(env))
 	root.AddCommand(pathsCmd(env))
+	root.AddCommand(deviceCmd(env))
 	root.AddCommand(versionCmd(env))
 	root.AddCommand(pickCmd(env, root))
 	setupRoot(env, root)

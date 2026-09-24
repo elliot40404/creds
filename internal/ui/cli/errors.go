@@ -23,6 +23,7 @@ var cliRules = []fail.Rule{
 	{Target: ErrNotTerminal, Code: fail.Locked, Hint: "run creds unlock in a terminal first"},
 	{Target: errNeedYes, Code: fail.Usage, Hint: "rerun the creds command with --yes"},
 	{Target: errNeedFlags, Code: fail.Usage, Hint: hintFlags},
+	{Target: errTrustSource, Code: fail.Usage, Hint: "run creds device trust --touchid or creds device trust --identity <file>"},
 	{Target: ErrNoInput, Code: fail.Usage, Hint: hintFlags},
 	{Target: ErrNeedDash, Code: fail.Usage, Hint: "run creds run [path] -- <command> [args...]"},
 	{Target: errNoProgram, Code: fail.NotFound, Hint: "check the program name, or install it and add it to PATH"},
