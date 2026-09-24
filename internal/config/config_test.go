@@ -16,6 +16,9 @@ func TestDefault(t *testing.T) {
 	if c.Sync.Stale != 5*time.Minute {
 		t.Fatalf("sync %+v", c.Sync)
 	}
+	if c.Device.MaxAge != 72*time.Hour {
+		t.Fatalf("device %+v", c.Device)
+	}
 	if c.Render.Formats == nil || len(c.Render.Formats) != 0 {
 		t.Fatalf("formats %v", c.Render.Formats)
 	}

@@ -24,6 +24,7 @@ type Config struct {
 	Render    Render    `toml:"render"`
 	UI        UI        `toml:"ui"`
 	Vault     Vault     `toml:"vault"`
+	Device    Device    `toml:"device"`
 }
 
 type Session struct {
@@ -56,6 +57,10 @@ type Vault struct {
 	Machine string `toml:"machine"`
 }
 
+type Device struct {
+	MaxAge time.Duration `toml:"max_age"`
+}
+
 type Render struct {
 	Shell   render.Shell      `toml:"shell"`
 	Formats map[string]string `toml:"formats"`
@@ -69,5 +74,6 @@ func Default() Config {
 		Render:    Render{Shell: render.DefaultShell(), Formats: map[string]string{}},
 		UI:        UI{Mode: ModeFullscreen, AltScreen: true, Height: DefaultHeight},
 		Vault:     Vault{History: vaultfiles.DefaultHistory},
+		Device:    Device{MaxAge: 72 * time.Hour},
 	}
 }

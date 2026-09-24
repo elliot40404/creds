@@ -30,3 +30,4 @@ func (p Paths) SyncLock() string { return filepath.Join(p.Home, "sync.lock") }
 func (p Paths) Config() string   { return filepath.Join(p.Home, "config.toml") }
 func (p Paths) Trust() string    { return filepath.Join(p.Home, "trust.json") }
 func (p Paths) Anchor() string   { return filepath.Join(p.Home, "anchor.json") }
+func (p Paths) Device() string   { return filepath.Join(p.Home, "device.json") }

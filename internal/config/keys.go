@@ -29,6 +29,7 @@ type limit struct {
 	max  time.Duration
 	warn time.Duration
 	risk string
+	zero string
 }
 
 func choices[T any](xs []T, str func(T) string) []string {
@@ -167,6 +168,9 @@ func staticFields() []Field {
 		number("vault.history", "keep this many previous versions of each entry, 0 turns it off", func(c *Config) *int { return &c.Vault.History },
 			0, 1, 3, 5, 10, 20, 50),
 		text("vault.machine", "name recorded on each edit, blank uses the hostname", func(c *Config) *string { return &c.Vault.Machine }),
+		duration("device.max_age", "ask the master password again when the last one is older than this, 0 never asks", func(c *Config) *time.Duration { return &c.Device.MaxAge },
+			limit{max: maxDevice, warn: 7 * 24 * time.Hour, risk: "a trusted device unlocks that long without the master password", zero: "a trusted device never asks for the master password again"},
+			0, 24*time.Hour, 72*time.Hour, 7*24*time.Hour, 14*24*time.Hour, 30*24*time.Hour),
 		choice("render.shell", "shell used to quote values", render.Shells(), func(c *Config) *render.Shell { return &c.Render.Shell }),
 	}
 }

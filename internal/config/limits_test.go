@@ -13,6 +13,7 @@ func TestDecodeRejectsAbsurdDurations(t *testing.T) {
 		"session.hard":    "[session]\nhard = \"48h\"\n",
 		"clipboard.clear": "[clipboard]\nclear = \"48h\"\n",
 		"sync.stale":      "[sync]\nstale = \"9000h\"\n",
+		"device.max_age":  "[device]\nmax_age = \"721h\"\n",
 	}
 	for key, body := range cases {
 		_, err := Decode([]byte(body))
@@ -56,5 +57,31 @@ func TestWarningsOnlyAboveThreshold(t *testing.T) {
 		if !strings.Contains(strings.Join(w, "\n"), key) {
 			t.Fatalf("%s missing from %v", key, w)
 		}
+	}
+}
+
+func TestDeviceMaxAgeZeroMeansNever(t *testing.T) {
+	t.Parallel()
+	c, err := Decode([]byte("[device]\nmax_age = \"0s\"\n"))
+	if err != nil || c.Device.MaxAge != 0 {
+		t.Fatalf("c %+v err %v", c.Device, err)
+	}
+	w := Warnings(c)
+	if len(w) != 1 || !strings.Contains(w[0], "device.max_age is 0") {
+		t.Fatalf("warnings %v", w)
+	}
+	if _, err := Decode([]byte("[device]\nmax_age = \"1ms\"\n")); err == nil {
+		t.Fatal("1ms accepted")
+	}
+}
+
+func TestDeviceMaxAgeWarnsAboveAWeek(t *testing.T) {
+	t.Parallel()
+	c, err := Set(Default(), "device.max_age", "336h")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w := Warnings(c); len(w) != 1 || !strings.Contains(w[0], "device.max_age") {
+		t.Fatalf("warnings %v", w)
 	}
 }

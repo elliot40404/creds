@@ -46,6 +46,7 @@ func TestPaths(t *testing.T) {
 		p.State():    "state.json",
 		p.SyncLock(): "sync.lock",
 		p.Config():   "config.toml",
+		p.Device():   "device.json",
 	}
 	for got, name := range cases {
 		if want := filepath.Join(h, name); got != want {

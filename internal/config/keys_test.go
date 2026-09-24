@@ -189,3 +189,25 @@ func fieldKeys(c Config) []string {
 	}
 	return keys
 }
+
+func TestDeviceMaxAgeKey(t *testing.T) {
+	t.Parallel()
+	if v, err := Get(Default(), "device.max_age"); err != nil || v != "72h0m0s" {
+		t.Fatalf("get %q %v", v, err)
+	}
+	c, err := Set(Default(), "device.max_age", "24h")
+	if err != nil || c.Device.MaxAge != 24*time.Hour {
+		t.Fatalf("set %+v %v", c.Device, err)
+	}
+	if _, err := Unset(c, "device.max_age"); !errors.Is(err, ErrNotRemovable) {
+		t.Fatalf("unset %v", err)
+	}
+	data, err := Encode(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	back, err := Decode(data)
+	if err != nil || back.Device.MaxAge != 24*time.Hour {
+		t.Fatalf("roundtrip %+v %v", back.Device, err)
+	}
+}
