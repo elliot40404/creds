@@ -17,6 +17,7 @@ import (
 	"github.com/elliot40404/creds/internal/clipboard"
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/crypto"
+	"github.com/elliot40404/creds/internal/device"
 	"github.com/elliot40404/creds/internal/editor"
 	"github.com/elliot40404/creds/internal/envfile"
 	"github.com/elliot40404/creds/internal/format"
@@ -88,6 +89,13 @@ var known = map[string]error{
 	"config.ErrUnknownKey":       config.ErrUnknownKey,
 	"crypto.ErrWrongKey":         crypto.ErrWrongKey,
 	"crypto.ErrWrongSecret":      crypto.ErrWrongSecret,
+	"device.ErrCorrupt":          device.ErrCorrupt,
+	"device.ErrMismatch":         device.ErrMismatch,
+	"device.ErrNoPlugin":         device.ErrNoPlugin,
+	"device.ErrNotTrusted":       device.ErrNotTrusted,
+	"device.ErrStale":            device.ErrStale,
+	"device.ErrUnprotected":      device.ErrUnprotected,
+	"device.ErrVaultChanged":     device.ErrVaultChanged,
 	"editor.ErrNoEditor":         editor.ErrNoEditor,
 	"envfile.ErrBadKey":          envfile.ErrBadKey,
 	"envfile.ErrBadRef":          envfile.ErrBadRef,

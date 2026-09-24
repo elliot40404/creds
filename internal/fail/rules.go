@@ -7,6 +7,7 @@ import (
 	"github.com/elliot40404/creds/internal/app"
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/crypto"
+	"github.com/elliot40404/creds/internal/device"
 	"github.com/elliot40404/creds/internal/editor"
 	"github.com/elliot40404/creds/internal/format"
 	"github.com/elliot40404/creds/internal/fsutil"
@@ -34,6 +35,13 @@ var vaultRules = []Rule{
 	{Target: session.ErrNoSession, Code: Locked, Msg: "vault is locked", Hint: hintUnlock},
 	{Target: session.ErrExpired, Code: Locked, Msg: "session expired", Hint: hintUnlock},
 	{Target: session.ErrUnprotected, Code: Locked, Msg: "session file was readable by others and was dropped", Hint: hintUnlock},
+	{Target: device.ErrNotTrusted, Code: General, Hint: "run creds device trust --touchid or --identity <file>"},
+	{Target: device.ErrStale, Code: General, Hint: hintUnlock + " with the master password"},
+	{Target: device.ErrVaultChanged, Code: General, Hint: "run creds device trust again"},
+	{Target: device.ErrUnprotected, Code: General, Hint: "run creds device trust again"},
+	{Target: device.ErrCorrupt, Code: General, Hint: "run creds device trust again"},
+	{Target: device.ErrMismatch, Code: Usage, Hint: "run creds device trust --identity <file> with the file the plugin keygen made"},
+	{Target: device.ErrNoPlugin, Code: General, Hint: "install the age plugin on PATH, or run creds device untrust"},
 	{Target: app.ErrJoinUndone, Code: General, Hint: "run creds join <url> again"},
 	{Target: app.ErrRemoteHasVault, Code: Conflict, Hint: "run creds join <url> to use that vault"},
 	{Target: app.ErrRemoteNotEmpty, Code: Conflict, Hint: "pick an empty repository, creds never writes over other content"},
