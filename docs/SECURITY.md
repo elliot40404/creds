@@ -195,9 +195,38 @@ Leaks and limits:
 
 ## Programs creds trusts
 
-creds runs `git`, `gh` and the clipboard tools (`wl-copy`, `xclip`, `xsel`, `pbcopy`) as
+creds runs `git`, `gh`, the clipboard tools (`wl-copy`, `xclip`, `xsel`, `pbcopy`) and age
+plugins (`age-plugin-<name>`, only after `creds device trust`) as
 resolved by your PATH at the time of the call, with the value on stdin, never through a shell.
 A writable directory earlier in your PATH can therefore see secrets you copy. Keep PATH clean.
+
+## Device unlock (Touch ID, YubiKey, TPM)
+
+`creds device trust` seals a copy of the vault identity to an age plugin key and keeps it in
+`device.json` in the creds home. After that a touch unlocks the vault instead of the password.
+
+- The copy is local only. It is never in `vault/`, never committed, never pushed. Another machine
+  with the same vault still needs the password
+- Trust always asks the master password, even with a live session, and opens the new copy once
+  before saving it
+- `device.max_age` (default `72h`) makes the password needed again now and then, so you keep
+  remembering it. `0` turns that off and creds warns
+- If the vault key changes (a new vault, or a remote with another vault), the copy no longer
+  matches and is deleted with a warning
+- `creds passwd` does not revoke the device. It changes only the password file, the vault identity
+  is the same, so the device copy still opens the vault. passwd and recover ask whether to untrust
+  the device too. Say yes if you think the machine or the plugin key is not safe
+- Touch ID (`--touchid`) makes the key with `age-plugin-se keygen --access-control
+  current-biometry`. Adding or removing a fingerprint breaks the key: unlock with the password and
+  run `creds device trust --touchid` again. The key lives in the Secure Enclave and is never written
+  to a file by creds
+- The Secure Enclave key is P-256, not post-quantum. The vault itself stays post-quantum (ML-KEM),
+  only the local device copy is not. A future quantum attacker also needs `device.json` from your disk
+- The plugin is found on PATH as `age-plugin-<name>`, the age plugin client cannot pin a path.
+  Anything that can put a program early on your PATH can already replace `creds` itself
+- Malware running as you can ask the plugin to open the copy. With Touch ID, or a YubiKey with a
+  touch policy, the plugin still wants a touch each time, so it gets the identity only if you touch.
+  A plugin key with no touch or PIN policy gives no such guard
 
 ## Command entries are never run
 

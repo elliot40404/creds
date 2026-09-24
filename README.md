@@ -292,6 +292,32 @@ creds recover                            # forgot password: use recovery code
 
 Lost creds itself? See [docs/RECOVERY.md](docs/RECOVERY.md).
 
+### Touch ID and other device keys
+
+Trust this machine once, then unlock with a fingerprint instead of the master password.
+
+```sh
+brew install age-plugin-se                          # macOS, Touch ID
+creds device trust --touchid                        # asks the master password once, then a touch
+creds lock
+creds copy web/mail                                 # touch, no password
+creds device status                                 # which plugin, when the password is needed again
+creds device untrust                                # back to the password
+```
+
+Any age plugin works the same way, like a YubiKey or a TPM:
+
+```sh
+age-plugin-yubikey --generate > yubikey.txt
+creds device trust --identity yubikey.txt
+```
+
+- Order on unlock: session, then device key, then password. Cancel the touch and creds asks the password
+- The password is needed again after `device.max_age` (default `72h`, `0` never)
+- The key copy stays on this machine (`device.json`), it is never synced
+- Adding a fingerprint on the Mac breaks the Touch ID key: use the password, then trust again
+- Details and limits: [docs/SECURITY.md](docs/SECURITY.md#device-unlock-touch-id-yubikey-tpm)
+
 ### Export and import
 
 ```sh
@@ -384,6 +410,9 @@ stale = "5m"
 [render]
 shell = "bash"
 
+[device]
+max_age = "72h"
+
 [render.formats]
 "postgres.short" = "psql {{sh .url}}"
 ```
@@ -437,10 +466,11 @@ Set the key and the note goes away, because your value is then the answer.
 | `sync.every` | sync at most this often in the background | `30s` |
 | `vault.history` | keep this many previous versions of each entry, 0 turns it off | `3` |
 | `vault.machine` | name recorded on each edit, blank uses the hostname | blank |
+| `device.max_age` | a trusted device asks the master password again after this long, `0` never asks | `72h` |
 | `render.shell` | `bash` or `pwsh` | `pwsh` on Windows, else `bash` |
 | `render.formats.<engine>.<name>` | template override, for example `render.formats.postgres.psql` | none |
 
-Durations must be at least `1s` and `session.idle` must not exceed `session.hard`. Only `render.formats.*` keys can be removed with `unset`.
+Durations must be at least `1s` (`device.max_age` may also be `0`) and `session.idle` must not exceed `session.hard`. Only `render.formats.*` keys can be removed with `unset`.
 
 `creds` and `creds pick` take `--inline`, `--fullscreen`, `--height <rows>` and `--alt-screen=false`
 to override the `ui.*` settings for one run. Inline draws in at most `--height` rows under your
@@ -596,7 +626,7 @@ Home is `~/.config/creds` on all systems. Set `CREDS_HOME` to use another dir.
 
 ```
 ~/.config/creds/
-  config.toml  session  state.json  sync.lock  trust.json
+  config.toml  session  state.json  sync.lock  trust.json  device.json
   vault/       git repo: vault.json, identity.pw.age, identity.recovery.age, entries/00.enc .. 0f.enc
 ```
 

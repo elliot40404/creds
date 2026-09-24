@@ -16,6 +16,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
   session              unlocked identity, plaintext, 0600
   state.json           sync state, local only
   trust.json           approved project files, local only
+  device.json          vault identity sealed to a plugin key, local only (creds device trust)
   sync.lock            present while a sync runs
   vault/               git repo, the only part that is synced
     .git/
@@ -311,6 +312,38 @@ Which project `.creds.toml` files you approved. Local only, never synced.
 - Written by `creds trust` and by a yes at the prompt. Max size 1 MiB, unknown keys are an error
 - Holds no secrets, only paths. Missing file = nothing trusted
 
+## Device trust: \<home\>/device.json
+
+Written by `creds device trust`. Lets this machine unlock with an age plugin key (Touch ID via
+`age-plugin-se`, a YubiKey via `age-plugin-yubikey`, a TPM via `age-plugin-tpm`) instead of the
+master password. Local only, never in `vault/`, never synced.
+
+```json
+{"plugin":"se","identity":"AGE-PLUGIN-SE-1...","recipient":"age1se1...","vault":"age1pq1...","trusted":"...","confirmed":"...","sealed":"<base64 age file>"}
+```
+
+| key | meaning |
+| --- | --- |
+| `plugin` | plugin name, creds runs `age-plugin-<plugin>` found on PATH |
+| `identity` | plugin identity string. For hardware plugins a handle, the private key stays in the hardware |
+| `recipient` | plugin recipient `sealed` was made for. Empty: the identity itself was used as recipient |
+| `vault` | vault recipient from `vault.json` at trust time |
+| `trusted` | when `creds device trust` ran |
+| `confirmed` | last unlock with the master password |
+| `sealed` | age file, recipient `recipient`, plaintext the vault identity string |
+
+- Unlock order: live session, then this file (the plugin asks for a touch or PIN), then the master password
+- `vault` must equal the recipient in `vault.json`, and the opened identity must match it. If not,
+  the vault key changed: the file is deleted with a warning
+- `now - confirmed >= device.max_age` (default `72h`, `0` = never): the file is skipped and the
+  master password is asked. That unlock moves `confirmed` to now
+- A cancel, a missing plugin or any plugin error: one warning, then the master password. The file stays
+- Trust seals the identity, then opens it once (the first touch) before the file is written, so a
+  broken key pair is never saved
+- Strict decode, max size 64 KiB, unknown keys or bad fields: file deleted. Readable by others:
+  file deleted, like the session
+- `creds device untrust` deletes it. `creds passwd` and `creds recover` offer to delete it
+
 ## Sync lock: \<home\>/sync.lock
 
 ```json
@@ -346,7 +379,7 @@ sync while the lock is held.
 
 ## config.toml
 
-All keys optional. Durations use Go syntax (`90s`, `15m`, `4h`), minimum `1s`.
+All keys optional. Durations use Go syntax (`90s`, `15m`, `4h`), minimum `1s` (`device.max_age` may be `0`).
 Unknown keys are an error. Missing file = all defaults.
 
 The key list lives in one place, `internal/config/keys.go` (`config.Fields`). `creds config`,
@@ -367,6 +400,9 @@ stale = "5m"
 [render]
 shell = "bash"
 
+[device]
+max_age = "72h"
+
 [render.formats]
 "postgres.url" = "postgres://{{.username}}@{{.host}}:{{.port}}/{{.database}}"
 "redis.local" = "redis-cli -h {{sh .host}}"
@@ -378,6 +414,7 @@ shell = "bash"
 | `session.hard` | `4h` | |
 | `clipboard.clear` | `30s` | |
 | `sync.stale` | `5m` | a read starts a background sync when the last sync try is older than this |
+| `device.max_age` | `72h` | a trusted device asks the master password again after this long, `0` never asks, max `720h` |
 | `render.shell` | `pwsh` on Windows, else `bash` | quoting style for command formats, `bash` or `pwsh` |
 | `render.formats` | empty | key `engine.format`, value Go template, checked at load |
 
