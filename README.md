@@ -295,6 +295,7 @@ Lost creds itself? See [docs/RECOVERY.md](docs/RECOVERY.md).
 ### Touch ID and other device keys
 
 Trust this machine once, then unlock with a fingerprint instead of the master password.
+Touch ID needs macOS 14 (Sonoma) or later on a Mac with a Secure Enclave (Apple silicon or a T2 chip).
 
 ```sh
 brew install age-plugin-se                          # macOS, Touch ID
