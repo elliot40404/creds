@@ -69,8 +69,10 @@ func NewAddForm(paths []string) Screen {
 }
 
 func NewEditForm(orig vault.Entry) Screen {
-	f := formScreen{edit: true, orig: orig, typ: orig.Type}
-	f.rows = []formRow{{kind: kindPath, key: rowPath, input: newInput(orig.Path, false)}}
+	f := formScreen{
+		edit: true, orig: orig, typ: orig.Type,
+		rows: []formRow{{kind: kindPath, key: rowPath, input: newInput(orig.Path, false)}},
+	}
 	for _, s := range app.FieldSpecs(orig.Type) {
 		v, _ := app.Lookup(orig, s.Key)
 		f.rows = append(f.rows, existingRow(s.Key, v, s.Secret, false))

@@ -149,9 +149,10 @@ func revAt(machine, notes string, m int) Revision {
 }
 
 func TestMergeByIDUnionsHistoryFromBothSides(t *testing.T) {
-	base := Entry{Path: "a", Type: TypeNote, Notes: "base"}
-	base.ID = uuid.NewV7()
-	base.History = []Revision{revAt("laptop", "a", 1)}
+	base := Entry{
+		Path: "a", Type: TypeNote, Notes: "base",
+		ID: uuid.NewV7(), History: []Revision{revAt("laptop", "a", 1)},
+	}
 
 	mine := base.Clone()
 	mine.History = []Revision{revAt("laptop", "c", 3), revAt("laptop", "a", 1)}
