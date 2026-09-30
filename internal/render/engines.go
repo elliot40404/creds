@@ -13,6 +13,15 @@ var engineSchemes = map[string][]string{
 }
 
 func EngineFor(s string) (string, bool) {
+	if raw, command, err := psqlInput(s); command {
+		if err != nil {
+			return "", false
+		}
+		if _, err := parsePostgres(raw); err != nil {
+			return "", false
+		}
+		return Postgres, true
+	}
 	scheme, _, ok := strings.Cut(strings.TrimLeft(s, spaces), "://")
 	if ok {
 		for engine, schemes := range engineSchemes {
@@ -33,6 +42,10 @@ func EngineFor(s string) (string, bool) {
 }
 
 func parsePostgres(s string) (Conn, error) {
+	s, _, err := psqlInput(s)
+	if err != nil {
+		return Conn{}, err
+	}
 	if looksLikeURL(s) {
 		return parseURL(s, engineSchemes[Postgres]...)
 	}

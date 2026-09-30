@@ -179,6 +179,10 @@ Secret values are never printed: pass them on stdin, one per line.
 
 Paste a connection string, creds splits it into parts.
 
+You can also paste a whole `psql '<connection>'` command, with a URL or `host=...`
+connection text. Single and double quotes work. creds extracts the connection;
+password and SSL options stay intact.
+
 ```sh
 creds add work/db --type database        # pick postgres, redis or mongo, paste the url
 creds get work/db --formats              # list formats
