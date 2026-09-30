@@ -165,16 +165,20 @@ func TestPwshRenderedLinesAreLiteral(t *testing.T) {
 	evil := []string{"db.example.com", "calc", "$(calc)", "a;calc", "x’;calc;’", "`n", "@calc", "5432", "it's", "a\nb", "require&calc"}
 	for _, v := range evil {
 		pg := Conn{Host: v, Port: v, Username: v, Password: v, Database: v, Params: map[string]string{"sslmode": v}}
-		want := map[string]int{"env": 6, "psql": 6, "pg_dump": 6, "pg_restore": 6}
-		for format, n := range want {
+		out, err := r.Render(Postgres, "env", pg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantLiterals(t, out, 6, v)
+		for _, format := range []string{"psql", "pg_dump", "pg_restore"} {
 			out, err := r.Render(Postgres, format, pg)
 			if err != nil {
 				t.Fatal(err)
 			}
-			wantLiterals(t, out, n, v)
+			wantLiterals(t, out, 1, buildURL("postgresql", pg))
 		}
 		rd := Conn{Host: v, Port: v, Username: v, Password: v, Database: v}
-		out, err := r.Render(Redis, "redis-cli", rd)
+		out, err = r.Render(Redis, "redis-cli", rd)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -3,11 +3,8 @@ package render
 const FormatURL = "url"
 
 const (
-	pgSSL       = `(index .params "sslmode")`
-	pgEnvPrefix = `{{envset "PGPASSWORD" .password}}{{envset "PGSSLMODE" ` + pgSSL + `}}`
-	pgEnvSuffix = `{{envunset "PGPASSWORD" .password}}{{envunset "PGSSLMODE" ` + pgSSL + `}}`
-	pgFlags     = `{{with .host}} -h {{sh .}}{{end}}{{with .port}} -p {{sh .}}{{end}}{{with .username}} -U {{sh .}}{{end}}{{with .database}} -d {{sh .}}{{end}}`
-	pgEnv       = `{{envline "PGHOST" .host}}{{envline "PGPORT" .port}}{{envline "PGUSER" .username}}` +
+	pgSSL = `(index .params "sslmode")`
+	pgEnv = `{{envline "PGHOST" .host}}{{envline "PGPORT" .port}}{{envline "PGUSER" .username}}` +
 		`{{envline "PGPASSWORD" .password}}{{envline "PGDATABASE" .database}}{{envline "PGSSLMODE" ` + pgSSL + `}}`
 	pgDotenv = `{{dotenv "PGHOST" .host}}{{dotenv "PGPORT" .port}}{{dotenv "PGUSER" .username}}` +
 		`{{dotenv "PGPASSWORD" .password}}{{dotenv "PGDATABASE" .database}}{{dotenv "PGSSLMODE" ` + pgSSL + `}}`
@@ -16,18 +13,14 @@ const (
 		`{{with .database}} -n {{sh .}}{{end}}{{if eq .scheme "rediss"}} --tls{{end}}{{envunset "REDISCLI_AUTH" .password}}`
 )
 
-func pgCmd(name string) string {
-	return pgEnvPrefix + name + pgFlags + pgEnvSuffix
-}
-
 var builtins = map[string]map[string]string{
 	Postgres: {
 		"url":        `{{.url}}`,
 		"env":        pgEnv,
 		"dotenv":     pgDotenv,
-		"psql":       pgCmd("psql"),
-		"pg_dump":    pgCmd("pg_dump"),
-		"pg_restore": pgCmd("pg_restore"),
+		"psql":       `psql {{sh .url}}`,
+		"pg_dump":    `pg_dump {{sh .url}}`,
+		"pg_restore": `pg_restore -d {{sh .url}}`,
 	},
 	Redis: {
 		"url":       `{{.url}}`,

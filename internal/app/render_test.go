@@ -39,7 +39,7 @@ func TestRender(t *testing.T) {
 		t.Fatalf("url %q %v", got, err)
 	}
 	got, err = s.Render("db/pg", "psql", "")
-	want = "PGPASSWORD=" + entrySecret + " PGSSLMODE=require psql -h db.internal -p 5433 -U app -d shop"
+	want = "psql '" + want + "'"
 	if err != nil || got != want {
 		t.Fatalf("psql %q %v", got, err)
 	}
@@ -110,10 +110,10 @@ func TestRenderShellOverrideAndVaries(t *testing.T) {
 		t.Fatalf("shell %q", got)
 	}
 	got, err := s.Render("db/pg", "psql", render.Pwsh)
-	if err != nil || !strings.HasPrefix(got, "$env:PGPASSWORD=") {
+	if err != nil || !strings.HasPrefix(got, "psql 'postgresql://") {
 		t.Fatalf("pwsh %q %v", got, err)
 	}
-	for format, want := range map[string]bool{"url": false, "dotenv": false, "psql": true, "env": true} {
+	for format, want := range map[string]bool{"url": false, "dotenv": false, "psql": false, "env": true} {
 		varies, err := s.ShellVaries("db/pg", format)
 		if err != nil || varies != want {
 			t.Fatalf("%s varies %v want %v, err %v", format, varies, want, err)

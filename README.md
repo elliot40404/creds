@@ -182,7 +182,7 @@ Paste a connection string, creds splits it into parts.
 ```sh
 creds add work/db --type database        # pick postgres, redis or mongo, paste the url
 creds get work/db --formats              # list formats
-creds get work/db --as psql              # PGPASSWORD='...' psql -h host -p 5432 -U user -d app
+creds get work/db --as psql
 creds get work/db --as dotenv            # plain PGHOST=... lines for a .env file
 creds copy work/db                       # the connection url
 creds copy work/db --field password      # just one field
@@ -193,6 +193,10 @@ Formats: postgres `url dotenv env psql pg_dump pg_restore`, redis `url dotenv en
 mongo `url dotenv env mongosh mongodump mongorestore`. `env` is shell flavoured and quoting
 follows `render.shell` (`pwsh` on Windows, `bash` elsewhere); `dotenv` is plain `KEY=value`
 and the same on every shell.
+
+Postgres commands keep the full connection URL, including password and options:
+`psql 'postgresql://user:password@host:5432/app?sslmode=require'`.
+`pg_dump` uses the same URL; `pg_restore` uses `pg_restore -d '<url>'`.
 
 Copying a database entry with no `--field` or `--as` gives the url, in the TUI (`y`) and on the
 CLI. `creds get work/db` with no flags still prints the default field.
@@ -418,7 +422,7 @@ max_age = "72h"
 "postgres.short" = "psql {{sh .url}}"
 ```
 
-`render.shell` picks quoting for command formats: `bash` or `pwsh`. Default is `pwsh` on Windows, `bash` elsewhere. Templates can use `sh`, `envset`, `envunset`, `envline`, `flag`, `pathesc`, `queryesc`. Example with `pwsh`: `psql` renders as `$env:PGPASSWORD='x'; psql -h h; Remove-Item Env:PGPASSWORD`.
+`render.shell` picks quoting for command formats: `bash` or `pwsh`. Default is `pwsh` on Windows, `bash` elsewhere. Templates can use `sh`, `envset`, `envunset`, `envline`, `flag`, `pathesc`, `queryesc`. Example with `pwsh`: `psql` renders as `psql 'postgresql://user:password@host/app'`.
 
 Edit it by hand, or from the `creds config` commands. Every change is validated before it is saved, so a bad value never lands in the file.
 

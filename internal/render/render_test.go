@@ -26,8 +26,6 @@ func TestRenderOutputs(t *testing.T) {
 	mg := Conn{Scheme: "mongodb+srv", Host: "c.example.com", Username: "u", Password: tricky, Database: "app"}
 	pgURL := "postgresql://bob:" + trickyEsc + "@db.local:5432/app?sslmode=require"
 	mgURL := "mongodb+srv://u:" + trickyEsc + "@c.example.com/app"
-	pgPrefix := `PGPASSWORD='p@ss:w/rd'\''"' PGSSLMODE=require `
-	pgArgs := " -h db.local -p 5432 -U bob -d app"
 	cases := []struct {
 		engine, format string
 		c              Conn
@@ -35,10 +33,10 @@ func TestRenderOutputs(t *testing.T) {
 	}{
 		{Postgres, "url", pg, pgURL},
 		{Postgres, "env", pg, "PGHOST=db.local\nPGPORT=5432\nPGUSER=bob\nPGPASSWORD='p@ss:w/rd'\\''\"'\nPGDATABASE=app\nPGSSLMODE=require"},
-		{Postgres, "psql", pg, pgPrefix + "psql" + pgArgs},
-		{Postgres, "pg_dump", pg, pgPrefix + "pg_dump" + pgArgs},
-		{Postgres, "pg_restore", pg, pgPrefix + "pg_restore" + pgArgs},
-		{Postgres, "psql", Conn{Host: "h"}, "psql -h h"},
+		{Postgres, "psql", pg, "psql '" + pgURL + "'"},
+		{Postgres, "pg_dump", pg, "pg_dump '" + pgURL + "'"},
+		{Postgres, "pg_restore", pg, "pg_restore -d '" + pgURL + "'"},
+		{Postgres, "psql", Conn{Host: "h"}, "psql postgresql://h"},
 		{Postgres, "env", Conn{}, ""},
 		{Redis, "url", rd, "rediss://u:" + trickyEsc + "@cache:6380/2"},
 		{Redis, "redis-cli", rd, `REDISCLI_AUTH='p@ss:w/rd'\''"' redis-cli -h cache -p 6380 --user u -n 2 --tls`},
@@ -152,7 +150,7 @@ func TestOverrides(t *testing.T) {
 		{Postgres, "url"}:   "pg://a&b@h",
 		{Postgres, "jdbc"}:  "jdbc:postgresql://h:1/d%20b?user=a%26b",
 		{Mongo, "password"}: "'x y'",
-		{Postgres, "psql"}:  "PGPASSWORD='x y' psql -h h -p 1 -U 'a&b' -d 'd b'",
+		{Postgres, "psql"}:  "psql 'postgresql://a&b:x%20y@h:1/d%20b'",
 	}
 	for k, want := range cases {
 		got, err := r.Render(k[0], k[1], c)

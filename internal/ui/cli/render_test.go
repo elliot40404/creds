@@ -13,7 +13,7 @@ func TestGetAs(t *testing.T) {
 	h.writeConfig("[render]\nshell = \"bash\"\n")
 	cases := map[string]string{
 		"url":  dbConn,
-		"psql": "PGPASSWORD=" + dbHidden + " PGSSLMODE=require psql -h db.example -p 5432 -U bob -d app",
+		"psql": "psql '" + dbConn + "'",
 		"env":  "PGHOST=db.example\nPGPORT=5432\nPGUSER=bob\nPGPASSWORD=" + dbHidden + "\nPGDATABASE=app\nPGSSLMODE=require",
 	}
 	for as, want := range cases {
@@ -34,7 +34,7 @@ func TestGetAs(t *testing.T) {
 	h.fail(&fake{}, "get", "db/prod", "--as", "url", "--field", "host")
 	h.writeConfig("[render]\nshell = \"pwsh\"\n")
 	r = h.ok(&fake{}, "get", "db/prod", "--as", "psql")
-	if !strings.HasPrefix(r.out, "$env:PGPASSWORD=") {
+	if r.out != "psql '"+dbConn+"'\n" {
 		t.Fatalf("pwsh out %q", r.out)
 	}
 }
@@ -102,7 +102,7 @@ func TestGetShellOverride(t *testing.T) {
 	h := seeded(t)
 	h.writeConfig("[render]\nshell = \"bash\"\n")
 	r := h.ok(&fake{}, "get", "db/prod", "--as", "psql", "--shell", "pwsh")
-	if !strings.HasPrefix(r.out, "$env:PGPASSWORD=") {
+	if r.out != "psql '"+dbConn+"'\n" {
 		t.Fatalf("out %q", r.out)
 	}
 	r = h.ok(&fake{}, "get", "db/prod", "--as", "psql")
@@ -118,7 +118,7 @@ func TestCopyShellOverride(t *testing.T) {
 	h := seeded(t)
 	h.writeConfig("[render]\nshell = \"bash\"\n")
 	r := h.ok(&fake{}, "copy", "db/prod", "--as", "psql", "--shell", "pwsh")
-	if !strings.HasPrefix(h.clip.value, "$env:PGPASSWORD=") {
+	if h.clip.value != "psql '"+dbConn+"'" {
 		t.Fatalf("clip %q", h.clip.value)
 	}
 	if r.err != "Copied db/prod as psql in pwsh\n" {

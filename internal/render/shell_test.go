@@ -60,8 +60,8 @@ func TestRenderPwsh(t *testing.T) {
 		c              Conn
 		want           string
 	}{
-		{Postgres, "psql", pg, "$env:PGPASSWORD=" + quoted + "; $env:PGSSLMODE='require'; psql -h 'db.local' -p '5432' -U 'bob' -d 'app'; Remove-Item Env:PGPASSWORD; Remove-Item Env:PGSSLMODE"},
-		{Postgres, "psql", Conn{Host: "h"}, "psql -h 'h'"},
+		{Postgres, "psql", pg, "psql 'postgresql://bob:" + trickyEsc + "@db.local:5432/app?sslmode=require'"},
+		{Postgres, "psql", Conn{Host: "h"}, "psql 'postgresql://h'"},
 		{Postgres, "env", pg, "$env:PGHOST='db.local'\n$env:PGPORT='5432'\n$env:PGUSER='bob'\n$env:PGPASSWORD=" + quoted + "\n$env:PGDATABASE='app'\n$env:PGSSLMODE='require'"},
 		{Redis, "redis-cli", rd, "$env:REDISCLI_AUTH='it''s'; redis-cli -h 'cache' --user 'u' --tls; Remove-Item Env:REDISCLI_AUTH"},
 		{Redis, "env", Conn{Host: "cache"}, "$env:REDIS_URL='redis://cache'"},

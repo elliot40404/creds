@@ -76,7 +76,7 @@ func buildURL(scheme string, c Conn) string {
 	for k, v := range c.Params {
 		q.Set(k, v)
 	}
-	u.RawQuery = q.Encode()
+	u.RawQuery = strings.ReplaceAll(q.Encode(), "+", "%20")
 	return u.String()
 }
 
