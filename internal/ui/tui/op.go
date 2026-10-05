@@ -12,22 +12,18 @@ const (
 	opNone opKind = iota
 	opAction
 	opSync
-	opAutoSync
 )
 
 type op struct {
-	kind   opKind
-	owner  int
-	retry  tea.Cmd
-	prompt int
+	owner   int
+	syncing bool
+	prompt  int
+	retry   tea.Cmd
+	waiting []opKind
 }
 
-func (o op) syncing() bool {
-	return o.kind == opSync || o.kind == opAutoSync
-}
-
-func (o op) idle() bool {
-	return o.kind == opNone && o.prompt == 0
+func (o op) busy() bool {
+	return o.owner != 0
 }
 
 type frame struct {
@@ -36,12 +32,25 @@ type frame struct {
 }
 
 func (m Model) start(kind opKind, fn tea.Cmd) (Model, tea.Cmd) {
-	m.op = op{kind: kind, owner: m.topID()}
-	return m, guard(fn)
+	if kind == opSync {
+		m.op.syncing = true
+	} else {
+		m.op.owner = m.topID()
+	}
+	return m, guard(kind, fn)
 }
 
 func (m Model) finish() Model {
-	m.op = op{}
+	return m.release(opAction)
+}
+
+func (m Model) release(kind opKind) Model {
+	switch kind {
+	case opAction:
+		m.op.owner = 0
+	case opSync:
+		m.op.syncing = false
+	}
 	return m
 }
 

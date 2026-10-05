@@ -35,17 +35,17 @@ func (m Model) syncIfDue() tea.Cmd {
 }
 
 func (m Model) autoSync() (Model, tea.Cmd) {
-	if !m.op.idle() {
+	if m.op.syncing || m.op.prompt != 0 {
 		return m, m.armSync()
 	}
 	b := m.opts.Backend
-	return m.start(opAutoSync, func() tea.Msg {
+	return m.start(opSync, func() tea.Msg {
 		res, err := b.Sync()
 		return autoSyncedMsg{errResult{err}, res}
 	})
 }
 
 func (m Model) autoSynced(msg autoSyncedMsg) (Model, tea.Cmd) {
-	m = m.finish().syncResult(msg.result, msg.err, false)
+	m = m.release(opSync).syncResult(msg.result, msg.err, false)
 	return m, m.reload()
 }

@@ -63,7 +63,7 @@ func TestAutoSyncCallsSyncOnce(t *testing.T) {
 		t.Fatal("autoSyncMsg not handled")
 	}
 	m = next.(Model)
-	if m.op.kind != opAutoSync {
+	if !m.op.syncing {
 		t.Fatal("not marked as syncing")
 	}
 	if !strings.Contains(view(m), "◌ syncing") {
@@ -73,7 +73,7 @@ func TestAutoSyncCallsSyncOnce(t *testing.T) {
 	if f.syncs != 1 {
 		t.Fatalf("Sync called %d times", f.syncs)
 	}
-	if m.op.syncing() {
+	if m.op.syncing {
 		t.Fatal("still syncing after the result")
 	}
 	if strings.Contains(view(m), "◌ syncing") {
@@ -97,7 +97,7 @@ func TestAutoSyncWhileSyncingRearmsInstead(t *testing.T) {
 	first()
 	next, _, _ = m.handle(autoSyncedMsg{result: "pushed"})
 	m = next.(Model)
-	if !m.op.idle() {
+	if m.op.syncing {
 		t.Fatal("op not cleared")
 	}
 	if f.syncs != 1 {
@@ -105,16 +105,28 @@ func TestAutoSyncWhileSyncingRearmsInstead(t *testing.T) {
 	}
 }
 
-func TestAutoSyncWaitsForARunningAction(t *testing.T) {
+func TestAutoSyncRunsBesideARunningAction(t *testing.T) {
 	f := newFake()
 	m := startSync(t, f)
-	m.op.kind = opAction
+	m.op.owner = m.topID()
 	next, cmd, ok := m.handle(autoSyncMsg{})
-	if !ok || !hasTick(t, cmd) || f.syncs != 0 {
-		t.Fatal("background sync did not wait for the running action")
+	m = next.(Model)
+	if !ok || !m.op.syncing || strings.Contains(view(m), "still working") {
+		t.Fatalf("background sync waited for the action: %q", view(m))
 	}
-	if strings.Contains(view(next.(Model)), "still working") {
-		t.Fatalf("busy message shown: %q", view(next.(Model)))
+	m = run(m, cmd)
+	if f.syncs != 1 || !m.op.busy() {
+		t.Fatalf("syncs %d busy %v", f.syncs, m.op.busy())
+	}
+}
+
+func TestAutoSyncWaitsForThePasswordPrompt(t *testing.T) {
+	f := newFake()
+	m := startSync(t, f)
+	m.op.prompt = m.topID()
+	_, cmd, _ := m.handle(autoSyncMsg{})
+	if !hasTick(t, cmd) || f.syncs != 0 {
+		t.Fatal("background sync ran under the password prompt")
 	}
 }
 

@@ -140,6 +140,9 @@ func (m Model) applyLater(fn func(ConfigBackend) error, done, hint string) (tea.
 	if !ok {
 		return m, nil
 	}
+	if m.op.syncing {
+		return m.syncBlocked(), nil
+	}
 	return m.start(opAction, func() tea.Msg { return appliedMsg{errResult{fn(c)}, done, hint} })
 }
 

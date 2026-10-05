@@ -52,7 +52,7 @@ func (msg revealMsg) apply(m Model) (tea.Model, tea.Cmd) {
 
 func (msg confirmMsg) apply(m Model) (tea.Model, tea.Cmd) {
 	b := m.opts.Backend
-	return m.start(opAction, func() tea.Msg {
+	return m.afterSync().start(opAction, func() tea.Msg {
 		return deletedMsg{errResult{b.Delete(msg.path)}, msg.path}
 	})
 }

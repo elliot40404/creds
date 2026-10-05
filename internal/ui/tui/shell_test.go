@@ -363,7 +363,7 @@ func TestSyncResults(t *testing.T) {
 	f := newFake()
 	f.syncRes = "pushed 1 commit"
 	m := press(start(t, f, Hooks{}), ch('s'))
-	if !strings.Contains(view(m), "Sync: pushed 1 commit") || !m.op.idle() {
+	if !strings.Contains(view(m), "Sync: pushed 1 commit") || m.op.syncing || m.op.busy() {
 		t.Fatalf("view %q", view(m))
 	}
 	f.syncErr = &app.ConflictError{Paths: []string{"db/prod", "web/mail"}}
@@ -385,11 +385,11 @@ func TestSyncResults(t *testing.T) {
 
 func TestBusyRejectsActions(t *testing.T) {
 	m := start(t, newFake(), Hooks{})
-	for _, msg := range []tea.Msg{syncMsg{}, openMsg{path: "web/mail"}} {
+	for _, msg := range []tea.Msg{openMsg{path: "db/prod"}, openMsg{path: "web/mail"}} {
 		next, _ := m.Update(msg)
 		m = next.(Model)
 	}
-	if m.op.kind != opSync || !strings.Contains(view(m), "still working") {
+	if !m.op.busy() || !strings.Contains(view(m), "still working") {
 		t.Fatalf("view %q", view(m))
 	}
 }

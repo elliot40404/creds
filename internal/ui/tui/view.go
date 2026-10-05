@@ -296,7 +296,7 @@ func helpView(s Screen) string {
 }
 
 func (m Model) syncBadge(st app.SyncStatus) string {
-	if m.op.syncing() {
+	if m.op.syncing {
 		return th.dim.Render("◌ syncing")
 	}
 	state := th.ok

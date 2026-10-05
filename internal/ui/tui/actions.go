@@ -36,7 +36,10 @@ func send(msg tea.Msg) tea.Cmd {
 	return func() tea.Msg { return msg }
 }
 
-var errBusy = errors.New("still working on the last action")
+var (
+	errBusy    = errors.New("still working on the last action")
+	errSyncing = errors.New("sync is still running")
+)
 
 func (m Model) handle(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 	if next, cmd, ok := m.handleResult(msg); ok {
@@ -58,14 +61,30 @@ func (m Model) gate(msg tea.Msg) (Model, bool) {
 	case popMsg:
 		return m, false
 	case syncMsg:
-		if m.op.syncing() {
+		if m.op.syncing {
 			return m.note("sync already running"), true
 		}
+		return m, false
+	case quitMsg, lockMsg:
+		if m.op.syncing {
+			return m.syncBlocked(), true
+		}
 	}
-	if m.op.kind != opNone {
+	if m.op.busy() {
 		return m.fail(errBusy, "wait a moment and try again"), true
 	}
 	return m, false
+}
+
+func (m Model) syncBlocked() Model {
+	return m.fail(errSyncing, "wait for it to finish and try again")
+}
+
+func (m Model) afterSync() Model {
+	if m.op.syncing {
+		return m.note("waiting for sync to finish")
+	}
+	return m
 }
 
 func (m Model) get(path string, wrap func(vault.Entry, error) tea.Msg) (Model, tea.Cmd) {
@@ -129,7 +148,7 @@ func (m Model) save(res FormResult) (tea.Model, tea.Cmd) {
 		return m.pop()
 	}
 	b, orig := m.opts.Backend, m.editing
-	return m.start(opAction, func() tea.Msg {
+	return m.afterSync().start(opAction, func() tea.Msg {
 		var e vault.Entry
 		var err error
 		if orig == nil {

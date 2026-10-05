@@ -77,7 +77,7 @@ func (m Model) handleResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 		next, cmd := m.autoSynced(msg)
 		return next, cmd, true
 	case lockedMsg:
-		return m.locked(msg.retry), nil, true
+		return m.locked(msg), nil, true
 	case PasswordResult:
 		next, cmd := m.unlock(msg)
 		return next, cmd, true
@@ -169,7 +169,7 @@ func (m Model) deleted(msg deletedMsg) (tea.Model, tea.Cmd, bool) {
 }
 
 func (m Model) synced(msg syncedMsg) (tea.Model, tea.Cmd, bool) {
-	m = m.finish()
+	m = m.release(opSync)
 	return m.syncResult(msg.result, msg.err, true), m.reload(), true
 }
 
@@ -216,7 +216,7 @@ func (m Model) reload() tea.Cmd {
 
 func (m Model) loadItems() tea.Cmd {
 	b := m.opts.Backend
-	return guard(func() tea.Msg {
+	return guard(opNone, func() tea.Msg {
 		items, err := b.List()
 		return itemsMsg{errResult{err}, items, b.Warnings()}
 	})
