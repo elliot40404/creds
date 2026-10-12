@@ -68,7 +68,9 @@ func (s *Service) Search(query string, order search.Sort) ([]search.Summary, err
 		return nil, err
 	}
 	defer v.Close()
-	return search.SearchSort(search.SummarizeAll(v.List()), query, order), nil
+	items := search.SummarizeAll(v.List())
+	s.addFrecency(v.Identity(), items)
+	return search.SearchSort(items, query, order), nil
 }
 
 func (s *Service) open() (*vault.Vault, error) {

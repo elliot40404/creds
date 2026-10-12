@@ -25,7 +25,7 @@ type listScreen struct {
 }
 
 func newList(items []search.Summary) listScreen {
-	l := listScreen{index: search.NewIndex(items), rows: 10, sort: search.SortPath}
+	l := listScreen{index: search.NewIndex(items), rows: 10, sort: search.DefaultSort}
 	l.filter()
 	return l
 }
@@ -295,7 +295,7 @@ func highlight(base, match style, s, query string) (string, bool) {
 
 func (l listScreen) counter() string {
 	s := fmt.Sprintf("%d/%d", len(l.shown), l.index.Len())
-	if l.sort != search.SortPath {
+	if l.sort != search.DefaultSort {
 		s += "  sort " + string(l.sort)
 	}
 	return s

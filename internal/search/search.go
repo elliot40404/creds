@@ -22,6 +22,7 @@ type Summary struct {
 	Tags     []string
 	Created  time.Time
 	Updated  time.Time
+	Frecency float64
 }
 
 func summarize(e vault.Entry) Summary {
@@ -122,14 +123,14 @@ func SearchSort(items []Summary, query string, order Sort) []Summary {
 }
 
 func (x Index) Search(query string, order Sort) []Summary {
-	out := x.search(query)
-	if order != SortPath && order.Valid() {
+	out := x.search(query, order == SortFrecent)
+	if order == SortUpdated || order == SortCreated {
 		slices.SortStableFunc(out, byOrder(order))
 	}
 	return out
 }
 
-func (x Index) search(query string) []Summary {
+func (x Index) search(query string, frecent bool) []Summary {
 	f := parseFilter(query)
 	picked := x.pick(f)
 	words := terms(f.Text)
@@ -138,13 +139,16 @@ func (x Index) search(query string) []Summary {
 		for i, at := range picked {
 			out[i] = x.items[at]
 		}
+		if frecent {
+			slices.SortStableFunc(out, func(a, b Summary) int { return cmp.Compare(b.Frecency, a.Frecency) })
+		}
 		return out
 	}
 	slab := slabs.Get().(*util.Slab)
 	defer slabs.Put(slab)
-	hits := x.hits(picked, words, false, slab)
+	hits := x.hits(picked, words, false, frecent, slab)
 	if len(hits) == 0 {
-		hits = x.hits(picked, words, true, slab)
+		hits = x.hits(picked, words, true, frecent, slab)
 	}
 	out := make([]Summary, len(hits))
 	for i, h := range hits {
@@ -153,23 +157,39 @@ func (x Index) search(query string) []Summary {
 	return out
 }
 
-func (x Index) hits(picked []int, words []term, typos bool, slab *util.Slab) []hit {
+func (x Index) hits(picked []int, words []term, typos, frecent bool, slab *util.Slab) []hit {
 	hits := make([]hit, 0, len(picked))
 	for _, at := range picked {
-		if h := x.score(at, words, typos, slab); h.score > 0 {
-			hits = append(hits, h)
+		h := x.score(at, words, typos, slab)
+		if h.score == 0 {
+			continue
 		}
+		h.rank = float64(h.score)
+		if frecent {
+			h.rank *= 1 + boost(x.items[at].Frecency)
+		}
+		hits = append(hits, h)
 	}
 	slices.SortStableFunc(hits, func(a, b hit) int {
-		return cmp.Or(cmp.Compare(a.typos, b.typos), cmp.Compare(b.score, a.score))
+		return cmp.Or(cmp.Compare(a.typos, b.typos), cmp.Compare(b.rank, a.rank))
 	})
 	return hits
 }
+
+func boost(frecency float64) float64 {
+	if frecency <= 0 {
+		return 0
+	}
+	return maxBoost * frecency / (frecency + 2)
+}
+
+const maxBoost = 0.5
 
 type hit struct {
 	at    int
 	score int
 	typos int
+	rank  float64
 }
 
 func (x Index) score(at int, words []term, typos bool, slab *util.Slab) hit {

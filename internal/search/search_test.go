@@ -29,7 +29,7 @@ func TestSummaryHasNoSecrets(t *testing.T) {
 	if got := fmt.Sprintf("%+v", s); strings.Contains(got, secret) {
 		t.Fatal("summary leaks secret")
 	}
-	want := []string{"ID", "Path", "Name", "Type", "Host", "Username", "Engine", "Tags", "Created", "Updated"}
+	want := []string{"ID", "Path", "Name", "Type", "Host", "Username", "Engine", "Tags", "Created", "Updated", "Frecency"}
 	var got []string
 	for f := range reflect.TypeFor[Summary]().Fields() {
 		got = append(got, f.Name)
@@ -218,5 +218,40 @@ func TestPositions(t *testing.T) {
 		if got := Positions(tc.query, tc.s); !slices.Equal(got, tc.want) {
 			t.Errorf("%q in %q got %v, want %v", tc.query, tc.s, got, tc.want)
 		}
+	}
+}
+
+func frecentItems() []Summary {
+	return []Summary{
+		{Path: "a/db", Frecency: 0},
+		{Path: "b/db", Frecency: 6},
+		{Path: "c/db", Frecency: 1},
+		{Path: "d/dashboard", Frecency: 50},
+		{Path: "e/xdxxxxxxxxb", Frecency: 50},
+	}
+}
+
+func TestFrecentEmptyQueryMostUsedFirst(t *testing.T) {
+	if got := pathLine(SearchSort(frecentItems(), "", SortFrecent)); got != "d/dashboard e/xdxxxxxxxxb b/db c/db a/db" {
+		t.Fatalf("got %q", got)
+	}
+	if got := pathLine(SearchSort(frecentItems(), "", SortPath)); got != "a/db b/db c/db d/dashboard e/xdxxxxxxxxb" {
+		t.Fatalf("path sort got %q", got)
+	}
+}
+
+func TestFrecentBoostsCloseMatches(t *testing.T) {
+	got := Paths(SearchSort(frecentItems(), "db", SortFrecent))
+	if !slices.Equal(got, []string{"b/db", "c/db", "d/dashboard", "a/db", "e/xdxxxxxxxxb"}) {
+		t.Fatalf("got %v, want use to break close calls only", got)
+	}
+	if got := Paths(SearchSort(frecentItems(), "db", SortPath)); got[0] != "a/db" {
+		t.Fatalf("path sort used frecency: %v", got)
+	}
+}
+
+func TestBoostIsCapped(t *testing.T) {
+	if boost(0) != 0 || boost(-1) != 0 || boost(1e9) > maxBoost || boost(2) != maxBoost/2 {
+		t.Fatal("boost out of range")
 	}
 }

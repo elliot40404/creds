@@ -132,16 +132,16 @@ func TestSortWinsOverRelevance(t *testing.T) {
 }
 
 func TestSortNextCycles(t *testing.T) {
-	got := SortPath
+	got := DefaultSort
 	var seen []string
 	for range len(Sorts()) {
 		got = got.Next()
 		seen = append(seen, string(got))
 	}
-	if strings.Join(seen, " ") != "updated created path" {
+	if strings.Join(seen, " ") != "path updated created frecent" {
 		t.Fatalf("cycle %q", seen)
 	}
-	if Sort("nope").Next() != SortPath {
+	if Sort("nope").Next() != DefaultSort {
 		t.Fatal("unknown sort does not reset")
 	}
 }

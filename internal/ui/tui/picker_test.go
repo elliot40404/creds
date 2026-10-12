@@ -153,6 +153,11 @@ func TestListOrderKeyCyclesSort(t *testing.T) {
 	}
 	s, _ := l.Update(ch('o'))
 	l = s.(listScreen)
+	if l.sort != search.SortPath || !strings.Contains(l.counter(), "sort path") {
+		t.Fatalf("path %v %q", l.sort, l.counter())
+	}
+	s, _ = l.Update(ch('o'))
+	l = s.(listScreen)
 	if l.sort != search.SortUpdated || l.shown[0].Path != "a/login" {
 		t.Fatalf("updated %v %q", l.sort, l.shown[0].Path)
 	}
@@ -166,8 +171,8 @@ func TestListOrderKeyCyclesSort(t *testing.T) {
 	}
 	s, _ = l.Update(ch('o'))
 	l = s.(listScreen)
-	if l.sort != search.SortPath || strings.Contains(l.counter(), "sort") {
-		t.Fatalf("back to path %v %q", l.sort, l.counter())
+	if l.sort != search.DefaultSort || strings.Contains(l.counter(), "sort") {
+		t.Fatalf("back to frecent %v %q", l.sort, l.counter())
 	}
 }
 

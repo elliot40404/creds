@@ -84,12 +84,14 @@ func containsFold(list []string, want string) bool {
 type Sort string
 
 const (
+	SortFrecent Sort = "frecent"
 	SortPath    Sort = "path"
 	SortUpdated Sort = "updated"
 	SortCreated Sort = "created"
+	DefaultSort      = SortFrecent
 )
 
-var sorts = []Sort{SortPath, SortUpdated, SortCreated}
+var sorts = []Sort{SortFrecent, SortPath, SortUpdated, SortCreated}
 
 func Sorts() []string {
 	out := make([]string, len(sorts))
@@ -106,7 +108,7 @@ func (s Sort) Valid() bool {
 func (s Sort) Next() Sort {
 	i := slices.Index(sorts, s)
 	if i < 0 {
-		return SortPath
+		return DefaultSort
 	}
 	return sorts[(i+1)%len(sorts)]
 }
