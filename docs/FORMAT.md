@@ -17,6 +17,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
   state.json           sync state, local only
   trust.json           approved project files, local only
   device.json          vault identity sealed to a plugin key, local only (creds device trust)
+  usage.age            frecency scores sealed to the vault key, local only
   sync.lock            present while a sync runs
   vault/               git repo, the only part that is synced
     .git/
@@ -344,6 +345,26 @@ master password. Local only, never in `vault/`, never synced.
   file deleted, like the session
 - `creds device untrust` deletes it. `creds passwd` and `creds recover` offer to delete it
 
+## Usage: \<home\>/usage.age
+
+Frecency scores for `frecent` search order. Local only, never in `vault/`, never synced, never
+exported. An age file to the vault recipient, padded like a bucket. Plaintext:
+
+```
+CUS1 NNNN  then NNNN records of 32 bytes, then space padding
+record     entry id (16 bytes) | score (float64, big endian) | last use (int64 unix seconds, big endian)
+```
+
+- `NNNN` is the record count as four ASCII digits, at most `2000`
+- A use is `get`, `copy`, `show`, `env`, `run` or opening an entry in the TUI. It sets
+  `score = score * 2^(-age/14d) + 1` and `last = now`
+- Rank at time `t` is `score * 2^(-(t-last)/14d)`. Entries below `0.01` are dropped, about three
+  months after a single use. Over 2000 entries the lowest ranks are dropped, never the one just used
+- Writes hold `usage.age.lock` and use the atomic write. Max size 1 MiB
+- Junk, a wrong key, a bad count, a negative or non finite number or anything but spaces after the
+  records: the file is ignored and the next use starts a fresh one. It never fails a command
+- `search.frecency = false` stops reading and writing it. Deleting it resets the order
+
 ## Sync lock: \<home\>/sync.lock
 
 ```json
@@ -403,6 +424,9 @@ shell = "bash"
 [device]
 max_age = "72h"
 
+[search]
+frecency = true
+
 [render.formats]
 "postgres.url" = "postgres://{{.username}}@{{.host}}:{{.port}}/{{.database}}"
 "redis.local" = "redis-cli -h {{sh .host}}"
@@ -415,6 +439,7 @@ max_age = "72h"
 | `clipboard.clear` | `30s` | |
 | `sync.stale` | `5m` | a read starts a background sync when the last sync try is older than this |
 | `device.max_age` | `72h` | a trusted device asks the master password again after this long, `0` never asks, max `720h` |
+| `search.frecency` | `true` | record entry uses in `usage.age` and rank by them, `false` does neither |
 | `render.shell` | `pwsh` on Windows, else `bash` | quoting style for command formats, `bash` or `pwsh` |
 | `render.formats` | empty | key `engine.format`, value Go template, checked at load |
 

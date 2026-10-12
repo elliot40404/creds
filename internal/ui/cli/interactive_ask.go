@@ -143,7 +143,7 @@ func (iv *interview) filtered(query string) ([]search.Summary, error) {
 		return nil, err
 	}
 	if query == "" {
-		if query, err = iv.p.Input("Search (blank for all, type:<type> engine:<engine> tag:<tag> to filter)", ""); err != nil {
+		if query, err = iv.p.Input("Search (blank for all, words in any order, !word leaves out, type: tag: host: user: in: filter)", ""); err != nil {
 			return nil, err
 		}
 	}

@@ -61,7 +61,7 @@ func (l listScreen) keys() []keyHelp {
 	return []keyHelp{
 		{"enter", "open"},
 		{"y", "copy default"},
-		{"/", "filter, try type:database engine:postgres tag:work"},
+		{"/", "filter: db work, !old, ^start, type:login in:work/"},
 		{"t", "cycle the type filter"},
 		{"o", "cycle the order"},
 		{"a", "add"},

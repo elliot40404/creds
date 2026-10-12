@@ -476,6 +476,7 @@ Set the key and the note goes away, because your value is then the answer.
 | `vault.history` | keep this many previous versions of each entry, 0 turns it off | `3` |
 | `vault.machine` | name recorded on each edit, blank uses the hostname | blank |
 | `device.max_age` | a trusted device asks the master password again after this long, `0` never asks | `72h` |
+| `search.frecency` | rank results by how often and how lately you use each entry, `false` stops recording and ranking | `true` |
 | `render.shell` | `bash` or `pwsh` | `pwsh` on Windows, else `bash` |
 | `render.formats.<engine>.<name>` | template override, for example `render.formats.postgres.psql` | none |
 
@@ -583,26 +584,56 @@ seconds for a lock another creds is holding instead of giving up straight away.
 off to five times that, capped at `sync.stale`, so a broken remote does not spawn a process per
 keystroke. The failure line stays on screen until a sync succeeds.
 
-### Filtering and sorting
+### Searching, filtering and sorting
 
-`creds search` and the `/` box in the TUI take `type:`, `engine:` and `tag:` tokens anywhere in
-the query. Anything else is fuzzy matched as before.
+`creds search` and the `/` box in the TUI fuzzy match each word on its own, in any order, against
+the path, name, tags, host, username and type. Every word must hit. A hit in the path or name
+counts more than one in a tag, and a tag more than the host, username or type.
+
+```
+creds search db work          # finds work/db, word order does not matter
+creds search prod !old        # ! leaves out entries that contain old
+creds search "'prod"          # ' wants the exact text, no fuzzy
+creds search ^work            # ^ starts with
+creds search db$              # $ ends with
+creds search ^work/db$        # exactly this
+creds search postgers         # no hit at all? a typo is forgiven, finds postgres
+```
+
+All lowercase ignores case, any capital makes that word case sensitive (`DB` will not find `db`).
+Accents are ignored, so `cafe` finds `café`. Typos are only tried when nothing matches as typed:
+words of 4 or more letters may be off by one letter (two from 8 letters on), a swap counts as
+one, and it also works on the start of a word (`pord` finds `production`).
+
+Filter tokens go anywhere in the query:
 
 ```
 creds search type:database engine:postgres      # both must hold
 creds search tag:work tag:personal              # either tag
+creds search host:example user:admin            # host and username contain the text
+creds search in:work/ db                        # only under work/
 creds search type:login prod                    # a filter plus fuzzy text
 creds list --sort updated                       # newest edit first
 creds search db --sort created
 ```
 
-Different keys are ANDed, repeats of one key are ORed. Values must match exactly, ignoring case,
-so `type:DB` finds nothing. A key creds does not know, like `foo:bar`, stays part of the fuzzy
-text, so urls keep working.
+Different keys are ANDed, repeats of one key are ORed. `type:`, `engine:` and `tag:` values must
+match exactly, ignoring case, so `type:DB` finds nothing. `host:` and `user:` match part of the
+value and `in:` the start of the path, all ignoring case. A key creds does not know, like
+`foo:bar`, stays part of the fuzzy text, so urls keep working.
+
+The default order is `frecent`: entries you use often and lately come first. A use is `get`,
+`copy`, `show`, `env`, `run`, or opening an entry in the TUI. Each use adds one point and points
+halve every 14 days. With text typed, use only breaks close calls: it lifts a match by at most
+half, so a clearly better match still wins. Example: you copy `work/db` daily and `work/dbadmin`
+once a month, `db` lists `work/db` first. `--sort path`, `updated` or `created` turn this off
+for one call, `creds config set search.frecency false` turns it off for good. The record stays on
+this machine, encrypted, see [docs/SECURITY.md](docs/SECURITY.md).
 
 In the TUI, `t` cycles the `type:` token inside the `/` box, so it composes with whatever else is
 typed and you can see what it did. `o` cycles the order and the count at the top right shows it
-(`12/340  sort updated`). Type `engine:` yourself, there is no key for it.
+when it is not `frecent` (`12/340  sort updated`). Type `engine:` and the other keys yourself,
+there is no key for them.
 
 ### Previous versions
 
@@ -635,7 +666,7 @@ Home is `~/.config/creds` on all systems. Set `CREDS_HOME` to use another dir.
 
 ```
 ~/.config/creds/
-  config.toml  session  state.json  sync.lock  trust.json  device.json
+  config.toml  session  state.json  sync.lock  trust.json  device.json  usage.age
   vault/       git repo: vault.json, identity.pw.age, identity.recovery.age, entries/00.enc .. 0f.enc
 ```
 

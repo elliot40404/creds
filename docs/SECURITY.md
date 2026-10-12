@@ -126,6 +126,11 @@ Leaks and limits:
   them (for example `/proc/<pid>/environ` on Linux)
 - `state.json` and `sync.lock` are plain but hold no secrets. `state.json` can hold entry
   paths of sync conflicts
+- `usage.age` records which entries you use and when, for the `frecent` order. It holds entry
+  ids, scores and times, no paths and no secrets, and is sealed to the vault key, so only someone
+  who can open the vault can read it. It is never synced or exported. The vault recipient is
+  public, so anyone who can write your home dir can replace the file: the worst they can do is
+  change the order of search results. `search.frecency = false` stops recording
 
 ### 4. Shoulder surfing and screen capture
 
