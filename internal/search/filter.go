@@ -9,12 +9,18 @@ const (
 	KeyType   = "type"
 	KeyEngine = "engine"
 	KeyTag    = "tag"
+	KeyHost   = "host"
+	KeyUser   = "user"
+	KeyIn     = "in"
 )
 
 type filter struct {
 	Types   []string
 	Engines []string
 	Tags    []string
+	Hosts   []string
+	Users   []string
+	Folders []string
 	Text    string
 }
 
@@ -34,6 +40,12 @@ func parseFilter(query string) filter {
 			f.Engines = append(f.Engines, val)
 		case KeyTag:
 			f.Tags = append(f.Tags, val)
+		case KeyHost:
+			f.Hosts = append(f.Hosts, val)
+		case KeyUser:
+			f.Users = append(f.Users, val)
+		case KeyIn:
+			f.Folders = append(f.Folders, val)
 		default:
 			text = append(text, tok)
 		}
@@ -56,7 +68,17 @@ func (f filter) match(s Summary) bool {
 	if len(f.Tags) > 0 && !slices.ContainsFunc(f.Tags, func(tag string) bool { return containsFold(s.Tags, tag) }) {
 		return false
 	}
-	return true
+	return anyFold(f.Hosts, s.Host, strings.Contains) &&
+		anyFold(f.Users, s.Username, strings.Contains) &&
+		anyFold(f.Folders, s.Path, strings.HasPrefix)
+}
+
+func anyFold(want []string, got string, test func(s, sub string) bool) bool {
+	if len(want) == 0 {
+		return true
+	}
+	got = strings.ToLower(got)
+	return slices.ContainsFunc(want, func(w string) bool { return test(got, strings.ToLower(w)) })
 }
 
 func containsFold(list []string, want string) bool {

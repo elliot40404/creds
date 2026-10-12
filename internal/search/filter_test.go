@@ -145,3 +145,44 @@ func TestSortNextCycles(t *testing.T) {
 		t.Fatal("unknown sort does not reset")
 	}
 }
+
+func TestHostUserFolderFilters(t *testing.T) {
+	items := []Summary{
+		{Path: "work/db/pg", Host: "pg.Example.com", Username: "admin"},
+		{Path: "work/mail", Host: "mail.example.com", Username: "me"},
+		{Path: "Home/wifi", Username: "Admin2"},
+	}
+	cases := map[string]string{
+		"host part":       "host:example",
+		"host case":       "host:EXAMPLE.com",
+		"host or":         "host:pg host:nope",
+		"user part":       "user:admin",
+		"folder":          "in:work/",
+		"folder case":     "in:home",
+		"folder and text": "in:work/ mail",
+		"folder no mid":   "in:db",
+	}
+	want := map[string]string{
+		"host part":       "work/db/pg work/mail",
+		"host case":       "work/db/pg work/mail",
+		"host or":         "work/db/pg",
+		"user part":       "Home/wifi work/db/pg",
+		"folder":          "work/db/pg work/mail",
+		"folder case":     "Home/wifi",
+		"folder and text": "work/mail",
+		"folder no mid":   "",
+	}
+	for name, q := range cases {
+		if got := pathLine(SearchSort(items, q, SortPath)); got != want[name] {
+			t.Errorf("%s %q got %q, want %q", name, q, got, want[name])
+		}
+	}
+}
+
+func TestParseNewKeys(t *testing.T) {
+	got := parseFilter("host:a user:b in:c/ x")
+	want := filter{Hosts: []string{"a"}, Users: []string{"b"}, Folders: []string{"c/"}, Text: "x"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %+v", got)
+	}
+}

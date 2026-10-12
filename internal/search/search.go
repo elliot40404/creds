@@ -50,12 +50,16 @@ func SummarizeAll(entries []vault.Entry) []Summary {
 
 type Index struct {
 	items  []Summary
-	fields [][]util.Chars
+	fields [][]field
+}
+
+type field struct {
+	text   util.Chars
+	weight int
 }
 
 func NewIndex(items []Summary) Index {
-	sorted := slices.Clone(items)
-	slices.SortFunc(sorted, byPath)
+	sorted := sortedByPath(items)
 	size, count := 0, 0
 	for _, s := range sorted {
 		for f := range texts(s) {
@@ -64,29 +68,45 @@ func NewIndex(items []Summary) Index {
 		}
 	}
 	buf := make([]byte, 0, size)
-	all := make([]util.Chars, 0, count)
-	fields := make([][]util.Chars, len(sorted))
+	all := make([]field, 0, count)
+	fields := make([][]field, len(sorted))
 	for i, s := range sorted {
 		from := len(all)
-		for f := range texts(s) {
+		for f, weight := range texts(s) {
 			at := len(buf)
 			buf = append(buf, f...)
-			all = append(all, util.ToChars(buf[at:len(buf):len(buf)]))
+			all = append(all, field{util.ToChars(buf[at:len(buf):len(buf)]), weight})
 		}
 		fields[i] = all[from:len(all):len(all)]
 	}
 	return Index{items: sorted, fields: fields}
 }
 
-func texts(s Summary) iter.Seq[string] {
-	return func(yield func(string) bool) {
-		for _, f := range [...]string{s.Path, s.Name, string(s.Type), s.Host, s.Username} {
-			if f != "" && !yield(f) {
+func sortedByPath(items []Summary) []Summary {
+	order := make([]int32, len(items))
+	for i := range order {
+		order[i] = int32(i)
+	}
+	slices.SortFunc(order, func(a, b int32) int { return byPath(items[a], items[b]) })
+	out := make([]Summary, len(items))
+	for i, at := range order {
+		out[i] = items[at]
+	}
+	return out
+}
+
+func texts(s Summary) iter.Seq2[string, int] {
+	return func(yield func(string, int) bool) {
+		for _, f := range [...]struct {
+			text   string
+			weight int
+		}{{s.Path, 3}, {s.Name, 3}, {string(s.Type), 1}, {s.Host, 1}, {s.Username, 1}} {
+			if f.text != "" && !yield(f.text, f.weight) {
 				return
 			}
 		}
-		for _, f := range s.Tags {
-			if f != "" && !yield(f) {
+		for _, tag := range s.Tags {
+			if tag != "" && !yield(tag, 2) {
 				return
 			}
 		}
@@ -159,8 +179,9 @@ func (x Index) score(at int, words []term, slab *util.Slab) int {
 func (x Index) best(at int, w *term, slab *util.Slab) int {
 	best := 0
 	for i := range x.fields[at] {
-		score, _ := w.match(&x.fields[at][i], false, slab)
-		best = max(best, score)
+		f := &x.fields[at][i]
+		score, _ := w.match(&f.text, false, slab)
+		best = max(best, score*f.weight)
 	}
 	return best
 }

@@ -190,3 +190,14 @@ func TestOperators(t *testing.T) {
 		}
 	}
 }
+
+func TestNameHitBeatsHostHit(t *testing.T) {
+	a := entry("aaa", vault.TypeLogin)
+	a.Host = "github.com"
+	b := entry("zzz", vault.TypeLogin)
+	b.Name = "github"
+	got := Paths(SearchSort(SummarizeAll([]vault.Entry{a, b}), "github", SortPath))
+	if !slices.Equal(got, []string{"zzz", "aaa"}) {
+		t.Fatalf("got %v", got)
+	}
+}
