@@ -51,7 +51,11 @@ func (s *Service) Get(path string) (vault.Entry, error) {
 		return vault.Entry{}, err
 	}
 	defer v.Close()
-	return v.Get(path)
+	e, err := v.Get(path)
+	if err == nil {
+		s.used(v.Identity(), e.ID)
+	}
+	return e, err
 }
 
 func (s *Service) List() ([]search.Summary, error) {

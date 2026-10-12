@@ -25,6 +25,7 @@ type Config struct {
 	UI        UI        `toml:"ui"`
 	Vault     Vault     `toml:"vault"`
 	Device    Device    `toml:"device"`
+	Search    Search    `toml:"search"`
 }
 
 type Session struct {
@@ -61,6 +62,10 @@ type Device struct {
 	MaxAge time.Duration `toml:"max_age"`
 }
 
+type Search struct {
+	Frecency bool `toml:"frecency"`
+}
+
 type Render struct {
 	Shell   render.Shell      `toml:"shell"`
 	Formats map[string]string `toml:"formats"`
@@ -75,5 +80,6 @@ func Default() Config {
 		UI:        UI{Mode: ModeFullscreen, AltScreen: true, Height: DefaultHeight},
 		Vault:     Vault{History: vaultfiles.DefaultHistory},
 		Device:    Device{MaxAge: 72 * time.Hour},
+		Search:    Search{Frecency: true},
 	}
 }

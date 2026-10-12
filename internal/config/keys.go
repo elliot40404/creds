@@ -152,6 +152,7 @@ func staticFields() []Field {
 			limit{max: maxStale, warn: 7 * 24 * time.Hour, risk: "creds stops pulling remote changes on its own"},
 			time.Minute, 5*time.Minute, 15*time.Minute, 30*time.Minute, time.Hour, 6*time.Hour, 24*time.Hour),
 		choice("ui.mode", "how the browse screen fills the terminal", Modes(), func(c *Config) *Mode { return &c.UI.Mode }),
+		boolean("search.frecency", "rank results by how often and how lately you use each entry, the record stays encrypted on this machine", func(c *Config) *bool { return &c.Search.Frecency }),
 		boolean("ui.altscreen", "swap to a clean screen while the TUI runs, in either mode", func(c *Config) *bool { return &c.UI.AltScreen }),
 		number("ui.height", "rows inline mode may use, between "+strconv.Itoa(MinHeight)+" and "+strconv.Itoa(MaxHeight), func(c *Config) *int { return &c.UI.Height },
 			10, 12, 15, 20, 25, 30, 40, 50, 60),

@@ -15,7 +15,7 @@ import (
 var ErrStrayHome = errors.New("creds home has settings files this vault did not create")
 
 func (s *Service) homeFiles() []string {
-	return []string{s.Paths.Config(), s.Paths.Trust(), s.Paths.State()}
+	return []string{s.Paths.Config(), s.Paths.Trust(), s.Paths.State(), s.Paths.Usage()}
 }
 
 func (s *Service) strayFiles() []string {

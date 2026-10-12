@@ -36,6 +36,8 @@ func (s *Service) PathReport() PathReport {
 			info("session", p.Session(), s.sessionNote()),
 			info("state", p.State(), ""),
 			info("trust", p.Trust(), ""),
+			info("device", p.Device(), ""),
+			info("usage", p.Usage(), ""),
 			info("sync.lock", p.SyncLock(), ""),
 		},
 	}

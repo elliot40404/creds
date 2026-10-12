@@ -17,7 +17,11 @@ func (s *Service) envVars(path string) ([]envfile.Var, error) {
 		return nil, err
 	}
 	defer v.Close()
-	return entryVars(v, path)
+	vars, err := entryVars(v, path)
+	if e, gerr := v.Get(path); err == nil && gerr == nil {
+		s.used(v.Identity(), e.ID)
+	}
+	return vars, err
 }
 
 func entryVars(v *vault.Vault, path string) ([]envfile.Var, error) {

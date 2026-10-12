@@ -13,12 +13,12 @@ func TestPathsListsEveryFileOnAnEmptyHome(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t)
 	r := h.ok(&fake{}, "paths")
-	for _, name := range []string{"home", "config", "vault", "session", "state", "trust", "sync.lock"} {
+	for _, name := range []string{"home", "config", "vault", "session", "state", "trust", "device", "usage", "sync.lock"} {
 		if !strings.Contains(r.out, name) {
 			t.Fatalf("%s missing from %q", name, r.out)
 		}
 	}
-	if strings.Count(r.out, "missing") != 6 || strings.Count(r.out, "exists") != 1 {
+	if strings.Count(r.out, "missing") != 8 || strings.Count(r.out, "exists") != 1 {
 		t.Fatalf("out %q", r.out)
 	}
 	if !strings.Contains(r.out, h.home) {
@@ -54,7 +54,7 @@ func TestPathsJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(r.out), &got); err != nil {
 		t.Fatalf("%v: %q", err, r.out)
 	}
-	if len(got.Paths) != 7 || got.Paths[0].Name != "home" || got.Paths[0].Path != h.home {
+	if len(got.Paths) != 9 || got.Paths[0].Name != "home" || got.Paths[0].Path != h.home {
 		t.Fatalf("report %+v", got)
 	}
 	for _, p := range got.Paths[1:] {
