@@ -7,3 +7,7 @@ import "os"
 func createIn(root *os.Root, name string) (*os.File, error) {
 	return root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, FilePerm)
 }
+
+func fixMode(root *os.Root, name string) error {
+	return root.Chmod(name, FilePerm)
+}

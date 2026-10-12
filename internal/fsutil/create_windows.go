@@ -52,3 +52,7 @@ func createAt(dir *os.File, base string) (*os.File, error) {
 	}
 	return os.NewFile(uintptr(h), filepath.Join(dir.Name(), base)), nil
 }
+
+func fixMode(*os.Root, string) error {
+	return nil
+}

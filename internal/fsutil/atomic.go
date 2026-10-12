@@ -53,7 +53,7 @@ func WriteFileIn(root *os.Root, name string, data []byte) (err error) {
 	if err = f.Close(); err != nil {
 		return err
 	}
-	if err = root.Chmod(tmpName, FilePerm); err != nil {
+	if err = fixMode(root, tmpName); err != nil {
 		return err
 	}
 	if err = rename(root, tmpName, name); err != nil {
