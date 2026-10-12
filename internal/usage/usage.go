@@ -15,8 +15,8 @@ const (
 )
 
 type Use struct {
-	Score float64 `json:"score"`
-	Last  int64   `json:"last"`
+	Score float64
+	Last  int64
 }
 
 type Log map[uuid.UUID]Use
