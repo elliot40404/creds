@@ -152,3 +152,41 @@ func TestWordBoundaryRanksFirst(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestOperators(t *testing.T) {
+	items := SummarizeAll([]vault.Entry{
+		entry("work/db", vault.TypeDatabase),
+		entry("work/old/db", vault.TypeDatabase),
+		entry("home/dashboard", vault.TypeNote),
+		entry("home/!bang", vault.TypeNote),
+	})
+	cases := map[string]string{
+		"exclude":            "db !old",
+		"exclude only":       "!work",
+		"exact":              "'db",
+		"starts with":        "^work",
+		"ends with":          "db$",
+		"whole field":        "^work/db$",
+		"exclude prefix":     "^work !^work/old",
+		"bang alone is text": "!",
+		"quote alone":        "'",
+		"fuzzy needs no op":  "hdb",
+	}
+	want := map[string]string{
+		"exclude":            "work/db home/dashboard",
+		"exclude only":       "home/!bang home/dashboard",
+		"exact":              "work/db work/old/db",
+		"starts with":        "work/db work/old/db",
+		"ends with":          "work/db work/old/db",
+		"whole field":        "work/db",
+		"exclude prefix":     "work/db",
+		"bang alone is text": "home/!bang",
+		"quote alone":        "",
+		"fuzzy needs no op":  "home/dashboard",
+	}
+	for name, q := range cases {
+		if got := pathLine(SearchSort(items, q, SortPath)); got != want[name] {
+			t.Errorf("%s %q got %q, want %q", name, q, got, want[name])
+		}
+	}
+}

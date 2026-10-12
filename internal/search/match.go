@@ -21,17 +21,52 @@ var slabs = sync.Pool{New: func() any { return util.MakeSlab(slab16, slab32) }}
 type term struct {
 	text []rune
 	fold bool
+	not  bool
+	algo algo.Algo
 }
 
 func newTerm(word string) term {
-	fold := !strings.ContainsFunc(word, unicode.IsUpper)
+	t := term{algo: algo.FuzzyMatchV2}
+	word, t.not = cutPrefix(word, "!")
+	if t.not {
+		t.algo = algo.ExactMatchNaive
+	}
+	word, exact := cutPrefix(word, "'")
+	word, prefix := cutPrefix(word, "^")
+	word, suffix := cutSuffix(word, "$")
+	switch {
+	case prefix && suffix:
+		t.algo = algo.EqualMatch
+	case prefix:
+		t.algo = algo.PrefixMatch
+	case suffix:
+		t.algo = algo.SuffixMatch
+	case exact:
+		t.algo = algo.ExactMatchNaive
+	}
+	t.fold = !strings.ContainsFunc(word, unicode.IsUpper)
 	r := []rune(word)
-	if fold {
+	if t.fold {
 		for i, c := range r {
 			r[i] = unicode.ToLower(c)
 		}
 	}
-	return term{text: algo.NormalizeRunes(r), fold: fold}
+	t.text = algo.NormalizeRunes(r)
+	return t
+}
+
+func cutPrefix(word, mark string) (string, bool) {
+	if rest, ok := strings.CutPrefix(word, mark); ok && rest != "" {
+		return rest, true
+	}
+	return word, false
+}
+
+func cutSuffix(word, mark string) (string, bool) {
+	if rest, ok := strings.CutSuffix(word, mark); ok && rest != "" {
+		return rest, true
+	}
+	return word, false
 }
 
 func terms(text string) []term {
@@ -43,8 +78,8 @@ func terms(text string) []term {
 	return out
 }
 
-func (t term) match(c *util.Chars, withPos bool, slab *util.Slab) (int, *[]int) {
-	res, pos := algo.FuzzyMatchV2(!t.fold, true, true, c, t.text, withPos, slab)
+func (t *term) match(c *util.Chars, withPos bool, slab *util.Slab) (int, *[]int) {
+	res, pos := t.algo(!t.fold, true, true, c, t.text, withPos, slab)
 	if res.Start < 0 {
 		return 0, nil
 	}

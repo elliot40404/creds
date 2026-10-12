@@ -142,19 +142,27 @@ type hit struct {
 }
 
 func (x Index) score(at int, words []term, slab *util.Slab) int {
-	total := 0
-	for _, w := range words {
-		best := 0
-		for i := range x.fields[at] {
-			score, _ := w.match(&x.fields[at][i], false, slab)
-			best = max(best, score)
-		}
-		if best == 0 {
+	total := 1
+	for i := range words {
+		w := &words[i]
+		best := x.best(at, w, slab)
+		if w.not != (best == 0) {
 			return 0
 		}
-		total += best
+		if !w.not {
+			total += best
+		}
 	}
 	return total
+}
+
+func (x Index) best(at int, w *term, slab *util.Slab) int {
+	best := 0
+	for i := range x.fields[at] {
+		score, _ := w.match(&x.fields[at][i], false, slab)
+		best = max(best, score)
+	}
+	return best
 }
 
 func (x Index) pick(f filter) []int {
