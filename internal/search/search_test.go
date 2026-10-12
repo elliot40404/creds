@@ -112,3 +112,43 @@ func TestTieBrokenByPath(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestWordsMatchInAnyOrder(t *testing.T) {
+	items := SummarizeAll([]vault.Entry{entry("work/db", vault.TypeDatabase), entry("home/wifi", vault.TypeNote)})
+	for _, q := range []string{"work db", "db work", "  db   work "} {
+		if got := pathLine(SearchSort(items, q, SortPath)); got != "work/db" {
+			t.Fatalf("%q got %q", q, got)
+		}
+	}
+	if got := SearchSort(items, "db wifi", SortPath); len(got) != 0 {
+		t.Fatalf("every word must match, got %v", Paths(got))
+	}
+}
+
+func TestSmartCase(t *testing.T) {
+	items := SummarizeAll([]vault.Entry{entry("work/DB", vault.TypeNote), entry("work/db", vault.TypeNote)})
+	cases := map[string]string{
+		"db": "work/DB work/db",
+		"DB": "work/DB",
+		"Db": "",
+	}
+	for q, want := range cases {
+		if got := pathLine(SearchSort(items, q, SortPath)); got != want {
+			t.Fatalf("%q got %q, want %q", q, got, want)
+		}
+	}
+}
+
+func TestAccentsFolded(t *testing.T) {
+	items := SummarizeAll([]vault.Entry{entry("perso/café", vault.TypeNote)})
+	if got := pathLine(SearchSort(items, "cafe", SortPath)); got != "perso/café" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestWordBoundaryRanksFirst(t *testing.T) {
+	items := SummarizeAll([]vault.Entry{entry("dashboard", vault.TypeNote), entry("work/db", vault.TypeNote)})
+	if got := Paths(SearchSort(items, "db", SortPath)); got[0] != "work/db" {
+		t.Fatalf("got %v", got)
+	}
+}

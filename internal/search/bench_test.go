@@ -23,3 +23,11 @@ func BenchmarkKeystroke(b *testing.B) {
 		x.Search("tdb4", SortPath)
 	}
 }
+
+func BenchmarkIndex(b *testing.B) {
+	items := benchItems(5000)
+	b.ReportAllocs()
+	for b.Loop() {
+		NewIndex(items)
+	}
+}

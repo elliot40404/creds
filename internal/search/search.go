@@ -2,13 +2,13 @@ package search
 
 import (
 	"cmp"
+	"iter"
 	"slices"
-	"strings"
 	"time"
 	"uuid"
 
 	"github.com/elliot40404/creds/internal/vault"
-	"github.com/sahilm/fuzzy"
+	"github.com/junegunn/fzf/src/util"
 )
 
 type Summary struct {
@@ -49,18 +49,48 @@ func SummarizeAll(entries []vault.Entry) []Summary {
 }
 
 type Index struct {
-	items []Summary
-	keys  []string
+	items  []Summary
+	fields [][]util.Chars
 }
 
 func NewIndex(items []Summary) Index {
 	sorted := slices.Clone(items)
 	slices.SortFunc(sorted, byPath)
-	keys := make([]string, len(sorted))
-	for i, s := range sorted {
-		keys[i] = strings.Join(append([]string{s.Path, s.Name, string(s.Type), s.Host, s.Username}, s.Tags...), " ")
+	size, count := 0, 0
+	for _, s := range sorted {
+		for f := range texts(s) {
+			size += len(f)
+			count++
+		}
 	}
-	return Index{items: sorted, keys: keys}
+	buf := make([]byte, 0, size)
+	all := make([]util.Chars, 0, count)
+	fields := make([][]util.Chars, len(sorted))
+	for i, s := range sorted {
+		from := len(all)
+		for f := range texts(s) {
+			at := len(buf)
+			buf = append(buf, f...)
+			all = append(all, util.ToChars(buf[at:len(buf):len(buf)]))
+		}
+		fields[i] = all[from:len(all):len(all)]
+	}
+	return Index{items: sorted, fields: fields}
+}
+
+func texts(s Summary) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for _, f := range [...]string{s.Path, s.Name, string(s.Type), s.Host, s.Username} {
+			if f != "" && !yield(f) {
+				return
+			}
+		}
+		for _, f := range s.Tags {
+			if f != "" && !yield(f) {
+				return
+			}
+		}
+	}
 }
 
 func (x Index) Len() int { return len(x.items) }
@@ -82,21 +112,49 @@ func (x Index) Search(query string, order Sort) []Summary {
 func (x Index) search(query string) []Summary {
 	f := parseFilter(query)
 	picked := x.pick(f)
-	text := strings.TrimSpace(f.Text)
-	if text == "" {
+	words := terms(f.Text)
+	if len(words) == 0 {
 		out := make([]Summary, len(picked))
 		for i, at := range picked {
 			out[i] = x.items[at]
 		}
 		return out
 	}
-	matches := fuzzy.FindFromNoSort(text, subset{x.keys, picked})
-	slices.SortStableFunc(matches, func(a, b fuzzy.Match) int { return cmp.Compare(b.Score, a.Score) })
-	out := make([]Summary, len(matches))
-	for i, m := range matches {
-		out[i] = x.items[picked[m.Index]]
+	slab := slabs.Get().(*util.Slab)
+	defer slabs.Put(slab)
+	hits := make([]hit, 0, len(picked))
+	for _, at := range picked {
+		if score := x.score(at, words, slab); score > 0 {
+			hits = append(hits, hit{at, score})
+		}
+	}
+	slices.SortStableFunc(hits, func(a, b hit) int { return cmp.Compare(b.score, a.score) })
+	out := make([]Summary, len(hits))
+	for i, h := range hits {
+		out[i] = x.items[h.at]
 	}
 	return out
+}
+
+type hit struct {
+	at    int
+	score int
+}
+
+func (x Index) score(at int, words []term, slab *util.Slab) int {
+	total := 0
+	for _, w := range words {
+		best := 0
+		for i := range x.fields[at] {
+			score, _ := w.match(&x.fields[at][i], false, slab)
+			best = max(best, score)
+		}
+		if best == 0 {
+			return 0
+		}
+		total += best
+	}
+	return total
 }
 
 func (x Index) pick(f filter) []int {
@@ -108,15 +166,6 @@ func (x Index) pick(f filter) []int {
 	}
 	return out
 }
-
-type subset struct {
-	keys []string
-	at   []int
-}
-
-func (s subset) Len() int { return len(s.at) }
-
-func (s subset) String(i int) string { return s.keys[s.at[i]] }
 
 func byOrder(order Sort) func(a, b Summary) int {
 	when := func(s Summary) time.Time { return s.Updated }
