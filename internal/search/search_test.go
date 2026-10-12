@@ -201,3 +201,22 @@ func TestNameHitBeatsHostHit(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestPositions(t *testing.T) {
+	cases := []struct {
+		query, s string
+		want     []int
+	}{
+		{"db work", "work/db", []int{0, 1, 2, 3, 5, 6}},
+		{"!work db", "work/db", []int{5, 6}},
+		{"tag:x db", "work/db", []int{5, 6}},
+		{"fé", "café", []int{2, 3}},
+		{"", "work/db", nil},
+		{"zz", "work/db", nil},
+	}
+	for _, tc := range cases {
+		if got := Positions(tc.query, tc.s); !slices.Equal(got, tc.want) {
+			t.Errorf("%q in %q got %v, want %v", tc.query, tc.s, got, tc.want)
+		}
+	}
+}

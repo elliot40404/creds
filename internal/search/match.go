@@ -1,6 +1,7 @@
 package search
 
 import (
+	"slices"
 	"strings"
 	"sync"
 	"unicode"
@@ -84,4 +85,25 @@ func (t *term) match(c *util.Chars, withPos bool, slab *util.Slab) (int, *[]int)
 		return 0, nil
 	}
 	return max(res.Score, 1), pos
+}
+
+func Positions(query, s string) []int {
+	words := terms(parseFilter(query).Text)
+	if len(words) == 0 || s == "" {
+		return nil
+	}
+	c := util.ToChars([]byte(s))
+	slab := slabs.Get().(*util.Slab)
+	defer slabs.Put(slab)
+	var out []int
+	for i := range words {
+		if words[i].not {
+			continue
+		}
+		if _, pos := words[i].match(&c, true, slab); pos != nil {
+			out = append(out, *pos...)
+		}
+	}
+	slices.Sort(out)
+	return slices.Compact(out)
 }

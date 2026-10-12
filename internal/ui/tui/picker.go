@@ -9,7 +9,6 @@ import (
 	"github.com/elliot40404/creds/internal/app"
 	"github.com/elliot40404/creds/internal/search"
 	"github.com/elliot40404/creds/internal/vault"
-	"github.com/sahilm/fuzzy"
 )
 
 const listChrome = 2
@@ -239,15 +238,14 @@ func (c columns) describe(t theme, s search.Summary, query string) string {
 	if r := []rune(path); len(r) > c.path {
 		path = string(r[:max(c.path-1, 0)]) + ellipsis
 	}
-	text := search.FilterText(query)
-	shown, hit := highlight(t.text, t.match, path, text)
+	shown, hit := highlight(t.text, t.match, path, query)
 	out := shown + t.text.Render(strings.Repeat(" ", c.path-len([]rune(path))+2))
 	out += t.badge.Render(padRight(string(s.Type), c.typ))
 	if who := owner(s); who != "" {
 		if hit {
-			text = ""
+			query = ""
 		}
-		shown, _ := highlight(t.dim, t.match, who, text)
+		shown, _ := highlight(t.dim, t.match, who, query)
 		out += t.dim.Render("  ") + shown
 	}
 	return out
@@ -263,14 +261,10 @@ func owner(s search.Summary) string {
 	return s.Host
 }
 
-func highlight(base, match style, s, text string) (string, bool) {
-	matches := fuzzy.Find(text, []string{s})
-	if text == "" || len(matches) == 0 {
+func highlight(base, match style, s, query string) (string, bool) {
+	pos := search.Positions(query, s)
+	if len(pos) == 0 {
 		return base.Render(s), false
-	}
-	hit := make(map[int]bool, len(matches[0].MatchedIndexes))
-	for _, i := range matches[0].MatchedIndexes {
-		hit[i] = true
 	}
 	var b, run strings.Builder
 	on := false
@@ -285,12 +279,15 @@ func highlight(base, match style, s, text string) (string, bool) {
 		b.WriteString(st.Render(run.String()))
 		run.Reset()
 	}
-	for i, r := range s {
-		if hit[i] != on {
+	i := 0
+	for _, r := range s {
+		hit := slices.Contains(pos, i)
+		if hit != on {
 			flush()
-			on = hit[i]
+			on = hit
 		}
 		run.WriteRune(r)
+		i++
 	}
 	flush()
 	return b.String(), true

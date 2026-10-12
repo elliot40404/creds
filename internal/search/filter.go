@@ -54,10 +54,6 @@ func parseFilter(query string) filter {
 	return f
 }
 
-func FilterText(query string) string {
-	return strings.TrimSpace(parseFilter(query).Text)
-}
-
 func (f filter) match(s Summary) bool {
 	if len(f.Types) > 0 && !containsFold(f.Types, string(s.Type)) {
 		return false
