@@ -2,6 +2,8 @@ module github.com/elliot40404/creds
 
 go 1.27
 
+toolchain go1.27.2
+
 require (
 	charm.land/bubbletea/v2 v2.0.9
 	charm.land/lipgloss/v2 v2.0.6
