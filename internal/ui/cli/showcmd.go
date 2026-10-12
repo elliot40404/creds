@@ -132,7 +132,7 @@ func writeEntry(w io.Writer, e vault.Entry, show bool) error {
 var errUnknownSort = errors.New("not a sort order")
 
 func sortFlag(c *cobra.Command, order *string) {
-	c.Flags().StringVar(order, "sort", string(search.SortPath),
+	c.Flags().StringVar(order, "sort", string(search.DefaultSort),
 		"order the list: "+strings.Join(search.Sorts(), "|"))
 }
 

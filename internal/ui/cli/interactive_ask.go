@@ -147,7 +147,7 @@ func (iv *interview) filtered(query string) ([]search.Summary, error) {
 			return nil, err
 		}
 	}
-	return s.Search(query, search.SortPath)
+	return s.Search(query, search.DefaultSort)
 }
 
 func fieldNames(e vault.Entry) []string {
