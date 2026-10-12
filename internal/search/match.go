@@ -20,10 +20,11 @@ var _ = algo.Init("default")
 var slabs = sync.Pool{New: func() any { return util.MakeSlab(slab16, slab32) }}
 
 type term struct {
-	text []rune
-	fold bool
-	not  bool
-	algo algo.Algo
+	text  []rune
+	fold  bool
+	not   bool
+	fuzzy bool
+	algo  algo.Algo
 }
 
 func newTerm(word string) term {
@@ -45,6 +46,7 @@ func newTerm(word string) term {
 	case exact:
 		t.algo = algo.ExactMatchNaive
 	}
+	t.fuzzy = !t.not && !exact && !prefix && !suffix
 	t.fold = !strings.ContainsFunc(word, unicode.IsUpper)
 	r := []rune(word)
 	if t.fold {
@@ -102,6 +104,10 @@ func Positions(query, s string) []int {
 		}
 		if _, pos := words[i].match(&c, true, slab); pos != nil {
 			out = append(out, *pos...)
+		} else if from, to, ok := words[i].typo(&c); ok {
+			for at := from; at < to; at++ {
+				out = append(out, at)
+			}
 		}
 	}
 	slices.Sort(out)

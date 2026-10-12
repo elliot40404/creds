@@ -142,13 +142,10 @@ func (x Index) search(query string) []Summary {
 	}
 	slab := slabs.Get().(*util.Slab)
 	defer slabs.Put(slab)
-	hits := make([]hit, 0, len(picked))
-	for _, at := range picked {
-		if score := x.score(at, words, slab); score > 0 {
-			hits = append(hits, hit{at, score})
-		}
+	hits := x.hits(picked, words, false, slab)
+	if len(hits) == 0 {
+		hits = x.hits(picked, words, true, slab)
 	}
-	slices.SortStableFunc(hits, func(a, b hit) int { return cmp.Compare(b.score, a.score) })
 	out := make([]Summary, len(hits))
 	for i, h := range hits {
 		out[i] = x.items[h.at]
@@ -156,24 +153,51 @@ func (x Index) search(query string) []Summary {
 	return out
 }
 
+func (x Index) hits(picked []int, words []term, typos bool, slab *util.Slab) []hit {
+	hits := make([]hit, 0, len(picked))
+	for _, at := range picked {
+		if h := x.score(at, words, typos, slab); h.score > 0 {
+			hits = append(hits, h)
+		}
+	}
+	slices.SortStableFunc(hits, func(a, b hit) int {
+		return cmp.Or(cmp.Compare(a.typos, b.typos), cmp.Compare(b.score, a.score))
+	})
+	return hits
+}
+
 type hit struct {
 	at    int
 	score int
+	typos int
 }
 
-func (x Index) score(at int, words []term, slab *util.Slab) int {
-	total := 1
+func (x Index) score(at int, words []term, typos bool, slab *util.Slab) hit {
+	h := hit{at: at, score: 1}
 	for i := range words {
 		w := &words[i]
 		best := x.best(at, w, slab)
+		if best == 0 && typos && x.typo(at, w) {
+			best = 1
+			h.typos++
+		}
 		if w.not != (best == 0) {
-			return 0
+			return hit{}
 		}
 		if !w.not {
-			total += best
+			h.score += best
 		}
 	}
-	return total
+	return h
+}
+
+func (x Index) typo(at int, w *term) bool {
+	for i := range x.fields[at] {
+		if _, _, ok := w.typo(&x.fields[at][i].text); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (x Index) best(at int, w *term, slab *util.Slab) int {

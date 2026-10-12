@@ -31,3 +31,11 @@ func BenchmarkIndex(b *testing.B) {
 		NewIndex(items)
 	}
 }
+
+func BenchmarkTypo(b *testing.B) {
+	x := NewIndex(benchItems(5000))
+	b.ReportAllocs()
+	for b.Loop() {
+		x.Search("sevrice", SortPath)
+	}
+}
