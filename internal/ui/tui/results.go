@@ -64,9 +64,38 @@ type (
 )
 
 func (m Model) handleResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
+	if next, cmd, ok := m.sessionResult(msg); ok {
+		return next, cmd, true
+	}
+	if next, cmd, ok := m.syncMsgResult(msg); ok {
+		return next, cmd, true
+	}
+	if next, cmd, ok := m.entryResult(msg); ok {
+		return next, cmd, true
+	}
+	return m.actionResult(msg)
+}
+
+func (m Model) sessionResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
+	var next tea.Model
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
-	case itemsMsg:
-		return m.setItems(msg), nil, true
+	case lockedMsg:
+		next = m.locked(msg)
+	case PasswordResult:
+		next, cmd = m.unlock(msg)
+	case unlockedMsg:
+		next, cmd = m.unlocked(msg)
+	case sessionLeftMsg:
+		next, cmd = m.sessionLeft(msg)
+	default:
+		return m, nil, false
+	}
+	return next, cmd, true
+}
+
+func (m Model) syncMsgResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
+	switch msg := msg.(type) {
 	case statusMsg:
 		m.status, m.stErr = msg.status, msg.err
 		return m, nil, true
@@ -76,23 +105,20 @@ func (m Model) handleResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 	case autoSyncedMsg:
 		next, cmd := m.autoSynced(msg)
 		return next, cmd, true
-	case lockedMsg:
-		return m.locked(msg), nil, true
-	case PasswordResult:
-		next, cmd := m.unlock(msg)
-		return next, cmd, true
-	case unlockedMsg:
-		next, cmd := m.unlocked(msg)
-		return next, cmd, true
-	case entryMsg:
-		if msg.err != nil {
-			return m.finish().fail(msg.err, "press r in the list to reload"), m.loadItems(), true
-		}
-		return m.finish().push(newDetail(msg.entry)), nil, true
-	case deletedMsg:
-		return m.deleted(msg)
 	case syncedMsg:
 		return m.synced(msg)
+	}
+	return m, nil, false
+}
+
+func (m Model) entryResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
+	switch msg := msg.(type) {
+	case itemsMsg:
+		return m.setItems(msg), nil, true
+	case entryMsg:
+		return m.opened(msg)
+	case deletedMsg:
+		return m.deleted(msg)
 	case savedMsg:
 		return m.saved(msg)
 	case editEntryMsg:
@@ -100,17 +126,15 @@ func (m Model) handleResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 			return m.openForm(&msg.entry)
 		})
 	case revealedMsg:
-		next, cmd, ok := m.done(msg.err, "press esc and open the entry again", m.toOwner(msg))
-		if msg.err != nil {
-			return next, cmd, ok
-		}
-		watched, watch := next.(Model).watch()
-		return watched, tea.Batch(cmd, watch), ok
-	case sessionLeftMsg:
-		next, cmd := m.sessionLeft(msg)
-		return next, cmd, true
+		return m.revealed(msg)
 	case unmaskedMsg:
 		return m.done(msg.err, "press ctrl+r to try again", m.toOwner(msg))
+	}
+	return m, nil, false
+}
+
+func (m Model) actionResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
+	switch msg := msg.(type) {
 	case formatListMsg:
 		return m.done(msg.err, "formats need a database entry with a host", func(m Model) (tea.Model, tea.Cmd) {
 			return m.push(newFormats(msg.path, msg.names, m.opts.Backend.RenderShell())), nil
@@ -130,6 +154,22 @@ func (m Model) handleResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 		})
 	}
 	return m, nil, false
+}
+
+func (m Model) opened(msg entryMsg) (tea.Model, tea.Cmd, bool) {
+	if msg.err != nil {
+		return m.finish().fail(msg.err, "press r in the list to reload"), m.loadItems(), true
+	}
+	return m.finish().push(newDetail(msg.entry)), nil, true
+}
+
+func (m Model) revealed(msg revealedMsg) (tea.Model, tea.Cmd, bool) {
+	next, cmd, ok := m.done(msg.err, "press esc and open the entry again", m.toOwner(msg))
+	if msg.err != nil {
+		return next, cmd, ok
+	}
+	watched, watch := next.(Model).watch()
+	return watched, tea.Batch(cmd, watch), ok
 }
 
 func (m Model) done(err error, hint string, then func(Model) (tea.Model, tea.Cmd)) (tea.Model, tea.Cmd, bool) {
