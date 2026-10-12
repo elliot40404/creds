@@ -172,7 +172,14 @@ func searchCmd(env Env) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "search <query>",
 		Short: "Fuzzy search entries",
-		Args:  cobra.MinimumNArgs(1),
+		Long: "Each word must match, in any order. A typo is forgiven when nothing else matches.\n" +
+			"  !word  leave out    'word  exact text    ^word  starts with    word$  ends with\n" +
+			"  type: engine: tag: host: user: in:  filter, different keys AND, same key OR",
+		Example: "  creds search db work\n" +
+			"  creds search prod !old\n" +
+			"  creds search type:database engine:postgres\n" +
+			"  creds search in:work/ db --sort updated",
+		Args: cobra.MinimumNArgs(1),
 		RunE: env.run(func(s *app.Service, args []string) error {
 			by, err := parseSort(order)
 			if err != nil {
