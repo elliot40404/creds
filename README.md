@@ -648,8 +648,8 @@ and `h` opens the list of previous versions; pick one to see its values, `r` rev
 That is the point of the feature and the cost of it. Set `vault.history` to `0` to turn it off,
 which also clears what is already stored the next time each entry is written.
 
-This is vault format 2. creds reads a format 1 vault and writes it back as format 2. An older
-creds refuses a format 2 vault and tells you to install the latest release.
+This is vault format 3. creds upgrades an older vault on unlock. An older creds refuses a format 3
+vault and tells you to install the latest release.
 
 ### Where the files are
 
@@ -658,7 +658,7 @@ creds paths          # every creds file, its full path and whether it exists
 creds paths --json   # same as data
 ```
 
-It lists the creds home, `config.toml`, the vault dir with its remote, the session with the time left, `state.json`, `trust.json` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
+It lists the creds home, `config.toml`, the vault dir with its remote, the session with the time left, `state.json`, `trust.json`, `device.json`, `usage.age` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
 
 ## Files
 
