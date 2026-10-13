@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	lockTries   = 100
+	lockTries   = 400
 	lockBackoff = 5 * time.Millisecond
 )
 
