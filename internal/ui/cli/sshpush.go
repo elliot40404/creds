@@ -34,6 +34,13 @@ type sshHint struct {
 	text   string
 }
 
+type sshColumn struct {
+	width int
+	label func(app.SSHFileResult) string
+}
+
+var sshActionColumn = sshColumn{12, func(f app.SSHFileResult) string { return string(f.Action) }}
+
 var sshPushHints = []sshHint{
 	{app.SSHNotAsked, "%d unused keys not pushed, run creds ssh push in a terminal to pick them or pass --all"},
 	{app.SSHKeptConflict, "%d files changed here and in the vault were not pushed, run creds ssh push -y to overwrite the vault copy"},
@@ -42,7 +49,7 @@ var sshPushHints = []sshHint{
 }
 
 func (e Env) printSSHPush(res app.SSHPushResult) error {
-	counts, err := e.printSSHFiles(res.Status, res.Files, sshPushHints)
+	counts, err := e.printSSHFiles(res.Status, res.Files, sshActionColumn, sshPushHints)
 	if err != nil || e.jsonMode() {
 		return err
 	}
@@ -54,7 +61,7 @@ func (e Env) printSSHPush(res app.SSHPushResult) error {
 	return nil
 }
 
-func (e Env) printSSHFiles(st app.SSHStatus, files []app.SSHFileResult, hints []sshHint) (map[app.SSHAction]int, error) {
+func (e Env) printSSHFiles(st app.SSHStatus, files []app.SSHFileResult, col sshColumn, hints []sshHint) (map[app.SSHAction]int, error) {
 	if e.jsonMode() {
 		return nil, e.writeJSON(toJSONSSH(st, files))
 	}
@@ -62,7 +69,7 @@ func (e Env) printSSHFiles(st app.SSHStatus, files []app.SSHFileResult, hints []
 	counts := map[app.SSHAction]int{}
 	for _, f := range files {
 		counts[f.Action]++
-		if err := e.printSSHLine(f); err != nil {
+		if err := e.printSSHLine(f, col); err != nil {
 			return nil, err
 		}
 	}
@@ -74,11 +81,11 @@ func (e Env) printSSHFiles(st app.SSHStatus, files []app.SSHFileResult, hints []
 	return counts, nil
 }
 
-func (e Env) printSSHLine(f app.SSHFileResult) error {
+func (e Env) printSSHLine(f app.SSHFileResult, col sshColumn) error {
 	if f.Action == app.SSHNoChange {
 		return nil
 	}
-	line := fmt.Sprintf("%-12s %s", f.Action, f.Rel)
+	line := fmt.Sprintf("%-*s %s", col.width, col.label(f), f.Rel)
 	if f.Err != nil {
 		line += ": " + f.Err.Error()
 	}

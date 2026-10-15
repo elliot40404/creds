@@ -16,7 +16,7 @@ the vault.`
 
 func sshCmd(env Env) *cobra.Command {
 	c := &cobra.Command{Use: "ssh", Short: "Back up ~/.ssh files in the vault", Args: cobra.NoArgs}
-	c.AddCommand(sshPushCmd(env), sshPullCmd(env))
+	c.AddCommand(sshPushCmd(env), sshPullCmd(env), sshStatusCmd(env))
 	return c
 }
 

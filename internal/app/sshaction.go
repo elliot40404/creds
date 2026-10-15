@@ -24,3 +24,20 @@ type SSHFileResult struct {
 	Action SSHAction
 	Err    error
 }
+
+func (f SSHFileStatus) Next() SSHAction {
+	switch f.Change {
+	case SSHSame:
+		return SSHNoChange
+	case SSHLocalNew, SSHLocalChanged:
+		if f.Unused && f.Skipped {
+			return SSHSkippedKey
+		}
+		return SSHNeedsPush
+	case SSHConflict:
+		return SSHKeptConflict
+	case SSHLocalDeleted:
+		return SSHKeptDelete
+	}
+	return SSHNeedsPull
+}

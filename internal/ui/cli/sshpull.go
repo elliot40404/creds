@@ -58,7 +58,7 @@ func (e Env) sshPullAsk(o app.SSHPullOptions) app.SSHPullOptions {
 }
 
 func (e Env) printSSHPull(res app.SSHPullResult) error {
-	counts, err := e.printSSHFiles(res.Status, res.Files, sshPullHints)
+	counts, err := e.printSSHFiles(res.Status, res.Files, sshActionColumn, sshPullHints)
 	if err != nil || e.jsonMode() {
 		return err
 	}
