@@ -15,6 +15,12 @@ import (
 func writeTree(t *testing.T, files map[string][]byte) string {
 	t.Helper()
 	dir := t.TempDir()
+	writeFiles(t, dir, files)
+	return dir
+}
+
+func writeFiles(t *testing.T, dir string, files map[string][]byte) {
+	t.Helper()
 	for rel, data := range files {
 		path := filepath.Join(dir, filepath.FromSlash(rel))
 		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
@@ -24,7 +30,6 @@ func writeTree(t *testing.T, files map[string][]byte) string {
 			t.Fatal(err)
 		}
 	}
-	return dir
 }
 
 func sshTree(t *testing.T) map[string][]byte {

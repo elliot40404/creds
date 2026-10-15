@@ -96,3 +96,4 @@ fuzz:
     go test -run='^$' -fuzz='^FuzzGhError$' -fuzztime={{fuzztime}} ./internal/gh
     go test -run='^$' -fuzz='^FuzzText$' -fuzztime={{fuzztime}} ./internal/safetext
     go test -run='^$' -fuzz='^FuzzDecode$' -fuzztime={{fuzztime}} ./internal/usage
+    go test -run='^$' -fuzz='^FuzzParseConfig$' -fuzztime={{fuzztime}} ./internal/sshdir

@@ -72,6 +72,10 @@ var vaultRules = []Rule{
 	{Target: format.ErrOldVersion, Code: General},
 	{Target: fsutil.ErrBusy, Code: General, Hint: "another creds command is busy with the same file, try again"},
 	{Target: sshdir.ErrSymlink, Code: General, Hint: "creds does not follow symlinks in the ssh dir, put the real file there instead"},
+	{Target: sshdir.ErrSyntax, Code: General, Hint: "fix the line in your ssh config so creds can read it"},
+	{Target: sshdir.ErrToken, Code: General, Hint: "write the full key path without % or ${} tokens so creds can find the key"},
+	{Target: sshdir.ErrOutside, Code: General, Hint: "creds only syncs files inside the ssh dir, move the file there to sync it"},
+	{Target: sshdir.ErrIncludeLoop, Code: General, Hint: "remove the Include that points back to an earlier ssh config file so creds reads each file once"},
 }
 
 var appRules = []Rule{
