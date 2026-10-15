@@ -14,6 +14,7 @@ import (
 	"github.com/elliot40404/creds/internal/gh"
 	"github.com/elliot40404/creds/internal/manifest"
 	"github.com/elliot40404/creds/internal/session"
+	"github.com/elliot40404/creds/internal/sshdir"
 	"github.com/elliot40404/creds/internal/vault"
 )
 
@@ -70,6 +71,7 @@ var vaultRules = []Rule{
 	{Target: fsutil.ErrTooLarge, Code: General, Hint: "the file or the remote data is far bigger than a vault should ever be, run creds status and check the remote"},
 	{Target: format.ErrOldVersion, Code: General},
 	{Target: fsutil.ErrBusy, Code: General, Hint: "another creds command is busy with the same file, try again"},
+	{Target: sshdir.ErrSymlink, Code: General, Hint: "creds does not follow symlinks in the ssh dir, put the real file there instead"},
 }
 
 var appRules = []Rule{

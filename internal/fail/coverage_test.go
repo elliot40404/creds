@@ -28,6 +28,7 @@ import (
 	"github.com/elliot40404/creds/internal/render"
 	"github.com/elliot40404/creds/internal/runner"
 	"github.com/elliot40404/creds/internal/session"
+	"github.com/elliot40404/creds/internal/sshdir"
 	"github.com/elliot40404/creds/internal/vault"
 )
 
@@ -113,6 +114,7 @@ var known = map[string]error{
 	"format.ErrUnknownVersion":   format.ErrUnknownVersion,
 	"fsutil.ErrBusy":             fsutil.ErrBusy,
 	"fsutil.ErrTooLarge":         fsutil.ErrTooLarge,
+	"sshdir.ErrSymlink":          sshdir.ErrSymlink,
 	"anchor.ErrNoAnchor":         anchor.ErrNoAnchor,
 	"anchor.ErrRollback":         anchor.ErrRollback,
 	"manifest.ErrBadManifest":    manifest.ErrBadManifest,
