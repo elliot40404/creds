@@ -2,19 +2,6 @@ package app
 
 import "github.com/elliot40404/creds/internal/sshdir"
 
-type SSHAction string
-
-const (
-	SSHPushed     SSHAction = "pushed"
-	SSHNoChange   SSHAction = "same"
-	SSHSkippedKey SSHAction = "skipped"
-	SSHNotAsked   SSHAction = "not asked"
-	SSHKeptVault  SSHAction = "conflict"
-	SSHKeptDelete SSHAction = "deleted here"
-	SSHNeedsPull  SSHAction = "pull"
-	SSHFailed     SSHAction = "failed"
-)
-
 type SSHPushOptions struct {
 	All         bool
 	Overwrite   bool
@@ -22,16 +9,9 @@ type SSHPushOptions struct {
 	AskConflict func(rel string) (bool, error)
 }
 
-type SSHPushFile struct {
-	Rel    string
-	Change SSHChange
-	Action SSHAction
-	Err    error
-}
-
 type SSHPushResult struct {
 	Status SSHStatus
-	Files  []SSHPushFile
+	Files  []SSHFileResult
 }
 
 func (s *Service) SSHPush(o SSHPushOptions) (SSHPushResult, error) {
@@ -39,18 +19,18 @@ func (s *Service) SSHPush(o SSHPushOptions) (SSHPushResult, error) {
 	if err != nil {
 		return SSHPushResult{}, err
 	}
-	res := SSHPushResult{Status: st, Files: make([]SSHPushFile, len(st.Files))}
+	res := SSHPushResult{Status: st, Files: make([]SSHFileResult, len(st.Files))}
 	for i, f := range st.Files {
 		a, err := o.decide(f)
 		if err != nil {
 			return SSHPushResult{}, err
 		}
-		res.Files[i] = SSHPushFile{Rel: f.Rel, Change: f.Change, Action: a}
+		res.Files[i] = SSHFileResult{Rel: f.Rel, Change: f.Change, Action: a}
 	}
 	if err := s.pushSSH(st.Files, res.Files); err != nil {
 		return SSHPushResult{}, err
 	}
-	return res, s.saveSSHState(st, res.Files)
+	return res, s.saveSSHState(func(cur sshdir.State) sshdir.State { return nextSSHState(cur, st, res.Files) })
 }
 
 func (o SSHPushOptions) decide(f SSHFileStatus) (SSHAction, error) {
@@ -89,9 +69,9 @@ func (o SSHPushOptions) conflict(rel string) (SSHAction, error) {
 	case o.Overwrite:
 		return SSHPushed, nil
 	case o.AskConflict == nil:
-		return SSHKeptVault, nil
+		return SSHKeptConflict, nil
 	}
-	return askPush(o.AskConflict, rel, SSHKeptVault)
+	return askPush(o.AskConflict, rel, SSHKeptConflict)
 }
 
 func askPush(ask func(string) (bool, error), rel string, no SSHAction) (SSHAction, error) {

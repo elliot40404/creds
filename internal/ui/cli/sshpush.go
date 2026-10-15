@@ -20,7 +20,7 @@ type jsonSSHNotRead struct {
 	Error string `json:"error"`
 }
 
-type jsonSSHPush struct {
+type jsonSSHRun struct {
 	Dir      string           `json:"dir"`
 	Files    []jsonSSHFile    `json:"files"`
 	NotRead  []jsonSSHNotRead `json:"not_read"`
@@ -29,37 +29,61 @@ type jsonSSHPush struct {
 	Invalid  []string         `json:"invalid"`
 }
 
-var sshPushHints = []struct {
+type sshHint struct {
 	action app.SSHAction
 	text   string
-}{
+}
+
+var sshPushHints = []sshHint{
 	{app.SSHNotAsked, "%d unused keys not pushed, run creds ssh push in a terminal to pick them or pass --all"},
-	{app.SSHKeptVault, "%d files changed here and in the vault were not pushed, run creds ssh push -y to overwrite the vault copy"},
+	{app.SSHKeptConflict, "%d files changed here and in the vault were not pushed, run creds ssh push -y to overwrite the vault copy"},
 	{app.SSHKeptDelete, "%d files deleted here are still in the vault"},
 	{app.SSHNeedsPull, "%d files changed in the vault, run creds ssh pull"},
 }
 
 func (e Env) printSSHPush(res app.SSHPushResult) error {
-	if e.jsonMode() {
-		return e.writeJSON(toJSONSSHPush(res))
+	counts, err := e.printSSHFiles(res.Status, res.Files, sshPushHints)
+	if err != nil || e.jsonMode() {
+		return err
 	}
-	e.sshNotes(res.Status)
-	counts := map[app.SSHAction]int{}
-	for _, f := range res.Files {
-		counts[f.Action]++
-		if f.Action == app.SSHNoChange {
-			continue
-		}
-		line := fmt.Sprintf("%-12s %s", f.Action, f.Rel)
-		if f.Err != nil {
-			line += ": " + f.Err.Error()
-		}
-		if _, err := fmt.Fprintln(e.Out, safetext.Line(line)); err != nil {
-			return err
-		}
+	if counts[app.SSHPushed] == 0 && counts[app.SSHFailed] == 0 {
+		e.note("nothing to push")
+		return nil
 	}
-	e.sshPushHints(counts)
+	e.note("pushed %d files", counts[app.SSHPushed])
 	return nil
+}
+
+func (e Env) printSSHFiles(st app.SSHStatus, files []app.SSHFileResult, hints []sshHint) (map[app.SSHAction]int, error) {
+	if e.jsonMode() {
+		return nil, e.writeJSON(toJSONSSH(st, files))
+	}
+	e.sshNotes(st)
+	counts := map[app.SSHAction]int{}
+	for _, f := range files {
+		counts[f.Action]++
+		if err := e.printSSHLine(f); err != nil {
+			return nil, err
+		}
+	}
+	for _, h := range hints {
+		if n := counts[h.action]; n > 0 {
+			e.note(h.text, n)
+		}
+	}
+	return counts, nil
+}
+
+func (e Env) printSSHLine(f app.SSHFileResult) error {
+	if f.Action == app.SSHNoChange {
+		return nil
+	}
+	line := fmt.Sprintf("%-12s %s", f.Action, f.Rel)
+	if f.Err != nil {
+		line += ": " + f.Err.Error()
+	}
+	_, err := fmt.Fprintln(e.Out, safetext.Line(line))
+	return err
 }
 
 func (e Env) sshNotes(st app.SSHStatus) {
@@ -74,23 +98,9 @@ func (e Env) sshNotes(st app.SSHStatus) {
 	}
 }
 
-func (e Env) sshPushHints(counts map[app.SSHAction]int) {
-	for _, h := range sshPushHints {
-		if n := counts[h.action]; n > 0 {
-			e.note(h.text, n)
-		}
-	}
-	if counts[app.SSHPushed] == 0 && counts[app.SSHFailed] == 0 {
-		e.note("nothing to push")
-		return
-	}
-	e.note("pushed %d files", counts[app.SSHPushed])
-}
-
-func toJSONSSHPush(res app.SSHPushResult) jsonSSHPush {
-	st := res.Status
-	out := jsonSSHPush{Dir: st.Dir, Files: make([]jsonSSHFile, len(res.Files)), NotRead: []jsonSSHNotRead{}, Missing: nonNil(st.Missing)}
-	for i, f := range res.Files {
+func toJSONSSH(st app.SSHStatus, files []app.SSHFileResult) jsonSSHRun {
+	out := jsonSSHRun{Dir: st.Dir, Files: make([]jsonSSHFile, len(files)), NotRead: []jsonSSHNotRead{}, Missing: nonNil(st.Missing)}
+	for i, f := range files {
 		out.Files[i] = jsonSSHFile{Path: f.Rel, Change: f.Change.String(), Action: string(f.Action)}
 		if f.Err != nil {
 			out.Files[i].Error = f.Err.Error()

@@ -21,6 +21,16 @@ func sshHarness(t *testing.T, extraKeys ...string) (*harness, string) {
 	if err := os.Mkdir(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
+	key := sshKeyPEM(t)
+	writeFile(t, dir, "config", "Host a\n  IdentityFile ~/.ssh/used_key\n")
+	for _, name := range append([]string{"used_key"}, extraKeys...) {
+		writeFile(t, dir, name, key)
+	}
+	return h, dir
+}
+
+func sshKeyPEM(t *testing.T) string {
+	t.Helper()
 	_, sk, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -29,11 +39,7 @@ func sshHarness(t *testing.T, extraKeys ...string) (*harness, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, dir, "config", "Host a\n  IdentityFile ~/.ssh/used_key\n")
-	for _, name := range append([]string{"used_key"}, extraKeys...) {
-		writeFile(t, dir, name, string(pem.EncodeToMemory(block)))
-	}
-	return h, dir
+	return string(pem.EncodeToMemory(block))
 }
 
 func TestSSHPushWithoutTerminalListsSkippedKeys(t *testing.T) {
@@ -53,7 +59,7 @@ func TestSSHPushWithoutTerminalListsSkippedKeys(t *testing.T) {
 	}
 	h.fail(&fake{}, "get", "ssh/work_key")
 	r = h.ok(&fake{noTTY: true}, "ssh", "push", "--json")
-	var got jsonSSHPush
+	var got jsonSSHRun
 	if err := json.Unmarshal([]byte(r.out), &got); err != nil {
 		t.Fatalf("%v: %q", err, r.out)
 	}

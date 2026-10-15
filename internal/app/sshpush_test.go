@@ -10,13 +10,13 @@ import (
 	"github.com/elliot40404/creds/internal/vault"
 )
 
-func pushSSH(t *testing.T, s *Service, o SSHPushOptions) map[string]SSHPushFile {
+func pushSSH(t *testing.T, s *Service, o SSHPushOptions) map[string]SSHFileResult {
 	t.Helper()
 	res, err := s.SSHPush(o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	out := map[string]SSHPushFile{}
+	out := map[string]SSHFileResult{}
 	for _, f := range res.Files {
 		out[f.Rel] = f
 	}
@@ -53,7 +53,7 @@ func TestSSHPushEveryCase(t *testing.T) {
 	want := map[string]SSHAction{
 		"same": SSHNoChange, "same_nobase": SSHNoChange, "local_new": SSHPushed, "remote_new": SSHNeedsPull,
 		"local_changed": SSHPushed, "remote_change": SSHNeedsPull, "local_deleted": SSHKeptDelete,
-		"remote_delete": SSHNeedsPull, "conflict": SSHKeptVault, "conflict_new": SSHKeptVault,
+		"remote_delete": SSHNeedsPull, "conflict": SSHKeptConflict, "conflict_new": SSHKeptConflict,
 	}
 	for name, a := range want {
 		if f := got["config.d/"+name]; f.Action != a || f.Err != nil {
@@ -121,7 +121,7 @@ func TestSSHPushAsksConflicts(t *testing.T) {
 	if !slices.Equal(asked, []string{"config.d/conflict", "config.d/conflict_new"}) {
 		t.Fatalf("asked %v", asked)
 	}
-	if got["config.d/conflict"].Action != SSHPushed || got["config.d/conflict_new"].Action != SSHKeptVault {
+	if got["config.d/conflict"].Action != SSHPushed || got["config.d/conflict_new"].Action != SSHKeptConflict {
 		t.Fatalf("got %+v", got)
 	}
 }

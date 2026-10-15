@@ -9,33 +9,42 @@ import (
 	"github.com/elliot40404/creds/internal/sshdir"
 )
 
-func (s *Service) saveSSHState(st SSHStatus, out []SSHPushFile) error {
+func (s *Service) saveSSHState(next func(sshdir.State) sshdir.State) error {
 	_, err := sshdir.UpdateState(s.Paths.SSHState(), func(cur *sshdir.State) (bool, error) {
-		next := nextSSHState(*cur, st, out)
-		if sameSSHState(*cur, next) {
+		n := next(*cur)
+		if sameSSHState(*cur, n) {
 			return false, nil
 		}
-		*cur = next
+		*cur = n
 		return true, nil
 	})
 	return err
 }
 
-func nextSSHState(cur sshdir.State, st SSHStatus, out []SSHPushFile) sshdir.State {
+func nextSSHState(cur sshdir.State, st SSHStatus, out []SSHFileResult) sshdir.State {
 	next := sshdir.State{Files: map[string]sshdir.FileState{}}
 	for i, f := range st.Files {
-		switch out[i].Action {
-		case SSHPushed, SSHNoChange:
-			next.Files[f.Rel] = sshFileState(st.Dir, *f.Disk)
-			continue
-		case SSHSkippedKey:
+		if out[i].Action == SSHSkippedKey {
 			next.Skipped = append(next.Skipped, f.Rel)
 		}
-		if base, ok := cur.Files[f.Rel]; ok {
-			next.Files[f.Rel] = base
+		if fs, ok := sshBase(cur, st.Dir, f, out[i].Action); ok {
+			next.Files[f.Rel] = fs
 		}
 	}
 	return next
+}
+
+func sshBase(cur sshdir.State, dir string, f SSHFileStatus, a SSHAction) (sshdir.FileState, bool) {
+	switch a {
+	case SSHPushed, SSHNoChange:
+		return sshFileState(dir, *f.Disk), true
+	case SSHCreated, SSHUpdated:
+		return sshFileState(dir, *f.Vault), true
+	case SSHDeleted:
+		return sshdir.FileState{}, false
+	}
+	fs, ok := cur.Files[f.Rel]
+	return fs, ok
 }
 
 func sshFileState(dir string, f sshdir.File) sshdir.FileState {

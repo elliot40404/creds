@@ -80,6 +80,7 @@ func plans() map[string]plan {
 		"device status":  {},
 		"ssh":            {run: (*interview).pickCommand},
 		"ssh push":       {skip: []string{"all", "yes"}},
+		"ssh pull":       {skip: []string{"yes"}},
 	}
 }
 
