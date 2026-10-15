@@ -78,6 +78,8 @@ func plans() map[string]plan {
 		"device trust":   {asks: []string{"touchid", "identity"}, run: askDeviceTrust},
 		"device untrust": {},
 		"device status":  {},
+		"ssh":            {run: (*interview).pickCommand},
+		"ssh push":       {skip: []string{"all", "yes"}},
 	}
 }
 
