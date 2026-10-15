@@ -96,6 +96,8 @@ var appRules = []Rule{
 	{Target: app.ErrRecoveryMismatch, Code: Usage, Hint: hintRerun + " and type the recovery code exactly as shown"},
 	{Target: app.ErrAborted, Code: General},
 	{Target: app.ErrStrayHome, Code: Conflict, Hint: "move or delete the listed files, or run creds setup in an empty CREDS_HOME"},
+	{Target: app.ErrSSHPath, Code: Usage, Hint: "creds syncs only plain paths inside the ssh dir: no .., /, \\, : or drive letters, rename the file or run creds rm <path>"},
+	{Target: app.ErrSSHFile, Code: General, Hint: "creds syncs only ssh config, private keys and .pub files as UTF-8 text up to 64 KiB, run creds get <path> to check the entry"},
 	{Target: config.ErrUnknownKey, Code: Usage, Hint: "run creds config to list every key"},
 	{Target: config.ErrNotRemovable, Code: Usage, Hint: "run creds config set <key> <value> instead"},
 	{Target: config.ErrBadDuration, Code: Usage, Hint: "run creds config set <key> 15m, any number and unit works, like 90s or 4h"},

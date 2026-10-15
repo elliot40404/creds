@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/pem"
 	"errors"
+	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
@@ -18,8 +19,10 @@ func ignored(name string) bool {
 	return strings.HasPrefix(name, "known_hosts") || strings.HasPrefix(name, "authorized_keys")
 }
 
-func classify(rel string, data []byte) Kind {
+func Classify(rel string, data []byte) Kind {
 	switch {
+	case ignored(path.Base(rel)):
+		return 0
 	case isPrivateKey(data):
 		return KindPrivateKey
 	case strings.HasSuffix(rel, ".pub"):

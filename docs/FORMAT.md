@@ -224,7 +224,7 @@ Any failure stops the load. Save rewrites only changed buckets.
 | --- | --- |
 | `id` | uuid v7, set on first save, never changes |
 | `path` | required, unique, `/` groups things (`work/db/prod`) |
-| `type` | one of `login api database ssh note command env generic` |
+| `type` | one of `login api database ssh note command env generic sshfile` |
 | `name username host url notes tags fields params` | left out when empty |
 | `fields[].name` | required, not empty |
 | `fields[].secret` | left out when false |
@@ -253,6 +253,14 @@ union is symmetric, so two machines merging the same pair land on the same list.
 Secret values live in `fields`. `database` entries: `host` and `username` on the entry,
 fields `engine`, `scheme`, `port`, `database`, `password` (secret), query options in `params`.
 `env` entries: each field is one env var. `command` entries are text only, never run.
+
+`sshfile` entries: one file from `~/.ssh`, path `ssh/<path under ~/.ssh>` with `/` separators
+(`ssh/config`, `ssh/config.d/beam/data_new`, `ssh/id_rsa.pem`). One field `content`, the file
+as UTF-8 text, at most 64 KiB, `secret` only for private keys. Only `config`, `config.d/**`,
+private keys and `*.pub` are allowed, never `known_hosts*` or `authorized_keys*`. Paths with
+`..`, `.`, empty parts, `\`, `:`, a drive letter or a leading `/` are refused when reading
+`~/.ssh` and again before writing a file back. A creds older than this type refuses a vault that
+has one with `invalid entry: unknown type "sshfile"`, there is no format version bump.
 
 ## Session: \<home\>/session
 

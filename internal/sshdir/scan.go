@@ -91,7 +91,7 @@ func (s *scanner) read(rel string) {
 		s.skip(rel, err)
 		return
 	}
-	if kind := classify(rel, data); kind != 0 {
+	if kind := Classify(rel, data); kind != 0 {
 		s.res.Files = append(s.res.Files, File{Rel: rel, Kind: kind, Data: data})
 	}
 }

@@ -24,9 +24,10 @@ const (
 	TypeCommand  Type = "command"
 	TypeEnv      Type = "env"
 	TypeGeneric  Type = "generic"
+	TypeSSHFile  Type = "sshfile"
 )
 
-var types = []Type{TypeLogin, TypeAPI, TypeDatabase, TypeSSH, TypeNote, TypeCommand, TypeEnv, TypeGeneric}
+var types = []Type{TypeLogin, TypeAPI, TypeDatabase, TypeSSH, TypeNote, TypeCommand, TypeEnv, TypeGeneric, TypeSSHFile}
 
 var (
 	ErrInvalidEntry = errors.New("invalid entry")
