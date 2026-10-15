@@ -134,25 +134,31 @@ func TestSSHFileRefused(t *testing.T) {
 
 func sshTestDir(t *testing.T) string {
 	t.Helper()
-	pub, priv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
-	block, err := ssh.MarshalPrivateKey(priv, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	sp, err := ssh.NewPublicKey(pub)
-	if err != nil {
-		t.Fatal(err)
-	}
+	priv, pub := sshKeyPair(t)
 	dir := t.TempDir()
 	writeSSHFile(t, dir, "config", []byte("Include config.d/*/*\n"))
 	writeSSHFile(t, dir, "config.d/beam/data_new", []byte("Host beam\n  IdentityFile ~/.ssh/id_ed25519\n"))
-	writeSSHFile(t, dir, "id_ed25519", pem.EncodeToMemory(block))
-	writeSSHFile(t, dir, "id_ed25519.pub", ssh.MarshalAuthorizedKey(sp))
+	writeSSHFile(t, dir, "id_ed25519", priv)
+	writeSSHFile(t, dir, "id_ed25519.pub", pub)
 	writeSSHFile(t, dir, "known_hosts", []byte("beam ssh-ed25519 AAAA\n"))
 	return dir
+}
+
+func sshKeyPair(t *testing.T) (priv, pub []byte) {
+	t.Helper()
+	pk, sk, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, err := ssh.MarshalPrivateKey(sk, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sp, err := ssh.NewPublicKey(pk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return pem.EncodeToMemory(block), ssh.MarshalAuthorizedKey(sp)
 }
 
 func writeSSHFile(t *testing.T, dir, rel string, data []byte) {

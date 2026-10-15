@@ -79,6 +79,7 @@ func newService(t *testing.T) (*Service, *fakePrompter, *clock) {
 		Prompter: fp,
 		Now:      c.now,
 		LogN:     10,
+		UserHome: t.TempDir(),
 	}
 	return s, fp, c
 }
