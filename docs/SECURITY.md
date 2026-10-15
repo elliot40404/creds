@@ -239,6 +239,32 @@ A writable directory earlier in your PATH can therefore see secrets you copy. Ke
 Only `creds run -- <cmd>` runs a program, and the program comes from you on the command
 line, not from the vault. A test makes sure only that one command can start programs.
 
+## SSH files
+
+`creds ssh push | pull | status` copy `~/.ssh` files to and from the vault.
+
+- Private keys are stored as secret fields inside the encrypted vault, like passwords. The remote
+  only sees encrypted buckets. A key with a passphrase is stored as is and keeps it
+- Only `config`, `config.d/**`, private keys and `*.pub` are read, at most 64 KiB each.
+  `known_hosts` and `authorized_keys` are never read or written. Symlinks in `~/.ssh` are skipped
+- Paths from the vault are checked again before any write: `..`, absolute paths, drive letters and
+  `\` are refused
+- Pull writes inside `~/.ssh` only, through an `os.Root`. A parent dir that is a symlink, junction
+  or file, or a target that is not a regular file, is refused. Files are written `0600`, new dirs
+  `0700`. On Windows each written file gets the protected access list (you and SYSTEM only) when
+  it is created, dirs keep what they inherit. `~/.ssh` is created only when missing (with the
+  protected list), an existing one keeps its access list
+- Each file is read again right before it is written or deleted. If it changed since the check,
+  it is left alone and marked failed
+- Deletes always ask, one yes per file. `-y` never deletes and without a terminal nothing is
+  deleted. A file deleted here never deletes the vault copy
+- The conflict diff never prints key content: private keys only show `key differs, content not
+  shown`. Other files go through the same escape filter as all terminal output
+- `ssh status` changes nothing. `ssh.json` holds paths, sha256 sums and file sizes and times, no
+  content. A sum of a private key does not reveal the key
+- An ssh config can run programs (`ProxyCommand`, `Match exec`). Pull writes the config the vault
+  holds, so anyone who can change your vault can change what ssh runs. Same trust as the vault itself
+
 ## Sync safety
 
 - System `git` runs with hooks off, no signing, `core.symlinks=false`,

@@ -291,6 +291,56 @@ Background sync never blocks and never prompts (git and ssh run in batch mode). 
 only while the vault is unlocked. If it fails, later commands other than `sync` and
 `status` print `last sync failed: <error>, run creds sync` until a sync works.
 
+### SSH files
+
+Back up `~/.ssh` in the vault, then restore it on another PC.
+
+```sh
+creds ssh status                         # what differs between ~/.ssh and the vault, changes nothing
+creds ssh push                           # copy new and changed files into the vault
+creds ssh push --all                     # also keys no ssh config uses
+creds ssh push -y                        # overwrite vault copies that changed on both sides
+creds ssh pull                           # write new and changed vault files into ~/.ssh
+creds ssh pull -y                        # overwrite local copies that changed on both sides
+```
+
+New PC: `creds setup` (or `creds join <url>`), then `creds ssh pull`. Every host works again.
+
+What is backed up, one vault entry per file under `ssh/` (`ssh/config`, `ssh/config.d/work`,
+`ssh/id_ed25519`):
+
+- `config`, everything under `config.d/`, private keys (found by content, any name, `.pem` and
+  `.ppk` too) and `*.pub` files
+- Never `known_hosts`, `authorized_keys` or any other file. Files over 64 KiB are left out and listed
+- Private keys are secret fields, like passwords
+
+Keys no ssh config uses (`IdentityFile`, through `Include`, plus the default `id_*` names) are
+asked about once at push, one yes or no each. A no is saved, later pushes only ask about new keys.
+Without a terminal they are left out and listed, `--all` pushes them.
+
+Status names each change: `local new`, `local changed`, `local deleted`, `remote new`,
+`remote changed`, `remote deleted`, `conflict`. Local means `~/.ssh`, remote means the vault.
+
+```
+$ creds ssh status
+local changed  config
+remote new     id_work
+1 files changed here, run creds ssh push
+1 files changed in the vault, run creds ssh pull
+2 of 5 files differ
+```
+
+- Push: a file changed on both sides is pushed only with `-y` or a yes. A file deleted here stays
+  in the vault
+- Pull: files missing here are created, files changed only in the vault are updated. A file
+  changed on both sides shows a diff (`- here, + vault`, private keys only say `key differs`) and
+  is overwritten only with `-y` or a yes. A file deleted in the vault is deleted here only after a
+  yes, `-y` never deletes
+- creds remembers what it last pushed or wrote in `ssh.json` in its own home (local only, see
+  `creds paths`). That is how it tells "you edited it here" from "old copy"
+- All three take `--json` and `-i`
+- File modes, symlinks and limits: [docs/SECURITY.md](docs/SECURITY.md#ssh-files)
+
 ### Passwords and recovery
 
 ```sh
@@ -376,6 +426,7 @@ JSON output:
 | `trust list` | `trusted[]` |
 | `config` | `[key value default doc]` |
 | `config get` | `key value` |
+| `ssh status`, `ssh push`, `ssh pull` | `dir files[path change action error] not_read[path error] missing warnings invalid` |
 | `paths` | `home_env paths[name path exists note]` |
 | `version` | `version commit date go os arch` |
 

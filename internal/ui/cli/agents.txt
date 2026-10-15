@@ -21,6 +21,7 @@ Using creds from scripts and AI agents
      creds config get session.idle --json
      creds trust list --json                   {"trusted":["/path/.creds.toml"]}
      creds device status --json                {"trusted":true,"plugin":"se",...}
+     creds ssh status --json                   {"files":[{"path":"config","change":"local changed","action":"push"}],...}
    Data goes to stdout. With --json every stderr line is JSON too:
      {"note":"added web/mail"}
      {"error":"vault is locked","hint":"run creds unlock","code":3}
@@ -44,6 +45,11 @@ Using creds from scripts and AI agents
      creds trust /path/to/project --yes
      creds trust remove /path/to/project/.creds.toml --yes
    config set validates the value and saves config.toml.
+     creds ssh push --json                     new and changed ~/.ssh files into the vault
+     creds ssh pull --json                     new and changed vault files into ~/.ssh
+   Without a terminal ssh push leaves out keys no ssh config uses (--all
+   pushes them) and files changed on both sides are kept unless -y.
+   ssh pull never deletes a file without a terminal, -y does not either.
 
 5. Skip questions with --yes: rm, env -o, export, import --overwrite,
    trust, resolve, join. Plain export also needs

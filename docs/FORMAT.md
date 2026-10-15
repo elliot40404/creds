@@ -305,6 +305,35 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
 
 Empty keys are left out. Missing file = empty state.
 
+## SSH state: \<home\>/ssh.json
+
+What `creds ssh push` and `creds ssh pull` last pushed or wrote, per file. Local only, never synced.
+`creds ssh status` only reads it.
+
+```json
+{
+  "files": {
+    "config": {"sum": "q1Yd...base64...=", "size": 812, "mtime": "2026-10-16T09:12:03.1Z"},
+    "id_ed25519": {"sum": "..."}
+  },
+  "skipped": ["old_key"]
+}
+```
+
+| key | meaning |
+| --- | --- |
+| `files` | key = path under `~/.ssh` with `/` separators, same rules as `sshfile` paths |
+| `files[].sum` | sha256 of the file content creds last pushed or wrote, base64. This is the base: disk equal to it and vault not means `remote changed`, the other way round `local changed`, both differ `conflict` |
+| `files[].size` `mtime` | stat of the file on disk when the sum was taken, left out when unknown |
+| `skipped` | keys no ssh config uses that you said no to at push, not asked again. `push --all` pushes them and clears the list |
+
+- Written atomically, mode `0600`, only when it changed. `ssh.json.lock` next to it is an OS file
+  lock held for each change and write
+- Missing file = empty: there is no base, so a file that differs between disk and vault counts as
+  `conflict`, push or pull overwrite it only with `-y` or a yes
+- Over 1 MiB, bad JSON, an unknown key or a path that is not local = `ssh state file is corrupt`.
+  It is never reset by itself. Fix: remove the `ssh.json` shown by `creds paths`
+
 ## Trust file: \<home\>/trust.json
 
 Which project `.creds.toml` files you approved. Local only, never synced.
