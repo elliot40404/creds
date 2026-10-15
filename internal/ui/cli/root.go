@@ -28,6 +28,7 @@ type Env struct {
 	Clip     Clip
 	Spawn    func() error
 	Home     string
+	UserHome string
 	Setup    func(*app.Setup)
 	Editor   func(path string) error
 	json     *bool
@@ -121,7 +122,7 @@ func (e Env) serviceFor(cmd *cobra.Command, p app.Prompter) (*app.Service, error
 		e.note("warning: using default settings, fix %s with creds config edit", paths.Config())
 		cfg = config.Default()
 	}
-	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn}, nil
+	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn, UserHome: e.UserHome}, nil
 }
 
 func configOptional(cmd *cobra.Command) bool {

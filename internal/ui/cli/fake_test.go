@@ -86,6 +86,7 @@ func (f *fake) drained() bool {
 type harness struct {
 	t    *testing.T
 	home string
+	user string
 	now  time.Time
 	clip *fakeClip
 }
@@ -98,13 +99,13 @@ type result struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	h := &harness{t: t, home: t.TempDir(), now: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), clip: &fakeClip{}}
+	h := &harness{t: t, home: t.TempDir(), user: t.TempDir(), now: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), clip: &fakeClip{}}
 	return h
 }
 
 func (h *harness) env(f *fake) (Env, *bytes.Buffer, *bytes.Buffer) {
 	var out, errb bytes.Buffer
-	return Env{Out: &out, Err: &errb, Prompter: f, Now: func() time.Time { return h.now }, LogN: 10, Clip: h.clip.env(), Home: h.home}, &out, &errb
+	return Env{Out: &out, Err: &errb, Prompter: f, Now: func() time.Time { return h.now }, LogN: 10, Clip: h.clip.env(), Home: h.home, UserHome: h.user}, &out, &errb
 }
 
 func (h *harness) run(f *fake, args ...string) result {
