@@ -121,6 +121,7 @@ var known = map[string]error{
 	"sshdir.ErrToken":            sshdir.ErrToken,
 	"sshdir.ErrOutside":          sshdir.ErrOutside,
 	"sshdir.ErrIncludeLoop":      sshdir.ErrIncludeLoop,
+	"sshdir.ErrStateCorrupt":     sshdir.ErrStateCorrupt,
 	"anchor.ErrNoAnchor":         anchor.ErrNoAnchor,
 	"anchor.ErrRollback":         anchor.ErrRollback,
 	"manifest.ErrBadManifest":    manifest.ErrBadManifest,

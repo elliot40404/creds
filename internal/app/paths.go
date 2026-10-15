@@ -35,6 +35,7 @@ func (s *Service) PathReport() PathReport {
 			info("vault", p.Vault(), s.remoteNote()),
 			info("session", p.Session(), s.sessionNote()),
 			info("state", p.State(), ""),
+			info("ssh state", p.SSHState(), ""),
 			info("trust", p.Trust(), ""),
 			info("device", p.Device(), ""),
 			info("usage", p.Usage(), ""),

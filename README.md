@@ -658,7 +658,7 @@ creds paths          # every creds file, its full path and whether it exists
 creds paths --json   # same as data
 ```
 
-It lists the creds home, `config.toml`, the vault dir with its remote, the session with the time left, `state.json`, `trust.json`, `device.json`, `usage.age` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
+It lists the creds home, `config.toml`, the vault dir with its remote, the session with the time left, `state.json`, `ssh.json`, `trust.json`, `device.json`, `usage.age` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
 
 ## Files
 
@@ -666,7 +666,7 @@ Home is `~/.config/creds` on all systems. Set `CREDS_HOME` to use another dir.
 
 ```
 ~/.config/creds/
-  config.toml  session  state.json  sync.lock  trust.json  device.json  usage.age
+  config.toml  session  state.json  ssh.json  sync.lock  trust.json  device.json  usage.age
   vault/       git repo: vault.json, identity.pw.age, identity.recovery.age, entries/00.enc .. 0f.enc
 ```
 

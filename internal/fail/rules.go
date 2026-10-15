@@ -68,6 +68,7 @@ var vaultRules = []Rule{
 	{Target: anchor.ErrNoAnchor, Code: General, Hint: "run creds sync to record the vault state this machine trusts"},
 	{Target: manifest.ErrBadManifest, Code: General, Hint: "the vault files do not match their signed manifest, run creds status and check the remote"},
 	{Target: manifest.ErrOverflow, Code: General, Hint: "run creds init against a fresh remote, this vault has no generations left"},
+	{Target: sshdir.ErrStateCorrupt, Code: General, Hint: "remove the ssh.json shown by creds paths, creds then asks again about keys and changed files"},
 	{Target: fsutil.ErrTooLarge, Code: General, Hint: "the file or the remote data is far bigger than a vault should ever be, run creds status and check the remote"},
 	{Target: format.ErrOldVersion, Code: General},
 	{Target: fsutil.ErrBusy, Code: General, Hint: "another creds command is busy with the same file, try again"},

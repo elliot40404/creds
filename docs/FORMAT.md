@@ -15,6 +15,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
   config.toml          user settings, optional
   session              unlocked identity, plaintext, 0600
   state.json           sync state, local only
+  ssh.json             ssh file hashes and skipped keys, local only
   trust.json           approved project files, local only
   device.json          vault identity sealed to a plugin key, local only (creds device trust)
   usage.age            frecency scores sealed to the vault key, local only

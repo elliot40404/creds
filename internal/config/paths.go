@@ -26,6 +26,7 @@ func DefaultPaths() (Paths, error) {
 func (p Paths) Vault() string    { return filepath.Join(p.Home, "vault") }
 func (p Paths) Session() string  { return filepath.Join(p.Home, "session") }
 func (p Paths) State() string    { return filepath.Join(p.Home, "state.json") }
+func (p Paths) SSHState() string { return filepath.Join(p.Home, "ssh.json") }
 func (p Paths) SyncLock() string { return filepath.Join(p.Home, "sync.lock") }
 func (p Paths) Config() string   { return filepath.Join(p.Home, "config.toml") }
 func (p Paths) Trust() string    { return filepath.Join(p.Home, "trust.json") }

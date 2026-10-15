@@ -44,6 +44,7 @@ func TestPaths(t *testing.T) {
 		p.Vault():    "vault",
 		p.Session():  "session",
 		p.State():    "state.json",
+		p.SSHState(): "ssh.json",
 		p.SyncLock(): "sync.lock",
 		p.Config():   "config.toml",
 		p.Device():   "device.json",
