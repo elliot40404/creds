@@ -42,6 +42,11 @@ func isPrivateKey(data []byte) bool {
 	return err == nil || errors.As(err, &missing)
 }
 
+func IsPublicKey(data []byte) bool {
+	_, _, _, _, err := ssh.ParseAuthorizedKey(data)
+	return err == nil
+}
+
 func isOpenSSHKey(data []byte) bool {
 	block, _ := pem.Decode(data)
 	return block != nil && block.Type == "OPENSSH PRIVATE KEY" && bytes.HasPrefix(block.Bytes, opensshMagic)

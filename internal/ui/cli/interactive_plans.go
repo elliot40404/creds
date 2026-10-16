@@ -83,6 +83,7 @@ func plans() map[string]plan {
 		"ssh pull":       {skip: []string{"yes"}},
 		"ssh status":     {},
 		"ssh add-host":   {asks: []string{"<group/name>", "host", "user", "port", "key"}, run: askSSHAddHost},
+		"ssh add-key":    {asks: []string{"<file>", "name"}, run: askSSHAddKey},
 	}
 }
 
@@ -323,4 +324,11 @@ func askSSHAddHost(iv *interview) error {
 		}
 	}
 	return nil
+}
+
+func askSSHAddKey(iv *interview) error {
+	if err := iv.arg(0, iv.input("Private key file", "")); err != nil {
+		return err
+	}
+	return iv.text("name", "Name in ~/.ssh for a key outside it (blank for the file name)")
 }

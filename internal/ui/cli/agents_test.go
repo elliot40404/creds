@@ -13,7 +13,7 @@ func TestHelpAgents(t *testing.T) {
 		"creds unlock", "--json", "--secret-field", "--yes", "3 locked", "6 no vault",
 		"creds paths --json", "creds config --json", "creds trust list --json",
 		"creds config set", "creds trust remove", "creds device status --json",
-		"creds ssh status --json", "creds ssh push --json", "creds ssh pull --json",
+		"creds ssh status --json", "creds ssh push --json", "creds ssh pull --json", "creds ssh add-key",
 	} {
 		if !strings.Contains(r.out, want) {
 			t.Fatalf("missing %q", want)

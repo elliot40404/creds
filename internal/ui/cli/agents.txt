@@ -48,10 +48,12 @@ Using creds from scripts and AI agents
      creds ssh push --json                     new and changed ~/.ssh files into the vault
      creds ssh pull --json                     new and changed vault files into ~/.ssh
      creds ssh add-host web/db --host h --json new Host file in ~/.ssh/config.d and the vault
+     creds ssh add-key ./work_key --json       private key into ~/.ssh and the vault
    Without a terminal ssh push leaves out keys no ssh config uses (--all
    pushes them) and files changed on both sides are kept unless -y.
    ssh pull never deletes a file without a terminal, -y does not either.
-   ssh add-host never overwrites a file and never edits ~/.ssh/config.
+   ssh add-host and add-key never overwrite a file, add-host never edits
+   ~/.ssh/config, add-key refuses anything but a private key.
 
 5. Skip questions with --yes: rm, env -o, export, import --overwrite,
    trust, resolve, join. Plain export also needs
