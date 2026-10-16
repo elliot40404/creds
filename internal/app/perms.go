@@ -20,6 +20,14 @@ func (s *Service) Warnings() []string {
 	return w
 }
 
+func (s *Service) takeWarnings() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	w := s.warnings
+	s.warnings = nil
+	return w
+}
+
 func (s *Service) warn(msg string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

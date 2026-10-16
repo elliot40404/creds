@@ -127,8 +127,12 @@ func (e Env) serviceFor(cmd *cobra.Command, p app.Prompter) (*app.Service, error
 }
 
 func configOptional(cmd *cobra.Command) bool {
+	return under(cmd, noConfigCmds)
+}
+
+func under(cmd *cobra.Command, names []string) bool {
 	for c := cmd; c != nil; c = c.Parent() {
-		if slices.Contains(noConfigCmds, c.Name()) {
+		if slices.Contains(names, c.Name()) {
 			return true
 		}
 	}
@@ -143,15 +147,22 @@ func (e Env) paths() (config.Paths, error) {
 }
 
 func (e Env) run(fn func(*app.Service, []string) error) func(*cobra.Command, []string) error {
-	return e.withService(e.Prompter, func(s *app.Service, args []string) error {
-		if msg := s.SyncFailure(); msg != "" {
-			e.note("last sync failed: %s", syncFailure(msg))
-		}
-		if msg := s.TakeClearFailure(); msg != "" {
-			e.note("warning: clipboard was not cleared after the last copy: %s", msg)
-		}
-		return fn(s, args)
-	})
+	return func(cmd *cobra.Command, args []string) error {
+		return e.withService(e.Prompter, func(s *app.Service, args []string) error {
+			e.startNotes(s)
+			e.autoPush(cmd, s)
+			return fn(s, args)
+		})(cmd, args)
+	}
+}
+
+func (e Env) startNotes(s *app.Service) {
+	if msg := s.SyncFailure(); msg != "" {
+		e.note("last sync failed: %s", syncFailure(msg))
+	}
+	if msg := s.TakeClearFailure(); msg != "" {
+		e.note("warning: clipboard was not cleared after the last copy: %s", msg)
+	}
 }
 
 func (e Env) withService(p app.Prompter, fn func(*app.Service, []string) error) func(*cobra.Command, []string) error {

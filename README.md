@@ -318,6 +318,11 @@ Keys no ssh config uses (`IdentityFile`, through `Include`, plus the default `id
 asked about once at push, one yes or no each. A no is saved, later pushes only ask about new keys.
 Without a terminal they are left out and listed, `--all` pushes them.
 
+After the first push, any other creds command run while the vault is unlocked pushes files you
+edited here that were pushed before. It only checks file size and time, so it adds well under a
+millisecond. New files, conflicts and deletes are never pushed by it, a one line hint says to run
+`creds ssh status`. Nothing happens while the vault is locked.
+
 Status names each change: `local new`, `local changed`, `local deleted`, `remote new`,
 `remote changed`, `remote deleted`, `conflict`. Local means `~/.ssh`, remote means the vault.
 

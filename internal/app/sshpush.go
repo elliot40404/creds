@@ -5,6 +5,7 @@ import "github.com/elliot40404/creds/internal/sshdir"
 type SSHPushOptions struct {
 	All         bool
 	Overwrite   bool
+	KnownOnly   bool
 	AskKey      func(rel string) (bool, error)
 	AskConflict func(rel string) (bool, error)
 }
@@ -38,10 +39,7 @@ func (o SSHPushOptions) decide(f SSHFileStatus) (SSHAction, error) {
 	case SSHSame:
 		return SSHNoChange, nil
 	case SSHLocalNew:
-		if f.Unused && f.Kind == sshdir.KindPrivateKey {
-			return o.key(f)
-		}
-		return SSHPushed, nil
+		return o.localNew(f)
 	case SSHLocalChanged:
 		return SSHPushed, nil
 	case SSHConflict:
@@ -50,6 +48,16 @@ func (o SSHPushOptions) decide(f SSHFileStatus) (SSHAction, error) {
 		return SSHKeptDelete, nil
 	}
 	return SSHNeedsPull, nil
+}
+
+func (o SSHPushOptions) localNew(f SSHFileStatus) (SSHAction, error) {
+	switch {
+	case f.Unused && f.Kind == sshdir.KindPrivateKey:
+		return o.key(f)
+	case o.KnownOnly:
+		return SSHNotAsked, nil
+	}
+	return SSHPushed, nil
 }
 
 func (o SSHPushOptions) key(f SSHFileStatus) (SSHAction, error) {

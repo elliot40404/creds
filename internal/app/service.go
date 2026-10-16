@@ -32,6 +32,7 @@ type Service struct {
 
 	mu           sync.Mutex
 	readChecked  bool
+	sessionOnly  bool
 	strayChecked bool
 	warnings     []string
 }

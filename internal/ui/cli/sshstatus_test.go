@@ -39,8 +39,8 @@ func TestSSHStatusListsChanges(t *testing.T) {
 	if r = h.ok(&fake{}, "ssh", "status"); r.out != "local new      work_key\n" || !strings.Contains(r.err, "1 unused keys skipped") {
 		t.Fatalf("skipped %q %q", r.out, r.err)
 	}
-	writeFile(t, dir, "config", "Host b\n  IdentityFile ~/.ssh/used_key\n")
 	h.ok(&fake{}, "rm", "ssh/used_key", "--yes")
+	writeFile(t, dir, "config", "Host b\n  IdentityFile ~/.ssh/used_key\n")
 	state := sshStateBytes(t, h)
 	r = h.ok(&fake{}, "ssh", "status")
 	if r.out != "local changed  config\nremote deleted used_key\nlocal new      work_key\n" {

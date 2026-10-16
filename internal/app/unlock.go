@@ -115,6 +115,9 @@ func (s *Service) UnlockWith(pw string) error {
 }
 
 func (s *Service) identity() (*crypto.Identity, error) {
+	if s.sessionOnly {
+		return s.loadIdentity(noSession, false)
+	}
 	return s.loadIdentity(func() (*crypto.Identity, error) {
 		return s.askUnwrap(vaultfiles.PasswordFile, "Master password", asTyped)
 	}, true)
@@ -195,6 +198,8 @@ func (s *Service) sessionIdentity() (*crypto.Identity, error) {
 }
 
 func asTyped(secret string) string { return secret }
+
+func noSession() (*crypto.Identity, error) { return nil, session.ErrNoSession }
 
 func (s *Service) askUnwrap(name, prompt string, canon func(string) string) (*crypto.Identity, error) {
 	return Retry(s.Prompter, func() (*crypto.Identity, error) {
