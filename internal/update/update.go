@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -39,14 +40,20 @@ type Release struct {
 }
 
 type Checker struct {
-	Client  *http.Client
-	BaseURL string
-	Repo    string
-	Version string
+	Client   *http.Client
+	Download *http.Client
+	BaseURL  string
+	Repo     string
+	Version  string
+	OS       string
+	Arch     string
 }
 
 func New(version string) Checker {
-	return Checker{Client: &http.Client{Timeout: Timeout}, BaseURL: API, Repo: Repo, Version: version}
+	return Checker{
+		Client: &http.Client{Timeout: Timeout}, Download: &http.Client{Timeout: DownloadTimeout},
+		BaseURL: API, Repo: Repo, Version: version, OS: runtime.GOOS, Arch: runtime.GOARCH,
+	}
 }
 
 func (c Checker) Latest(ctx context.Context) (Release, error) {
