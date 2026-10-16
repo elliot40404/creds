@@ -44,6 +44,10 @@ type fakeBackend struct {
 	warnings  []string
 	shell     render.Shell
 	variesErr error
+	ssh       app.SSHStatus
+	sshErr    error
+	pushes    []app.SSHPushOptions
+	pulls     []app.SSHPullOptions
 }
 
 func newFake() *fakeBackend {

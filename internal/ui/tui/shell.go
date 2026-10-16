@@ -28,6 +28,9 @@ type Backend interface {
 	SyncStatus() (app.SyncStatus, error)
 	Lock() error
 	Warnings() []string
+	SSHStatus() (app.SSHStatus, error)
+	SSHPush(o app.SSHPushOptions) (app.SSHPushResult, error)
+	SSHPull(o app.SSHPullOptions) (app.SSHPullResult, error)
 }
 
 type Copier func(path, field, as string, sh render.Shell) (string, error)

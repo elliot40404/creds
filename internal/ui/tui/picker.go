@@ -71,6 +71,7 @@ func (l listScreen) keys() []keyHelp {
 		{"up/down j/k", "move"},
 		{"q esc", "quit"},
 		{",", "settings"},
+		{"S", "ssh files"},
 	}
 }
 
@@ -139,6 +140,8 @@ func (l listScreen) navKey(key tea.KeyPressMsg) (Screen, tea.Cmd) {
 		l.filter()
 	case ",":
 		return l, send(settingsMsg{})
+	case "S":
+		return l, send(sshOpenMsg{})
 	case "L":
 		return l, send(lockMsg{})
 	default:

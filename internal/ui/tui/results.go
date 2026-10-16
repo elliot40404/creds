@@ -145,6 +145,10 @@ func (m Model) actionResult(msg tea.Msg) (tea.Model, tea.Cmd, bool) {
 		return m.applied(msg)
 	case copiedMsg:
 		return m.copied(msg)
+	case sshStatusMsg:
+		return m.sshLoaded(msg)
+	case sshDoneMsg:
+		return m.sshDone(msg)
 	case shellVariesMsg:
 		return m.done(msg.err, "press esc and pick the format again", func(m Model) (tea.Model, tea.Cmd) {
 			if !msg.varies {

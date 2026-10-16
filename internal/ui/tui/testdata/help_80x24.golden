@@ -15,8 +15,8 @@ last sync failed: network down. press s to retry
 │ up/down j/k  move                                                            │
 │ q esc        quit                                                            │
 │ ,            settings                                                        │
+│ S            ssh files                                                       │
 │ any key closes this help, ctrl+c quits                                       │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯

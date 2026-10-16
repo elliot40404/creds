@@ -66,6 +66,7 @@ func snapshotFake() *fakeBackend {
 		Path: "work/very/long/path/that/keeps/going/and/going/forever/and/ever", Type: vault.TypeLogin,
 		Username: "someone.with.a.long.name", Host: "a-very-long-hostname.internal.example.com",
 	})
+	f.ssh = fakeSSH()
 	return f
 }
 
@@ -73,13 +74,15 @@ func TestViewSnapshots(t *testing.T) {
 	for _, size := range [][2]int{{80, 24}, {120, 40}} {
 		w, h := size[0], size[1]
 		screens := map[string]Model{
-			"list":   sized(t, snapshotFake(), w, h),
-			"filter": press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('/')}, text("wm")...)...),
-			"detail": press(sized(t, snapshotFake(), w, h), down, enter, down),
-			"help":   press(sized(t, snapshotFake(), w, h), ch('?')),
-			"delete": press(sized(t, snapshotFake(), w, h), ch('d')),
-			"error":  sized(t, snapshotFake(), w, h).fail(errors.New("no clipboard"), "use creds get db/prod --show instead"),
-			"form":   press(step(start(t, snapshotFake(), DefaultHooks()), tea.WindowSizeMsg{Width: w, Height: h}), ch('a'), enter),
+			"list":    sized(t, snapshotFake(), w, h),
+			"filter":  press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('/')}, text("wm")...)...),
+			"detail":  press(sized(t, snapshotFake(), w, h), down, enter, down),
+			"help":    press(sized(t, snapshotFake(), w, h), ch('?')),
+			"delete":  press(sized(t, snapshotFake(), w, h), ch('d')),
+			"error":   sized(t, snapshotFake(), w, h).fail(errors.New("no clipboard"), "use creds get db/prod --show instead"),
+			"ssh":     press(sized(t, snapshotFake(), w, h), ch('S'), down),
+			"sshdiff": press(sized(t, snapshotFake(), w, h), ch('S'), enter),
+			"form":    press(step(start(t, snapshotFake(), DefaultHooks()), tea.WindowSizeMsg{Width: w, Height: h}), ch('a'), enter),
 		}
 		for name, m := range screens {
 			v := view(m)

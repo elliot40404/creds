@@ -1,0 +1,40 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  vault /v
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ssh files  /home/me/.ssh                                                                                             │
+│ 6 of 7 files differ                                                                                                  │
+│                                                                                                                      │
+│   config          conflict        P keeps this file, L takes the vault copy                                          │
+│ ▌ config.d/db     local changed   p pushes it                                                                        │
+│   config.d/old    remote deleted  deleted in the vault, L deletes it here                                            │
+│   config.d/web    remote new      l pulls it                                                                         │
+│   id_ed25519      conflict        P keeps this file, L takes the vault copy                                          │
+│   id_ed25519.pub  same                                                                                               │
+│   id_spare        local new       unused key, not asked                                                              │
+│ ssh config names a missing key file: id_gone                                                                         │
+│ warning: config line 4 uses %h, skipped                                                                              │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+? help  p push changes here to the vault  l pull vault changes here  enter d diff
