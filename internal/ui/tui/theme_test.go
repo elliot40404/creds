@@ -74,15 +74,18 @@ func TestViewSnapshots(t *testing.T) {
 	for _, size := range [][2]int{{80, 24}, {120, 40}} {
 		w, h := size[0], size[1]
 		screens := map[string]Model{
-			"list":    sized(t, snapshotFake(), w, h),
-			"filter":  press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('/')}, text("wm")...)...),
-			"detail":  press(sized(t, snapshotFake(), w, h), down, enter, down),
-			"help":    press(sized(t, snapshotFake(), w, h), ch('?')),
-			"delete":  press(sized(t, snapshotFake(), w, h), ch('d')),
-			"error":   sized(t, snapshotFake(), w, h).fail(errors.New("no clipboard"), "use creds get db/prod --show instead"),
-			"ssh":     press(sized(t, snapshotFake(), w, h), ch('S'), down),
-			"sshdiff": press(sized(t, snapshotFake(), w, h), ch('S'), enter),
-			"form":    press(step(start(t, snapshotFake(), DefaultHooks()), tea.WindowSizeMsg{Width: w, Height: h}), ch('a'), enter),
+			"list":      sized(t, snapshotFake(), w, h),
+			"filter":    press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('/')}, text("wm")...)...),
+			"detail":    press(sized(t, snapshotFake(), w, h), down, enter, down),
+			"help":      press(sized(t, snapshotFake(), w, h), ch('?')),
+			"delete":    press(sized(t, snapshotFake(), w, h), ch('d')),
+			"error":     sized(t, snapshotFake(), w, h).fail(errors.New("no clipboard"), "use creds get db/prod --show instead"),
+			"ssh":       press(sized(t, snapshotFake(), w, h), ch('S'), down),
+			"sshdiff":   press(sized(t, snapshotFake(), w, h), ch('S'), enter),
+			"sshhost":   press(sized(t, snapshotFake(), w, h), append(append([]tea.KeyPressMsg{ch('S'), ch('a')}, text("beam/web")...), ctrl('s'))...),
+			"sshkey":    press(sized(t, snapshotFake(), w, h), ch('S'), ch('i')),
+			"sshkeygen": press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('S'), ch('g'), tabKey, tabKey, ch(' '), tabKey}, text(secretA)...)...),
+			"form":      press(step(start(t, snapshotFake(), DefaultHooks()), tea.WindowSizeMsg{Width: w, Height: h}), ch('a'), enter),
 		}
 		for name, m := range screens {
 			v := view(m)

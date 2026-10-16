@@ -1,0 +1,24 @@
+ creds   ● synced never  ▲ conflicts 1  remote https://example.com/vault.git  v…
+last sync failed: network down. press s to retry
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Add ssh host                                                                 │
+│                                                                              │
+│   name                 beam/web                                              │
+│ ▌ host                 _host name or IP                                      │
+│   user                 optional                                              │
+│   port                 22 when blank                                         │
+│   key                  optional, like id_ed25519, id_spare                   │
+│                                                                              │
+│ host is required, a host name or IP                                          │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+tab down next field  ctrl+s save  esc cancel  shift+tab up previous field

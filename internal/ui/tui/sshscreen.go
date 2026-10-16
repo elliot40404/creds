@@ -21,6 +21,9 @@ func (s sshScreen) keys() []keyHelp {
 		{"p", "push changes here to the vault"},
 		{"l", "pull vault changes here"},
 		{"enter d", "diff"},
+		{"a", "add a host"},
+		{"i", "add a key file"},
+		{"g", "make a new key"},
 		{"P", "conflict: keep this file, replace the vault copy"},
 		{"L", "conflict or delete: take the vault side here"},
 		{"r", "refresh"},
@@ -61,6 +64,12 @@ func (s sshScreen) key(key tea.KeyPressMsg) (Screen, tea.Cmd) {
 		return s, send(sshPullMsg{})
 	case "r":
 		return s, send(sshLoadMsg{})
+	case "a":
+		return s, send(sshHostFormMsg{keys: sshKeyNames(s.status)})
+	case "i":
+		return s, send(sshKeyFormMsg{})
+	case "g":
+		return s, send(sshKeygenFormMsg{})
 	}
 	return s, s.fileKey(key.String())
 }

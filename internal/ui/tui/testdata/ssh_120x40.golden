@@ -37,4 +37,4 @@ last sync failed: network down. press s to retry
 │                                                                                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-? help  p push changes here to the vault  l pull vault changes here  enter d diff
+? help  p push changes here to the vault  l pull vault changes here  enter d diff  a add a host  i add a key file

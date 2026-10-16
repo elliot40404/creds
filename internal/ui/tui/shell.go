@@ -31,6 +31,9 @@ type Backend interface {
 	SSHStatus() (app.SSHStatus, error)
 	SSHPush(o app.SSHPushOptions) (app.SSHPushResult, error)
 	SSHPull(o app.SSHPullOptions) (app.SSHPullResult, error)
+	SSHAddHost(h app.SSHHost) (app.SSHAddHostResult, error)
+	SSHAddKey(file, name string) (app.SSHAddKeyResult, error)
+	SSHKeygen(k app.SSHKeygen) (app.SSHKeygenResult, error)
 }
 
 type Copier func(path, field, as string, sh render.Shell) (string, error)

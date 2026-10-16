@@ -48,6 +48,8 @@ type fakeBackend struct {
 	sshErr    error
 	pushes    []app.SSHPushOptions
 	pulls     []app.SSHPullOptions
+	sshAdds   []string
+	addErr    error
 }
 
 func newFake() *fakeBackend {
