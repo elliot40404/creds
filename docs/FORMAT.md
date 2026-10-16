@@ -267,14 +267,25 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
 ## Session: \<home\>/session
 
 ```json
-{"identity":"AGE-SECRET-KEY-PQ-1...","created":"...","last_used":"..."}
+{"version":2,"method":"dpapi","sealed":"AQAAANCM...","created":"...","last_used":"..."}
+{"version":2,"method":"plain","identity":"AGE-SECRET-KEY-PQ-1...","created":"...","last_used":"..."}
 ```
 
-- Plaintext unlocked identity. File mode `0600`. Never in git
+- `method` is the OS key store that sealed the identity (`dpapi` Windows, `keyring` Linux,
+  `keychain` macOS) or `plain`. `sealed` is the base64 sealed identity, `identity` the plaintext
+  one, a record has exactly one of them. Times are always plain, so a refresh never reseals
+- Key store account: hex SHA-256 of `creds session\0<absolute session path>`
+- No key store, or sealing fails: a `plain` record is written and the caller is told
+  (`ErrPlainFallback`), the unlock is kept
+- A plain record read while a key store is set is sealed and rewritten in place
+- A sealed record that cannot be opened (tampered, other user, other key store, Linux keys gone
+  after a reboot) is deleted, user is asked again
+- Version 1 (no `version`, `{"identity":...,"created":...,"last_used":...}`) is still read
+- File mode `0600`. Never in git
 - Valid while `now - last_used < session.idle` and `now - created < session.hard`
 - Each use rewrites `last_used`
 - Expired, broken, or `last_used` in the future: file is deleted, user is asked again
-- `creds lock` deletes it
+- `creds lock` deletes it and forgets the key store entry
 
 ## Sync state: \<home\>/state.json
 
