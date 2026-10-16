@@ -51,6 +51,7 @@ func plans() map[string]plan {
 		"sync":           {skip: []string{"quiet"}},
 		clipKey:          {skip: []string{"after", "mode"}},
 		updateCheckName:  {},
+		"update":         {skip: []string{"check", "yes"}},
 		"add":            {asks: append([]string{"<path>", "type"}, builtinFlags...), skip: entryForm, run: askAdd, vault: true},
 		"edit":           {asks: append([]string{"<path>", flagRename}, builtinFlags...), skip: entryForm, run: askEdit, vault: true},
 		"get":            {asks: []string{"<path>", "show", "field", "as", "formats"}, skip: []string{"shell"}, run: askGet, vault: true},

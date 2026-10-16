@@ -150,6 +150,7 @@ creds edit work/github
 creds rm work/github
 creds lock                          # forget the session now
 creds version                       # same as creds --version
+creds update                        # install the latest release, --check only looks
 ```
 
 Unlock lasts 15 min idle, 4 h max. Commands ask for the password when needed,

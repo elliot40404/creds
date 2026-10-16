@@ -13,6 +13,7 @@ import (
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/fail"
 	"github.com/elliot40404/creds/internal/safetext"
+	"github.com/elliot40404/creds/internal/update"
 	"github.com/spf13/cobra"
 )
 
@@ -40,6 +41,9 @@ func Main(args []string) int {
 	env := Env{
 		In: os.Stdin, Out: os.Stdout, Err: os.Stderr, Prompter: NewTerminal(os.Stdin, os.Stderr), Clip: SystemClip(), Spawn: spawnSync,
 		Release: buildinfo.Release(), Updates: Updates{Spawn: spawnUpdateCheck},
+	}
+	if env.Release != "" {
+		update.Cleanup()
 	}
 	return Run(env, args)
 }
@@ -104,6 +108,7 @@ func NewRoot(env Env) *cobra.Command {
 	root.AddCommand(deviceCmd(env))
 	root.AddCommand(sshCmd(env))
 	root.AddCommand(versionCmd(env))
+	root.AddCommand(updateCmd(env))
 	root.AddCommand(updateCheckCmd(env))
 	root.AddCommand(pickCmd(env, root))
 	setupRoot(env, root)

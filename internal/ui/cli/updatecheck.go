@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/elliot40404/creds/internal/app"
@@ -18,6 +19,8 @@ var noUpdateNoteCmds = []string{"update", "version"}
 type Updates struct {
 	Spawn func() error
 	API   string
+	HTTP  *http.Client
+	Exe   func() (string, error)
 }
 
 func spawnUpdateCheck() error {
@@ -55,6 +58,9 @@ func (e Env) checker() update.Checker {
 	c := update.New(e.Release)
 	if e.Updates.API != "" {
 		c.BaseURL = e.Updates.API
+	}
+	if e.Updates.HTTP != nil {
+		c.Client, c.Download = e.Updates.HTTP, e.Updates.HTTP
 	}
 	return c
 }
