@@ -43,6 +43,9 @@ func (o SSHPushOptions) decide(f SSHFileStatus) (SSHAction, error) {
 	case SSHLocalChanged:
 		return SSHPushed, nil
 	case SSHConflict:
+		if f.Disk == nil {
+			return SSHKeptConflict, nil
+		}
 		return o.conflict(f.Rel)
 	case SSHLocalDeleted:
 		return SSHKeptDelete, nil

@@ -235,3 +235,17 @@ func TestSSHPushRefusesAVaultChangedSinceStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestSSHPushKeepsAConflictDeletedHere(t *testing.T) {
+	t.Parallel()
+	s, _ := sshService(t)
+	addSSHEntry(t, s, sshdir.File{Rel: "config.d/x", Kind: sshdir.KindConfig, Data: []byte("Host c\n")})
+	st := sshdir.State{Files: map[string]sshdir.FileState{"config.d/x": {Sum: sha256.Sum256([]byte("Host a\n"))}}}
+	if err := sshdir.SaveState(s.Paths.SSHState(), st); err != nil {
+		t.Fatal(err)
+	}
+	got := pushSSH(t, s, SSHPushOptions{Overwrite: true})
+	if f := got["config.d/x"]; f.Change != SSHConflict || f.Action != SSHKeptConflict || vaultSSH(t, s, "config.d/x") != "Host c\n" {
+		t.Fatalf("got %+v", f)
+	}
+}
