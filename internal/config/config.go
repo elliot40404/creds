@@ -26,6 +26,7 @@ type Config struct {
 	Vault     Vault     `toml:"vault"`
 	Device    Device    `toml:"device"`
 	Search    Search    `toml:"search"`
+	SSH       SSH       `toml:"ssh,omitempty"`
 }
 
 type Session struct {
@@ -65,6 +66,12 @@ type Device struct {
 type Search struct {
 	Frecency bool `toml:"frecency"`
 }
+
+type SSH struct {
+	Auto *bool `toml:"auto"`
+}
+
+func (c SSH) AutoOn() bool { return c.Auto != nil && *c.Auto }
 
 type Render struct {
 	Shell   render.Shell      `toml:"shell"`

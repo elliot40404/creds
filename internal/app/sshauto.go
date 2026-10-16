@@ -39,7 +39,19 @@ func (s *Service) SSHAutoPush() string {
 }
 
 func (s *Service) sshAutoOn(st sshdir.State) bool {
-	return len(st.Files) > 0
+	return len(st.Files) > 0 && s.CurrentConfig().SSH.AutoOn()
+}
+
+func (s *Service) turnOnSSHAuto() {
+	c := s.CurrentConfig()
+	if c.SSH.Auto != nil {
+		return
+	}
+	on := true
+	c.SSH.Auto = &on
+	if err := s.saveConfig(c); err != nil {
+		s.warn("ssh: could not turn on ssh.auto, run creds config set ssh.auto true")
+	}
 }
 
 func (s *Service) sessionOnlyService() *Service {

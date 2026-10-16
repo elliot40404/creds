@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -209,5 +210,35 @@ func TestDeviceMaxAgeKey(t *testing.T) {
 	back, err := Decode(data)
 	if err != nil || back.Device.MaxAge != 24*time.Hour {
 		t.Fatalf("roundtrip %+v %v", back.Device, err)
+	}
+}
+
+func TestSSHAutoKeyKeepsUnsetApart(t *testing.T) {
+	t.Parallel()
+	if v, err := Get(Default(), "ssh.auto"); err != nil || v != "false" || Default().SSH.Auto != nil {
+		t.Fatalf("get %q %v", v, err)
+	}
+	data, err := Encode(Default())
+	if err != nil || strings.Contains(string(data), "[ssh]") {
+		t.Fatalf("unset key written %q %v", data, err)
+	}
+	off, err := Set(Default(), "ssh.auto", "false")
+	if err != nil || off.SSH.Auto == nil || off.SSH.AutoOn() {
+		t.Fatalf("set %+v %v", off.SSH, err)
+	}
+	on, err := Set(off, "ssh.auto", "true")
+	if err != nil || !on.SSH.AutoOn() || off.SSH.AutoOn() {
+		t.Fatalf("set changed the original %+v %+v %v", on.SSH, off.SSH, err)
+	}
+	if _, err := Set(off, "ssh.auto", "maybe"); !errors.Is(err, ErrNotBool) {
+		t.Fatalf("bad value %v", err)
+	}
+	data, err = Encode(off)
+	if err != nil {
+		t.Fatal(err)
+	}
+	back, err := Decode(data)
+	if err != nil || back.SSH.Auto == nil || back.SSH.AutoOn() {
+		t.Fatalf("roundtrip %q %+v %v", data, back.SSH, err)
 	}
 }

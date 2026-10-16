@@ -13,7 +13,11 @@ import (
 
 func knownSSHFiles(tb testing.TB, n int) (*Service, string) {
 	tb.Helper()
-	s := &Service{Paths: config.Paths{Home: tb.TempDir()}, Config: config.Default(), Prompter: &fakePrompter{}, UserHome: tb.TempDir()}
+	cfg, err := config.Set(config.Default(), "ssh.auto", "true")
+	if err != nil {
+		tb.Fatal(err)
+	}
+	s := &Service{Paths: config.Paths{Home: tb.TempDir()}, Config: cfg, Prompter: &fakePrompter{}, UserHome: tb.TempDir()}
 	dir := filepath.Join(s.UserHome, ".ssh")
 	st := sshdir.State{Files: map[string]sshdir.FileState{}}
 	for i := range n {
@@ -31,6 +35,13 @@ func knownSSHFiles(tb testing.TB, n int) (*Service, string) {
 		tb.Fatal(err)
 	}
 	return s, dir
+}
+
+func setSSHAuto(t *testing.T, s *Service, v string) {
+	t.Helper()
+	if err := s.ConfigSet("ssh.auto", v); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func pushedSSH(t *testing.T) (*Service, *fakePrompter, string) {
@@ -101,6 +112,7 @@ func TestSSHAutoRefreshesStatWhenOnlyTimeChanged(t *testing.T) {
 func TestSSHAutoConflictHint(t *testing.T) {
 	t.Parallel()
 	s, dir := sshService(t)
+	setSSHAuto(t, s, "true")
 	writeSSHFile(t, dir, "config", []byte("Host b\n"))
 	addSSHEntry(t, s, sshdir.File{Rel: "config", Kind: sshdir.KindConfig, Data: []byte("Host c\n")})
 	st := sshdir.State{Files: map[string]sshdir.FileState{"config": {Sum: sha256.Sum256([]byte("Host a\n"))}}}
@@ -118,6 +130,7 @@ func TestSSHAutoConflictHint(t *testing.T) {
 func TestSSHAutoEveryCase(t *testing.T) {
 	t.Parallel()
 	s, dir := sshService(t)
+	setSSHAuto(t, s, "true")
 	plantSSHCases(t, s, dir)
 	if hint := s.SSHAutoPush(); hint != "ssh: 4 files not pushed, run creds ssh status" {
 		t.Fatalf("hint %q", hint)

@@ -185,6 +185,22 @@ func TestSettingsCycleWraps(t *testing.T) {
 	}
 }
 
+func TestSettingsTogglesSSHAuto(t *testing.T) {
+	c := newFakeConfig()
+	m := gotoRow(t, startCfg(t, c), "ssh.auto")
+	if v := view(m); !strings.Contains(v, "‹ false ›") {
+		t.Fatalf("unset ssh.auto not shown as false %q", v)
+	}
+	m = press(m, rightKey)
+	if !c.cfg.SSH.AutoOn() {
+		t.Fatalf("ssh.auto %v set %v", c.cfg.SSH.Auto, c.set)
+	}
+	press(m, rightKey)
+	if c.cfg.SSH.Auto == nil || c.cfg.SSH.AutoOn() {
+		t.Fatalf("ssh.auto %v after toggling off", c.cfg.SSH.Auto)
+	}
+}
+
 func TestSettingsCycleSnapsOffListValue(t *testing.T) {
 	c := newFakeConfig()
 	c.cfg.Session.Idle = 7 * time.Minute

@@ -10,14 +10,19 @@ import (
 )
 
 func (s *Service) saveSSHState(next func(sshdir.State) sshdir.State) error {
+	known := false
 	_, err := sshdir.UpdateState(s.Paths.SSHState(), func(cur *sshdir.State) (bool, error) {
 		n := next(*cur)
+		known = len(n.Files) > 0
 		if sameSSHState(*cur, n) {
 			return false, nil
 		}
 		*cur = n
 		return true, nil
 	})
+	if err == nil && known {
+		s.turnOnSSHAuto()
+	}
 	return err
 }
 

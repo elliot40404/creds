@@ -77,6 +77,14 @@ func duration(key, doc string, ptr func(*Config) *time.Duration, lim limit, pres
 	}
 }
 
+func parseBool(key, v string) (bool, error) {
+	b, err := strconv.ParseBool(strings.TrimSpace(v))
+	if err != nil {
+		return false, fmt.Errorf("%s: %w: %q", key, ErrNotBool, v)
+	}
+	return b, nil
+}
+
 func boolean(key, doc string, ptr func(*Config) *bool) Field {
 	return Field{
 		Key:     key,
@@ -84,11 +92,28 @@ func boolean(key, doc string, ptr func(*Config) *bool) Field {
 		Choices: []string{"false", "true"},
 		get:     func(c *Config) string { return strconv.FormatBool(*ptr(c)) },
 		set: func(c *Config, v string) error {
-			b, err := strconv.ParseBool(strings.TrimSpace(v))
+			b, err := parseBool(key, v)
 			if err != nil {
-				return fmt.Errorf("%s: %w: %q", key, ErrNotBool, v)
+				return err
 			}
 			*ptr(c) = b
+			return nil
+		},
+	}
+}
+
+func maybeBool(key, doc string, ptr func(*Config) **bool) Field {
+	return Field{
+		Key:     key,
+		Doc:     doc,
+		Choices: []string{"false", "true"},
+		get:     func(c *Config) string { return strconv.FormatBool(*ptr(c) != nil && **ptr(c)) },
+		set: func(c *Config, v string) error {
+			b, err := parseBool(key, v)
+			if err != nil {
+				return err
+			}
+			*ptr(c) = &b
 			return nil
 		},
 	}
@@ -172,6 +197,7 @@ func staticFields() []Field {
 		duration("device.max_age", "ask the master password again when the last one is older than this, 0 never asks", func(c *Config) *time.Duration { return &c.Device.MaxAge },
 			limit{max: maxDevice, warn: 7 * 24 * time.Hour, risk: "a trusted device unlocks that long without the master password", zero: "a trusted device never asks for the master password again"},
 			0, 24*time.Hour, 72*time.Hour, 7*24*time.Hour, 14*24*time.Hour, 30*24*time.Hour),
+		maybeBool("ssh.auto", "push edited ~/.ssh files and write synced ones on their own, the first creds ssh push or pull turns it on", func(c *Config) **bool { return &c.SSH.Auto }),
 		choice("render.shell", "shell used to quote values", render.Shells(), func(c *Config) *render.Shell { return &c.Render.Shell }),
 	}
 }

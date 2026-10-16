@@ -22,6 +22,7 @@ func sshPullFlag(t *testing.T, s *Service) bool {
 func TestSSHAutoPullWritesOnlySafeChanges(t *testing.T) {
 	t.Parallel()
 	s, dir := sshService(t)
+	setSSHAuto(t, s, "true")
 	plantSSHCases(t, s, dir)
 	if hint := s.SSHAutoPull(); hint != "" {
 		t.Fatalf("pulled without a sync: %q", hint)

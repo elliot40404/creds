@@ -21,3 +21,28 @@ func TestSSHAutoPushOnCommandStart(t *testing.T) {
 		t.Fatalf("status after auto push %q %q", r.out, r.err)
 	}
 }
+
+func TestSSHAutoConfigKey(t *testing.T) {
+	t.Parallel()
+	h, dir := sshHarness(t)
+	if r := h.ok(&fake{}, "config", "get", "ssh.auto"); strings.TrimSpace(r.out) != "false" {
+		t.Fatalf("before push %q", r.out)
+	}
+	h.ok(&fake{noTTY: true}, "ssh", "push")
+	if r := h.ok(&fake{}, "config", "get", "ssh.auto"); strings.TrimSpace(r.out) != "true" {
+		t.Fatalf("after push %q", r.out)
+	}
+	h.ok(&fake{}, "config", "set", "ssh.auto", "false")
+	if r := h.ok(&fake{}, "config"); !strings.Contains(r.out, "ssh.auto") {
+		t.Fatalf("config list %q", r.out)
+	}
+	writeFile(t, dir, "config", "Host a\n  IdentityFile ~/.ssh/used_key\n  Port 2222\n")
+	r := h.ok(&fake{}, "get", "ssh/config", "--field", "content")
+	if strings.Contains(r.out, "Port 2222") {
+		t.Fatalf("pushed with ssh.auto false: %q", r.out)
+	}
+	h.ok(&fake{noTTY: true}, "ssh", "push")
+	if r := h.ok(&fake{}, "config", "get", "ssh.auto"); strings.TrimSpace(r.out) != "false" {
+		t.Fatalf("push turned it back on %q", r.out)
+	}
+}
