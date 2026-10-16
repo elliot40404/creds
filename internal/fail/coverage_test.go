@@ -24,6 +24,7 @@ import (
 	"github.com/elliot40404/creds/internal/fsutil"
 	"github.com/elliot40404/creds/internal/gh"
 	"github.com/elliot40404/creds/internal/gitsync"
+	"github.com/elliot40404/creds/internal/keystore"
 	"github.com/elliot40404/creds/internal/manifest"
 	"github.com/elliot40404/creds/internal/render"
 	"github.com/elliot40404/creds/internal/runner"
@@ -169,6 +170,8 @@ var known = map[string]error{
 	"render.ErrTooBig":           render.ErrTooBig,
 	"render.ErrTooLong":          render.ErrTooLong,
 	"runner.ErrNoCommand":        runner.ErrNoCommand,
+	"keystore.ErrOpen":           keystore.ErrOpen,
+	"keystore.ErrUnavailable":    keystore.ErrUnavailable,
 	"session.ErrExpired":         session.ErrExpired,
 	"session.ErrNoSession":       session.ErrNoSession,
 	"session.ErrUnprotected":     session.ErrUnprotected,

@@ -12,6 +12,7 @@ import (
 	"github.com/elliot40404/creds/internal/format"
 	"github.com/elliot40404/creds/internal/fsutil"
 	"github.com/elliot40404/creds/internal/gh"
+	"github.com/elliot40404/creds/internal/keystore"
 	"github.com/elliot40404/creds/internal/manifest"
 	"github.com/elliot40404/creds/internal/session"
 	"github.com/elliot40404/creds/internal/sshdir"
@@ -37,6 +38,8 @@ var vaultRules = []Rule{
 	{Target: session.ErrNoSession, Code: Locked, Msg: "vault is locked", Hint: hintUnlock},
 	{Target: session.ErrExpired, Code: Locked, Msg: "session expired", Hint: hintUnlock},
 	{Target: session.ErrUnprotected, Code: Locked, Msg: "session file was readable by others and was dropped", Hint: hintUnlock},
+	{Target: keystore.ErrOpen, Code: Locked, Msg: "protected session could not be opened", Hint: hintUnlock},
+	{Target: keystore.ErrUnavailable, Code: General, Msg: "no OS key store on this system", Hint: "creds keeps a plain session file here, run creds lock when done"},
 	{Target: device.ErrNotTrusted, Code: General, Hint: "run creds device trust --touchid or --identity <file>"},
 	{Target: device.ErrStale, Code: General, Hint: hintUnlock + " with the master password"},
 	{Target: device.ErrVaultChanged, Code: General, Hint: "run creds device trust again"},

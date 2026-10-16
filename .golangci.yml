@@ -44,6 +44,10 @@ linters:
         linters:
           - gosec
         text: G103
+      - path: internal/keystore/dpapi_windows.go
+        linters:
+          - gosec
+        text: G103
       - path: internal/detach/job_windows_test.go
         linters:
           - gosec
