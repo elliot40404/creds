@@ -15,13 +15,9 @@ func (s *Service) RecordClearFailure(err error) error {
 	return uerr
 }
 
-func (s *Service) TakeClearFailure() string {
-	st, err := gitsync.LoadState(s.Paths.State())
-	if err != nil || st.ClearError == "" {
-		return ""
-	}
+func (s *Service) takeClearFailure() string {
 	var msg string
-	_, err = gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
+	_, err := gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
 		msg, st.ClearError = st.ClearError, ""
 		return msg != "", nil
 	})

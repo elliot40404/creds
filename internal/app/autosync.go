@@ -72,9 +72,8 @@ func (s *Service) hasRemote() bool {
 	return err == nil && bytes.Contains(data, remoteSection)
 }
 
-func (s *Service) SyncFailure() string {
-	st, err := gitsync.LoadState(s.Paths.State())
-	if err != nil || st.LastResult != "error" || !s.hasRemote() {
+func (s *Service) syncFailure(st gitsync.State) string {
+	if st.LastResult != "error" || !s.hasRemote() {
 		return ""
 	}
 	line, _, _ := strings.Cut(st.LastError, "\n")

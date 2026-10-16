@@ -29,6 +29,7 @@ type Service struct {
 	Spawn    func() error
 	Waiting  func()
 	UserHome string
+	Release  string
 
 	mu           sync.Mutex
 	readChecked  bool

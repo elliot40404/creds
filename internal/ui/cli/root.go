@@ -28,6 +28,8 @@ type Env struct {
 	Clip     Clip
 	Spawn    func() error
 	Home     string
+	Release  string
+	Updates  Updates
 	UserHome string
 	Setup    func(*app.Setup)
 	Editor   func(path string) error
@@ -35,7 +37,10 @@ type Env struct {
 }
 
 func Main(args []string) int {
-	env := Env{In: os.Stdin, Out: os.Stdout, Err: os.Stderr, Prompter: NewTerminal(os.Stdin, os.Stderr), Clip: SystemClip(), Spawn: spawnSync}
+	env := Env{
+		In: os.Stdin, Out: os.Stdout, Err: os.Stderr, Prompter: NewTerminal(os.Stdin, os.Stderr), Clip: SystemClip(), Spawn: spawnSync,
+		Release: buildinfo.Release(), Updates: Updates{Spawn: spawnUpdateCheck},
+	}
 	return Run(env, args)
 }
 
@@ -99,6 +104,7 @@ func NewRoot(env Env) *cobra.Command {
 	root.AddCommand(deviceCmd(env))
 	root.AddCommand(sshCmd(env))
 	root.AddCommand(versionCmd(env))
+	root.AddCommand(updateCheckCmd(env))
 	root.AddCommand(pickCmd(env, root))
 	setupRoot(env, root)
 	markRun(root)
@@ -123,7 +129,7 @@ func (e Env) serviceFor(cmd *cobra.Command, p app.Prompter) (*app.Service, error
 		e.note("warning: using default settings, fix %s with creds config edit", paths.Config())
 		cfg = config.Default()
 	}
-	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn, UserHome: e.UserHome}, nil
+	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn, UserHome: e.UserHome, Release: e.Release}, nil
 }
 
 func configOptional(cmd *cobra.Command) bool {
@@ -149,20 +155,22 @@ func (e Env) paths() (config.Paths, error) {
 func (e Env) run(fn func(*app.Service, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return e.withService(e.Prompter, func(s *app.Service, args []string) error {
-			e.startNotes(s)
+			e.startNotes(cmd, s)
 			e.autoSSH(cmd, s)
 			return fn(s, args)
 		})(cmd, args)
 	}
 }
 
-func (e Env) startNotes(s *app.Service) {
-	if msg := s.SyncFailure(); msg != "" {
-		e.note("last sync failed: %s", syncFailure(msg))
+func (e Env) startNotes(cmd *cobra.Command, s *app.Service) {
+	n := s.Notice()
+	if n.SyncFailure != "" {
+		e.note("last sync failed: %s", syncFailure(n.SyncFailure))
 	}
-	if msg := s.TakeClearFailure(); msg != "" {
-		e.note("warning: clipboard was not cleared after the last copy: %s", msg)
+	if n.ClearFailure != "" {
+		e.note("warning: clipboard was not cleared after the last copy: %s", n.ClearFailure)
 	}
+	e.updateNotes(cmd, n)
 }
 
 func (e Env) withService(p app.Prompter, fn func(*app.Service, []string) error) func(*cobra.Command, []string) error {

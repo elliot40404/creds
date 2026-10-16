@@ -129,6 +129,7 @@ func (iv *interview) run(argv, stdin []string) {
 	env := iv.env
 	if iv.ran {
 		env.Spawn = nil
+		env.Updates.Spawn = nil
 	}
 	if len(stdin) > 0 {
 		env.In = strings.NewReader(strings.Join(stdin, "\n") + "\n")

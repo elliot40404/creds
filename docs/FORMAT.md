@@ -285,7 +285,10 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
   "last_error": "",
   "conflicts": [{"file": "entries/03.enc", "paths": ["work/db"], "ids": ["..."], "choice": 1}],
   "password_changed": "...",
-  "clear_error": ""
+  "clear_error": "",
+  "update_checked": "...",
+  "update_latest": "v0.3.0",
+  "update_url": "https://github.com/elliot40404/creds/releases/tag/v0.3.0"
 }
 ```
 
@@ -300,6 +303,9 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
 | `conflicts[].choice` | missing = not picked, `1` = mine, `2` = theirs (set by `creds resolve`) |
 | `password_changed` | UTC time a sync pulled a different `identity.pw.age`. Commands warn until you unlock with the password or run `passwd`, which clears it |
 | `clear_error` | first line of the error when the background clipboard clear failed. The next command warns once and clears it |
+| `update_checked` | UTC time of the last release check. Release builds start a background check when this is a day old, unless `update.mode` is `off` |
+| `update_latest` | tag of the latest GitHub release seen. While it is newer than the running release build, commands show `creds <version> is out, run creds update` |
+| `update_url` | release page of `update_latest` |
 
 `state.json.lock` next to it is an OS file lock held for each read, change and write of the file.
 
