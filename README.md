@@ -72,6 +72,37 @@ creds --version
 creds setup        # guided first run, see below
 ```
 
+### Updates
+
+Release binaries check GitHub for a new release once a day, in the background. A command never
+waits for it. When one is out, the next command prints `creds 0.3.0 is out, run creds update`.
+
+```sh
+creds update --check   # only look
+creds update           # download, check, install (asks first)
+creds update --yes     # no question, for scripts
+```
+
+`update.mode` picks what the daily check does:
+
+- `hint` (default): print the note above
+- `install`: also install the new release in the background. The next command prints
+  `creds updated to 0.3.0`, or `creds update failed in the background, run creds update`
+- `off`: never check. `creds update` still works
+
+```sh
+creds config set update.mode install
+```
+
+`creds update` checks the archive against `checksums.txt` of the same release before it touches
+the binary. See [docs/SECURITY.md](docs/SECURITY.md#self-update).
+
+Builds from `go install` or `just install` do not update themselves. Run
+`go install github.com/elliot40404/creds/cmd/creds@latest` or `just install` again.
+
+On Windows a running exe cannot be replaced, so creds renames it to `creds.exe.old` and puts the
+new one in its place. The next creds run deletes `creds.exe.old`.
+
 ### Uninstall
 
 Delete the binary: the one you unpacked, or `$(go env GOPATH)/bin/creds`

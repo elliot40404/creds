@@ -205,6 +205,31 @@ plugins (`age-plugin-<name>`, only after `creds device trust`) as
 resolved by your PATH at the time of the call, with the value on stdin, never through a shell.
 A writable directory earlier in your PATH can therefore see secrets you copy. Keep PATH clean.
 
+## Self update
+
+`creds update` and `update.mode = install` replace the creds binary with the latest GitHub
+release. Only release builds do this, `go install` and source builds refuse.
+
+- The GitHub API is only read (`releases/latest`), with no token. Nothing is ever written to any
+  repo
+- Every request is https, redirects too. A redirect to plain http is refused
+- The archive's sha256 must match its line in `checksums.txt` of the same release. Any other
+  value, a missing line or a malformed file stops the update before the binary is touched
+- Size caps: 256 KiB release data, 64 KiB `checksums.txt`, 64 MiB archive, 128 MiB binary
+- Only the root `creds` (`creds.exe`) entry is taken from the archive. It must be a regular
+  file, not a link. Paths that leave the archive root and duplicate names are refused
+- The download and the new binary are temp files in the exe's own dir, then a rename swaps the
+  new binary in. Unix renames over the exe. Windows renames the running exe to `creds.exe.old`
+  first and renames it back if the second step fails. Temp files left by a killed update are
+  removed by the next background check once they are an hour old
+- `install` mode runs in the detached background check, at most once a day, under
+  `update.lock` in the creds home so two installs never overlap. A failure is kept in
+  `state.json` and the next command prints one line
+- Trust: this is GitHub's release plus TLS. Someone who can publish a release in this repo, or
+  break TLS to GitHub, can ship a binary that passes the check. `checksums.txt` is not signed yet
+  (listed as later work). To check a release by hand, use `gh attestation verify` as shown in the
+  README. Use `hint` mode (the default) if you want to check each release before installing it
+
 ## Device unlock (Touch ID, YubiKey, TPM)
 
 `creds device trust` seals a copy of the vault identity to an age plugin key and keeps it in

@@ -20,6 +20,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
   device.json          vault identity sealed to a plugin key, local only (creds device trust)
   usage.age            frecency scores sealed to the vault key, local only
   sync.lock            present while a sync runs
+  update.lock          OS file lock held while a background update installs
   vault/               git repo, the only part that is synced
     .git/
     .gitignore
@@ -288,7 +289,9 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
   "clear_error": "",
   "update_checked": "...",
   "update_latest": "v0.3.0",
-  "update_url": "https://github.com/elliot40404/creds/releases/tag/v0.3.0"
+  "update_url": "https://github.com/elliot40404/creds/releases/tag/v0.3.0",
+  "update_error": "",
+  "update_installed": "0.3.0"
 }
 ```
 
@@ -306,6 +309,8 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
 | `update_checked` | UTC time of the last release check. Release builds start a background check when this is a day old, unless `update.mode` is `off` |
 | `update_latest` | tag of the latest GitHub release seen. While it is newer than the running release build, commands show `creds <version> is out, run creds update` |
 | `update_url` | release page of `update_latest` |
+| `update_error` | first line of the error when `update.mode = install` failed to install in the background. The next command prints `creds update failed in the background, run creds update` once and clears it |
+| `update_installed` | version the background install put in place. The next command prints `creds updated to <version>` once and clears it |
 
 `state.json.lock` next to it is an OS file lock held for each read, change and write of the file.
 
