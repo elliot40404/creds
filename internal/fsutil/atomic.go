@@ -70,9 +70,17 @@ func writeAndSync(f *os.File, data []byte) error {
 }
 
 func rename(root *os.Root, old, new string) error {
+	return retry(func() error { return renameIn(root, old, new) })
+}
+
+func Rename(old, new string) error {
+	return retry(func() error { return os.Rename(old, new) })
+}
+
+func retry(fn func() error) error {
 	var err error
 	for range renameTries {
-		if err = renameIn(root, old, new); err == nil || !transient(err) {
+		if err = fn(); err == nil || !transient(err) {
 			return err
 		}
 		time.Sleep(renameBackoff)
