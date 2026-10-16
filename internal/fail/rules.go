@@ -116,5 +116,6 @@ var appRules = []Rule{
 	{Target: config.ErrNoChoices, Code: Usage, Hint: "type a value for that key, run creds config set <key> <value>"},
 	{Target: config.ErrUnknownMode, Code: Usage, Hint: "run creds config set ui.mode fullscreen, or inline"},
 	{Target: config.ErrUnknownSign, Code: Usage, Hint: "run creds config set sync.sign off, ssh, or inherit"},
+	{Target: config.ErrUnknownUpdate, Code: Usage, Hint: "run creds config set update.mode hint, install, or off"},
 	{Target: editor.ErrNoEditor, Code: General, Hint: "set EDITOR to your editor, then run creds config edit"},
 }

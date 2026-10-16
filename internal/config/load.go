@@ -76,6 +76,9 @@ func (c Config) validate() error {
 	if err := checkSign(c.Sync); err != nil {
 		return err
 	}
+	if err := checkUpdate(c.Update); err != nil {
+		return err
+	}
 	if c.Session.Idle > c.Session.Hard {
 		return errors.New("session.idle must not exceed session.hard")
 	}

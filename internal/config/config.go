@@ -27,6 +27,7 @@ type Config struct {
 	Device    Device    `toml:"device"`
 	Search    Search    `toml:"search"`
 	SSH       SSH       `toml:"ssh,omitempty"`
+	Update    Update    `toml:"update,omitempty"`
 }
 
 type Session struct {

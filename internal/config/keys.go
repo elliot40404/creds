@@ -198,6 +198,7 @@ func staticFields() []Field {
 			limit{max: maxDevice, warn: 7 * 24 * time.Hour, risk: "a trusted device unlocks that long without the master password", zero: "a trusted device never asks for the master password again"},
 			0, 24*time.Hour, 72*time.Hour, 7*24*time.Hour, 14*24*time.Hour, 30*24*time.Hour),
 		maybeBool("ssh.auto", "push edited ~/.ssh files and write synced ones on their own, the first creds ssh push or pull turns it on", func(c *Config) **bool { return &c.SSH.Auto }),
+		updateField(),
 		choice("render.shell", "shell used to quote values", render.Shells(), func(c *Config) *render.Shell { return &c.Render.Shell }),
 	}
 }

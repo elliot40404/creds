@@ -552,6 +552,7 @@ Set the key and the note goes away, because your value is then the answer.
 | `device.max_age` | a trusted device asks the master password again after this long, `0` never asks | `72h` |
 | `search.frecency` | rank results by how often and how lately you use each entry, `false` stops recording and ranking | `true` |
 | `ssh.auto` | push edited `~/.ssh` files and write synced ones on their own, the first `creds ssh push` or `pull` turns it on | `false` |
+| `update.mode` | when a new release is out: `hint` prints a note, `install` also installs it, `off` never checks | `hint` |
 | `render.shell` | `bash` or `pwsh` | `pwsh` on Windows, else `bash` |
 | `render.formats.<engine>.<name>` | template override, for example `render.formats.postgres.psql` | none |
 

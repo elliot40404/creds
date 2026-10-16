@@ -96,6 +96,7 @@ var known = map[string]error{
 	"config.ErrNoChoices":        config.ErrNoChoices,
 	"config.ErrUnknownMode":      config.ErrUnknownMode,
 	"config.ErrUnknownSign":      config.ErrUnknownSign,
+	"config.ErrUnknownUpdate":    config.ErrUnknownUpdate,
 	"gitsync.ErrSignFailed":      gitsync.ErrSignFailed,
 	"config.ErrNotRemovable":     config.ErrNotRemovable,
 	"config.ErrUnknownKey":       config.ErrUnknownKey,

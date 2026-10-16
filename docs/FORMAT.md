@@ -479,6 +479,7 @@ frecency = true
 | `device.max_age` | `72h` | a trusted device asks the master password again after this long, `0` never asks, max `720h` |
 | `search.frecency` | `true` | record entry uses in `usage.age` and rank by them, `false` does neither |
 | `ssh.auto` | unset (off) | auto push and pull of known `~/.ssh` files, the first `creds ssh push` or `pull` sets it to `true` when unset, an explicit `false` stays |
+| `update.mode` | unset (`hint`) | `hint`, `install` or `off`. Release builds check GitHub once a day in the background unless `off` |
 | `render.shell` | `pwsh` on Windows, else `bash` | quoting style for command formats, `bash` or `pwsh` |
 | `render.formats` | empty | key `engine.format`, value Go template, checked at load |
 

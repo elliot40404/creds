@@ -615,3 +615,15 @@ func TestSettingsRemoteInputIsMasked(t *testing.T) {
 		t.Fatalf("token on screen %q", v)
 	}
 }
+
+func TestSettingsCyclesUpdateMode(t *testing.T) {
+	c := newFakeConfig()
+	m := gotoRow(t, startCfg(t, c), "update.mode")
+	if v := view(m); !strings.Contains(v, "‹ hint ›") {
+		t.Fatalf("unset update.mode not shown as hint %q", v)
+	}
+	press(m, leftKey)
+	if c.cfg.Update.Current() != config.UpdateOff {
+		t.Fatalf("update.mode %q set %v", c.cfg.Update.Mode, c.set)
+	}
+}
