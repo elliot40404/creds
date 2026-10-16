@@ -76,7 +76,7 @@ func (s *scanner) visit(rel string, d fs.DirEntry, err error) error {
 		return err
 	case err != nil:
 		s.skip(rel, err)
-	case rel == "." || d.IsDir() || ignored(d.Name()):
+	case rel == "." || d.IsDir() || Ignored(d.Name()):
 	case d.Type()&fs.ModeSymlink != 0:
 		s.skip(rel, ErrSymlink)
 	case d.Type().IsRegular():

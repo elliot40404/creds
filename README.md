@@ -306,6 +306,7 @@ creds ssh add-host web/db --host 10.0.0.5 --user ubuntu --port 2222 --key id_ed2
                                          # new ~/.ssh/config.d/web/db with Host db, saved in the vault
 creds ssh add-key ~/Downloads/work_key   # copy a key into ~/.ssh and the vault, with its .pub
 creds ssh add-key ~/.ssh/old_key         # push a key in ~/.ssh, also one no ssh config uses
+creds ssh keygen id_work --passphrase    # new ed25519 key + .pub in ~/.ssh and the vault
 ```
 
 New PC: `creds setup` (or `creds join <url>`), then `creds ssh pull`. Every host works again.
@@ -314,6 +315,8 @@ New PC: `creds setup` (or `creds join <url>`), then `creds ssh pull`. Every host
 include the new file it prints the line to add at the top, like `Include config.d/*/*`.
 `ssh add-key` takes only private keys up to 64 KiB, never links, and never overwrites a file with
 other content. `--name` sets the file name in `~/.ssh` for a key copied from outside it.
+`ssh keygen` asks for the passphrase at the terminal, never on the command line. `--comment` sets
+the text at the end of the `.pub` line (default: the name).
 
 What is backed up, one vault entry per file under `ssh/` (`ssh/config`, `ssh/config.d/work`,
 `ssh/id_ed25519`):
@@ -446,6 +449,7 @@ JSON output:
 | `ssh status`, `ssh push`, `ssh pull` | `dir files[path change action error] not_read[path error] missing warnings invalid` |
 | `ssh add-host` | `dir path alias include` (`include` is the line to add to `~/.ssh/config`, absent when it already includes the file) |
 | `ssh add-key` | `dir path files unused note` (`files` lists `path action`, action `created`, `pushed` or `same`; `unused` is true when no ssh config uses the key; `note` says why a `.pub` was left out) |
+| `ssh keygen` | `dir path files public_key` (`files` lists the key and its `.pub` with action `created`; `public_key` is the `.pub` line) |
 | `paths` | `home_env paths[name path exists note]` |
 | `version` | `version commit date go os arch` |
 

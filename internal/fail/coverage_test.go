@@ -62,6 +62,8 @@ var known = map[string]error{
 	"app.ErrSSHFile":             app.ErrSSHFile,
 	"app.ErrSSHHost":             app.ErrSSHHost,
 	"app.ErrSSHKey":              app.ErrSSHKey,
+	"app.ErrSSHKeygen":           app.ErrSSHKeygen,
+	"app.ErrSSHPassphrase":       app.ErrSSHPassphrase,
 	"app.ErrSSHPath":             app.ErrSSHPath,
 	"app.ErrPasswordMismatch":    app.ErrPasswordMismatch,
 	"app.ErrPhrase":              app.ErrPhrase,

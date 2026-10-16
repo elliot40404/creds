@@ -101,6 +101,8 @@ var appRules = []Rule{
 	{Target: app.ErrSSHFile, Code: General, Hint: "creds syncs only ssh config, private keys and .pub files as UTF-8 text up to 64 KiB, run creds get <path> to check the entry"},
 	{Target: app.ErrSSHHost, Code: Usage, Hint: "run creds ssh add-host group/name --host 10.0.0.5, names use letters, digits, . _ -, --key names a private key file in ~/.ssh"},
 	{Target: app.ErrSSHKey, Code: Usage, Hint: "creds ssh add-key takes a private key file up to 64 KiB, not a .pub, config or link, like creds ssh add-key ~/Downloads/id_ed25519 --name work_key"},
+	{Target: app.ErrSSHKeygen, Code: Usage, Hint: "run creds ssh keygen id_work, names use letters, digits, . _ - and no .pub, --comment is one line of text"},
+	{Target: app.ErrSSHPassphrase, Code: Usage, Hint: "type a passphrase twice, or run creds ssh keygen <name> without --passphrase"},
 	{Target: app.ErrSSHExists, Code: Conflict, Hint: "pick another name, or edit the file in ~/.ssh and run creds ssh push"},
 	{Target: config.ErrUnknownKey, Code: Usage, Hint: "run creds config to list every key"},
 	{Target: config.ErrNotRemovable, Code: Usage, Hint: "run creds config set <key> <value> instead"},

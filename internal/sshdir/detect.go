@@ -15,13 +15,13 @@ var (
 	opensshMagic = []byte("openssh-key-v1\x00")
 )
 
-func ignored(name string) bool {
+func Ignored(name string) bool {
 	return strings.HasPrefix(name, "known_hosts") || strings.HasPrefix(name, "authorized_keys")
 }
 
 func Classify(rel string, data []byte) Kind {
 	switch {
-	case ignored(path.Base(rel)):
+	case Ignored(path.Base(rel)):
 		return 0
 	case isPrivateKey(data):
 		return KindPrivateKey

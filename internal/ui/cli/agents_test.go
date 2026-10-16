@@ -14,6 +14,7 @@ func TestHelpAgents(t *testing.T) {
 		"creds paths --json", "creds config --json", "creds trust list --json",
 		"creds config set", "creds trust remove", "creds device status --json",
 		"creds ssh status --json", "creds ssh push --json", "creds ssh pull --json", "creds ssh add-key",
+		"creds ssh keygen id_work --json",
 	} {
 		if !strings.Contains(r.out, want) {
 			t.Fatalf("missing %q", want)

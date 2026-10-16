@@ -55,23 +55,34 @@ func checkSSHKey(res sshdir.Result, key string) error {
 	return fmt.Errorf("%w: key %q is not a private key file in ~/.ssh", ErrSSHHost, key)
 }
 
-func (s *Service) sshFree(dir, rel string) error {
-	_, err := os.Lstat(filepath.Join(dir, filepath.FromSlash(rel)))
-	switch {
-	case err == nil:
-		return fmt.Errorf("%w: %s is in %s", ErrSSHExists, rel, dir)
-	case !errors.Is(err, fs.ErrNotExist):
-		return err
-	}
-	p, err := SSHVaultPath(rel)
-	if err != nil {
-		return err
+func (s *Service) sshFree(dir string, rels ...string) error {
+	for _, rel := range rels {
+		_, err := os.Lstat(filepath.Join(dir, filepath.FromSlash(rel)))
+		switch {
+		case err == nil:
+			return fmt.Errorf("%w: %s is in %s", ErrSSHExists, rel, dir)
+		case !errors.Is(err, fs.ErrNotExist):
+			return err
+		}
 	}
 	v, err := s.open()
 	if err != nil {
 		return err
 	}
 	defer v.Close()
+	for _, rel := range rels {
+		if err := sshVaultFree(v, rel); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func sshVaultFree(v *vault.Vault, rel string) error {
+	p, err := SSHVaultPath(rel)
+	if err != nil {
+		return err
+	}
 	_, err = v.Get(p)
 	switch {
 	case err == nil:

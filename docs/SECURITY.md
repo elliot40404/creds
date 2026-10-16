@@ -256,6 +256,8 @@ line, not from the vault. A test makes sure only that one command can start prog
   protected list), an existing one keeps its access list
 - Each file is read again right before it is written or deleted. If it changed since the check,
   it is left alone and marked failed
+- `creds ssh keygen` makes ed25519 keys with Go's `crypto/rand`, no `ssh-keygen` needed. The
+  passphrase is only typed at the terminal (twice), never taken from argv or the environment
 - Deletes always ask, one yes per file. `-y` never deletes and without a terminal nothing is
   deleted. A file deleted here never deletes the vault copy
 - The conflict diff never prints key content: private keys only show `key differs, content not
