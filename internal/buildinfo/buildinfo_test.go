@@ -51,3 +51,15 @@ func TestStringHasNoNewline(t *testing.T) {
 		t.Fatal("version string contains a newline")
 	}
 }
+
+func TestReleaseOnlyWhenStamped(t *testing.T) {
+	if got := Release(); got != "" {
+		t.Fatalf("Release() = %q in a test build", got)
+	}
+	old := version
+	version = "0.2.1"
+	t.Cleanup(func() { version = old })
+	if got := Release(); got != "0.2.1" {
+		t.Fatalf("Release() = %q, want 0.2.1", got)
+	}
+}

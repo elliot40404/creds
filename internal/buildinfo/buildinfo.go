@@ -51,6 +51,10 @@ func Get() Info {
 	return info.orDev()
 }
 
+func Release() string {
+	return version
+}
+
 func (i Info) orDev() Info {
 	if i.Version == "" {
 		i.Version = "dev"
