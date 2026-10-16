@@ -15,14 +15,19 @@ func (s *Service) RecordClearFailure(err error) error {
 	return uerr
 }
 
-func (s *Service) takeClearFailure() string {
-	var msg string
+func (s *Service) takeOnce(n *Notice) {
+	var was gitsync.State
 	_, err := gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
-		msg, st.ClearError = st.ClearError, ""
-		return msg != "", nil
+		was = *st
+		st.ClearError, st.UpdateError, st.UpdateInstalled = "", "", ""
+		return hasOnce(was), nil
 	})
 	if err != nil {
-		return ""
+		return
 	}
-	return msg
+	n.ClearFailure, n.UpdateFailed, n.Updated = was.ClearError, was.UpdateError != "", was.UpdateInstalled
+}
+
+func hasOnce(st gitsync.State) bool {
+	return st.ClearError != "" || st.UpdateError != "" || st.UpdateInstalled != ""
 }

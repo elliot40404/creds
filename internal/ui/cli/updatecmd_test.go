@@ -97,6 +97,11 @@ type updateCase struct {
 
 func (h *harness) selfUpdate(c updateCase, args ...string) (result, string) {
 	h.t.Helper()
+	return h.updateRun(c, append([]string{"update"}, args...)...)
+}
+
+func (h *harness) updateRun(c updateCase, args ...string) (result, string) {
+	h.t.Helper()
 	srv := c.gh.serve(h.t)
 	exe := filepath.Join(h.t.TempDir(), "creds.exe")
 	if err := os.WriteFile(exe, []byte(oldExeBody), 0o600); err != nil {
@@ -108,7 +113,7 @@ func (h *harness) selfUpdate(c updateCase, args ...string) (result, string) {
 	env, out, errb := h.env(c.f)
 	env.Release = c.release
 	env.Updates = Updates{API: srv.URL, HTTP: srv.Client(), Exe: func() (string, error) { return exe, nil }}
-	r := result{code: Run(env, append([]string{"update"}, args...))}
+	r := result{code: Run(env, args)}
 	r.out, r.err = out.String(), errb.String()
 	data, err := os.ReadFile(filepath.Clean(exe))
 	if err != nil {

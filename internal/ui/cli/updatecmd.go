@@ -54,13 +54,16 @@ func (e Env) selfUpdate(check, yes bool) error {
 }
 
 func (e Env) install(ctx context.Context, c update.Checker, rel update.Release) error {
-	exe := update.Exe
-	if e.Updates.Exe != nil {
-		exe = e.Updates.Exe
-	}
-	path, err := exe()
+	path, err := e.exe()
 	if err != nil {
 		return err
 	}
 	return c.Install(ctx, rel, path)
+}
+
+func (e Env) exe() (string, error) {
+	if e.Updates.Exe != nil {
+		return e.Updates.Exe()
+	}
+	return update.Exe()
 }

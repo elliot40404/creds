@@ -7,23 +7,23 @@ import (
 	"github.com/elliot40404/creds/internal/update"
 )
 
-func (s *Service) CheckUpdate(ctx context.Context, c update.Checker) error {
+func (s *Service) CheckUpdate(ctx context.Context, c update.Checker) (update.Release, error) {
 	if _, ok := update.Parse(c.Version); !ok {
-		return nil
+		return update.Release{}, nil
 	}
 	claimed, err := s.claimUpdateCheck()
 	if err != nil || !claimed {
-		return err
+		return update.Release{}, err
 	}
-	rel, cerr := c.Latest(ctx)
-	if cerr != nil {
-		return cerr
+	rel, err := c.Latest(ctx)
+	if err != nil {
+		return update.Release{}, err
 	}
 	_, err = gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
 		st.UpdateLatest, st.UpdateURL = rel.Tag, rel.URL
 		return true, nil
 	})
-	return err
+	return rel, err
 }
 
 func (s *Service) claimUpdateCheck() (bool, error) {

@@ -57,7 +57,7 @@ func (c Checker) download(ctx context.Context, rel Release, name, dir string) (p
 	if err != nil {
 		return "", err
 	}
-	f, err := os.CreateTemp(dir, ".creds-download-*")
+	f, err := os.CreateTemp(dir, tempDownload+"*")
 	if err != nil {
 		return "", err
 	}

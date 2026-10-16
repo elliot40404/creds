@@ -33,6 +33,9 @@ type State struct {
 	UpdateChecked time.Time `json:"update_checked,omitzero"`
 	UpdateLatest  string    `json:"update_latest,omitzero"`
 	UpdateURL     string    `json:"update_url,omitzero"`
+
+	UpdateError     string `json:"update_error,omitzero"`
+	UpdateInstalled string `json:"update_installed,omitzero"`
 }
 
 type PendingConflict struct {

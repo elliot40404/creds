@@ -31,7 +31,7 @@ func extract(archive, goos, dir string) (path string, err error) {
 		return "", err
 	}
 	defer func() { _ = in.Close() }()
-	out, err := os.CreateTemp(dir, ".creds-new-*")
+	out, err := os.CreateTemp(dir, tempNew+"*")
 	if err != nil {
 		return "", err
 	}

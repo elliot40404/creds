@@ -14,6 +14,8 @@ type Notice struct {
 	ClearFailure string
 	Update       string
 	CheckUpdate  bool
+	UpdateFailed bool
+	Updated      string
 }
 
 func (s *Service) Notice() Notice {
@@ -27,8 +29,8 @@ func (s *Service) Notice() Notice {
 		Update:      newRelease(mode, s.Release, st.UpdateLatest),
 		CheckUpdate: checkDue(mode, s.Release, st.UpdateChecked, s.now()),
 	}
-	if st.ClearError != "" {
-		n.ClearFailure = s.takeClearFailure()
+	if hasOnce(st) {
+		s.takeOnce(&n)
 	}
 	return n
 }
