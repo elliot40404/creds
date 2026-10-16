@@ -150,7 +150,7 @@ func (e Env) run(fn func(*app.Service, []string) error) func(*cobra.Command, []s
 	return func(cmd *cobra.Command, args []string) error {
 		return e.withService(e.Prompter, func(s *app.Service, args []string) error {
 			e.startNotes(s)
-			e.autoPush(cmd, s)
+			e.autoSSH(cmd, s)
 			return fn(s, args)
 		})(cmd, args)
 	}

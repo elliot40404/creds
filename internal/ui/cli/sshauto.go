@@ -5,13 +5,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var noAutoPushCmds = []string{"ssh", "lock", "config"}
+var noAutoSSHCmds = []string{"ssh", "lock", "config"}
 
-func (e Env) autoPush(cmd *cobra.Command, s *app.Service) {
-	if under(cmd, noAutoPushCmds) {
+func (e Env) autoSSH(cmd *cobra.Command, s *app.Service) {
+	if under(cmd, noAutoSSHCmds) {
 		return
 	}
-	if hint := s.SSHAutoPush(); hint != "" {
+	e.sshHint(s.SSHAuto())
+}
+
+func (e Env) sshHint(hint string) {
+	if hint != "" {
 		e.note("%s", hint)
 	}
 }

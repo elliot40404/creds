@@ -27,6 +27,8 @@ type State struct {
 	PasswordChanged time.Time `json:"password_changed,omitzero"`
 
 	ClearError string `json:"clear_error,omitzero"`
+
+	SSHPull bool `json:"ssh_pull,omitzero"`
 }
 
 type PendingConflict struct {

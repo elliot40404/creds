@@ -35,7 +35,7 @@ func (s *Service) SSHAutoPush() string {
 	case err != nil:
 		return "ssh: auto push failed, run creds ssh push"
 	}
-	return sshAutoHint(res.Files, dirty)
+	return sshAutoHint(sshPushLeft(res.Files, dirty), sshPushWords)
 }
 
 func (s *Service) sshAutoOn(st sshdir.State) bool {
@@ -67,26 +67,39 @@ func sshStatDirty(dir string, st sshdir.State) []string {
 	return dirty
 }
 
-func sshAutoHint(files []SSHFileResult, dirty []string) string {
+type sshAutoWords struct {
+	done, failed, cmd string
+}
+
+var (
+	sshPushWords = sshAutoWords{done: "pushed", failed: "could not be pushed", cmd: "status"}
+	sshPullWords = sshAutoWords{done: "pulled", failed: "could not be written", cmd: "pull"}
+)
+
+func sshPushLeft(files []SSHFileResult, dirty []string) []SSHFileResult {
 	var left []SSHFileResult
 	for _, f := range files {
 		if slices.Contains(dirty, f.Rel) && f.Action != SSHPushed && f.Action != SSHNoChange {
 			left = append(left, f)
 		}
 	}
+	return left
+}
+
+func sshAutoHint(left []SSHFileResult, w sshAutoWords) string {
 	switch len(left) {
 	case 0:
 		return ""
 	case 1:
-		return fmt.Sprintf("ssh: %s %s, run creds ssh status", left[0].Rel, sshAutoReason(left[0]))
+		return fmt.Sprintf("ssh: %s %s, run creds ssh %s", left[0].Rel, sshAutoReason(left[0], w), w.cmd)
 	}
-	return fmt.Sprintf("ssh: %d files not pushed, run creds ssh status", len(left))
+	return fmt.Sprintf("ssh: %d files not %s, run creds ssh %s", len(left), w.done, w.cmd)
 }
 
-func sshAutoReason(f SSHFileResult) string {
+func sshAutoReason(f SSHFileResult, w sshAutoWords) string {
 	switch {
 	case f.Action == SSHFailed:
-		return "could not be pushed"
+		return w.failed
 	case f.Change == SSHConflict:
 		return "changed here and in the vault"
 	case f.Change == SSHLocalDeleted:

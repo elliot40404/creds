@@ -111,7 +111,9 @@ func syncCmd(env Env) *cobra.Command {
 			return env.withService(env.Prompter, func(s *app.Service, _ []string) error {
 				s.Waiting = env.waiting
 				res, err := s.Sync()
-				return env.synced(res, err)
+				err = env.synced(res, err)
+				env.sshHint(s.SSHAutoPull())
+				return err
 			})(cmd, args)
 		},
 	}

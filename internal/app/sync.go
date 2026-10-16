@@ -124,10 +124,10 @@ func (s *Service) SyncQuiet() (err error) {
 	}
 	defer func() { err = errors.Join(err, lock.Release()) }()
 	sy := s.newSyncer(r, id)
-	if _, err = sy.Sync(lock.Context()); err != nil || !s.stillPending() {
+	if _, err = s.runSync(lock.Context(), sy); err != nil || !s.stillPending() {
 		return err
 	}
-	_, err = sy.Sync(lock.Context())
+	_, err = s.runSync(lock.Context(), sy)
 	return err
 }
 
@@ -148,7 +148,7 @@ func (s *Service) lockedSync(before func(*gitsync.Syncer) error) (string, error)
 				return false, err
 			}
 		}
-		result, err := sy.Sync(lock.Context())
+		result, err := s.runSync(lock.Context(), sy)
 		if errors.Is(err, gitsync.ErrConflict) {
 			if perr := s.pendingError(); perr != nil {
 				return false, perr
