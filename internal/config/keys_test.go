@@ -242,3 +242,29 @@ func TestSSHAutoKeyKeepsUnsetApart(t *testing.T) {
 		t.Fatalf("roundtrip %q %+v %v", data, back.SSH, err)
 	}
 }
+
+func TestSessionProtectDefaultsOnAndIsNotWritten(t *testing.T) {
+	t.Parallel()
+	if v, err := Get(Default(), "session.protect"); err != nil || v != "true" || !Default().Session.ProtectOn() {
+		t.Fatalf("get %q %v", v, err)
+	}
+	data, err := Encode(Default())
+	if err != nil || strings.Contains(string(data), "protect") {
+		t.Fatalf("unset key written %q %v", data, err)
+	}
+	off, err := Set(Default(), "session.protect", "false")
+	if err != nil || off.Session.ProtectOn() {
+		t.Fatalf("set %+v %v", off.Session, err)
+	}
+	if v, _ := Get(off, "session.protect"); v != "false" {
+		t.Fatalf("get after set %q", v)
+	}
+	data, err = Encode(off)
+	if err != nil {
+		t.Fatal(err)
+	}
+	back, err := Decode(data)
+	if err != nil || back.Session.Protect == nil || back.Session.ProtectOn() {
+		t.Fatalf("roundtrip %q %+v %v", data, back.Session, err)
+	}
+}

@@ -31,9 +31,12 @@ type Config struct {
 }
 
 type Session struct {
-	Idle time.Duration `toml:"idle"`
-	Hard time.Duration `toml:"hard"`
+	Idle    time.Duration `toml:"idle"`
+	Hard    time.Duration `toml:"hard"`
+	Protect *bool         `toml:"protect,omitempty"`
 }
+
+func (c Session) ProtectOn() bool { return c.Protect == nil || *c.Protect }
 
 type Clipboard struct {
 	Clear time.Duration `toml:"clear"`
