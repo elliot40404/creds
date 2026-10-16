@@ -15,6 +15,7 @@ import (
 	"github.com/elliot40404/creds/internal/manifest"
 	"github.com/elliot40404/creds/internal/session"
 	"github.com/elliot40404/creds/internal/sshdir"
+	"github.com/elliot40404/creds/internal/update"
 	"github.com/elliot40404/creds/internal/vault"
 )
 
@@ -53,6 +54,9 @@ var vaultRules = []Rule{
 	{Target: gh.ErrNoHost, Code: General, Hint: "install gh and run gh auth login, then run creds setup again, or paste a git url instead"},
 	{Target: gh.ErrRepoExists, Code: Conflict, Hint: "pick another name, creds never uses an existing repository"},
 	{Target: gh.ErrBadRepoName, Code: Usage, Hint: hintRerun + " with a name of letters, digits, dot, dash or underscore"},
+	{Target: update.ErrUnreachable, Code: General, Hint: "check the network, then run creds update again"},
+	{Target: update.ErrRateLimited, Code: General, Hint: "GitHub limits release checks per hour, wait an hour then run creds update again"},
+	{Target: update.ErrBadRelease, Code: General, Hint: "GitHub sent release data creds could not use, try creds update again later"},
 	{Target: crypto.ErrWrongSecret, Code: General, Hint: "check the password and try again, or run creds recover"},
 	{Target: crypto.ErrWrongKey, Code: General, Hint: "a vault file does not belong to this vault, run creds status and check the remote"},
 	{Target: vault.ErrRecipientMismatch, Code: General, Hint: "the vault files do not match this identity, restore them with git or run creds join <url> in a new CREDS_HOME"},

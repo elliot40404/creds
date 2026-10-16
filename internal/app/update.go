@@ -1,0 +1,40 @@
+package app
+
+import (
+	"context"
+
+	"github.com/elliot40404/creds/internal/gitsync"
+	"github.com/elliot40404/creds/internal/update"
+)
+
+func (s *Service) CheckUpdate(ctx context.Context, c update.Checker) error {
+	if _, ok := update.Parse(c.Version); !ok {
+		return nil
+	}
+	claimed, err := s.claimUpdateCheck()
+	if err != nil || !claimed {
+		return err
+	}
+	rel, cerr := c.Latest(ctx)
+	if cerr != nil {
+		return cerr
+	}
+	_, err = gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
+		st.UpdateLatest, st.UpdateURL = rel.Tag, rel.URL
+		return true, nil
+	})
+	return err
+}
+
+func (s *Service) claimUpdateCheck() (bool, error) {
+	now := s.now()
+	claimed := false
+	_, err := gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
+		claimed = update.Due(st.UpdateChecked, now)
+		if claimed {
+			st.UpdateChecked = now.UTC()
+		}
+		return claimed, nil
+	})
+	return claimed, err
+}

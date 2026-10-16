@@ -29,6 +29,7 @@ import (
 	"github.com/elliot40404/creds/internal/runner"
 	"github.com/elliot40404/creds/internal/session"
 	"github.com/elliot40404/creds/internal/sshdir"
+	"github.com/elliot40404/creds/internal/update"
 	"github.com/elliot40404/creds/internal/vault"
 )
 
@@ -75,6 +76,9 @@ var known = map[string]error{
 	"gh.ErrRepoExists":           gh.ErrRepoExists,
 	"gh.ErrBadRepoName":          gh.ErrBadRepoName,
 	"gh.ErrNoHost":               gh.ErrNoHost,
+	"update.ErrUnreachable":      update.ErrUnreachable,
+	"update.ErrRateLimited":      update.ErrRateLimited,
+	"update.ErrBadRelease":       update.ErrBadRelease,
 	"app.ErrShortPassword":       app.ErrShortPassword,
 	"app.ErrStale":               app.ErrStale,
 	"app.ErrVaultExists":         app.ErrVaultExists,

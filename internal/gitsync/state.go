@@ -29,6 +29,10 @@ type State struct {
 	ClearError string `json:"clear_error,omitzero"`
 
 	SSHPull bool `json:"ssh_pull,omitzero"`
+
+	UpdateChecked time.Time `json:"update_checked,omitzero"`
+	UpdateLatest  string    `json:"update_latest,omitzero"`
+	UpdateURL     string    `json:"update_url,omitzero"`
 }
 
 type PendingConflict struct {
