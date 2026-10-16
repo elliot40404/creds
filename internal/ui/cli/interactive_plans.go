@@ -82,6 +82,7 @@ func plans() map[string]plan {
 		"ssh push":       {skip: []string{"all", "yes"}},
 		"ssh pull":       {skip: []string{"yes"}},
 		"ssh status":     {},
+		"ssh add-host":   {asks: []string{"<group/name>", "host", "user", "port", "key"}, run: askSSHAddHost},
 	}
 }
 
@@ -199,7 +200,7 @@ func askEnv(iv *interview) error {
 	if err := iv.optionalEntry(); err != nil {
 		return err
 	}
-	return iv.text("output", "Write to file (blank prints)", "")
+	return iv.text("output", "Write to file (blank prints)")
 }
 
 func (iv *interview) optionalEntry() error {
@@ -272,7 +273,7 @@ func askExport(iv *interview) error {
 			return err
 		}
 	}
-	return iv.text("output", "Output file", "")
+	return iv.text("output", "Output file")
 }
 
 func askDeviceTrust(iv *interview) error {
@@ -284,7 +285,7 @@ func askDeviceTrust(iv *interview) error {
 	case err != nil:
 		return err
 	case kind == deviceIdentity:
-		return iv.text("identity", "Plugin identity file", "")
+		return iv.text("identity", "Plugin identity file")
 	}
 	return iv.set("touchid", "true")
 }
@@ -305,4 +306,21 @@ func askImport(iv *interview) error {
 
 func askURL(iv *interview) error {
 	return iv.arg(0, iv.input("Git remote URL", ""))
+}
+
+func askSSHAddHost(iv *interview) error {
+	if err := iv.arg(0, iv.input("Host name, like group/name", "")); err != nil {
+		return err
+	}
+	for _, q := range [][2]string{
+		{"host", "Host name or IP"},
+		{"user", "User (blank for your login name)"},
+		{"port", "Port (blank for 22)"},
+		{"key", "Key file in ~/.ssh (blank for ssh defaults)"},
+	} {
+		if err := iv.text(q[0], q[1]); err != nil {
+			return err
+		}
+	}
+	return nil
 }

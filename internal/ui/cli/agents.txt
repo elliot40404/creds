@@ -47,9 +47,11 @@ Using creds from scripts and AI agents
    config set validates the value and saves config.toml.
      creds ssh push --json                     new and changed ~/.ssh files into the vault
      creds ssh pull --json                     new and changed vault files into ~/.ssh
+     creds ssh add-host web/db --host h --json new Host file in ~/.ssh/config.d and the vault
    Without a terminal ssh push leaves out keys no ssh config uses (--all
    pushes them) and files changed on both sides are kept unless -y.
    ssh pull never deletes a file without a terminal, -y does not either.
+   ssh add-host never overwrites a file and never edits ~/.ssh/config.
 
 5. Skip questions with --yes: rm, env -o, export, import --overwrite,
    trust, resolve, join. Plain export also needs

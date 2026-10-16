@@ -302,9 +302,14 @@ creds ssh push --all                     # also keys no ssh config uses
 creds ssh push -y                        # overwrite vault copies that changed on both sides
 creds ssh pull                           # write new and changed vault files into ~/.ssh
 creds ssh pull -y                        # overwrite local copies that changed on both sides
+creds ssh add-host web/db --host 10.0.0.5 --user ubuntu --port 2222 --key id_ed25519
+                                         # new ~/.ssh/config.d/web/db with Host db, saved in the vault
 ```
 
 New PC: `creds setup` (or `creds join <url>`), then `creds ssh pull`. Every host works again.
+
+`ssh add-host` never overwrites a file and never edits `~/.ssh/config`. When `config` does not
+include the new file it prints the line to add at the top, like `Include config.d/*/*`.
 
 What is backed up, one vault entry per file under `ssh/` (`ssh/config`, `ssh/config.d/work`,
 `ssh/id_ed25519`):
@@ -435,6 +440,7 @@ JSON output:
 | `config` | `[key value default doc]` |
 | `config get` | `key value` |
 | `ssh status`, `ssh push`, `ssh pull` | `dir files[path change action error] not_read[path error] missing warnings invalid` |
+| `ssh add-host` | `dir path alias include` (`include` is the line to add to `~/.ssh/config`, absent when it already includes the file) |
 | `paths` | `home_env paths[name path exists note]` |
 | `version` | `version commit date go os arch` |
 

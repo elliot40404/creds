@@ -19,11 +19,20 @@ type Usage struct {
 }
 
 func ReadUsage(res Result, dir, home string) Usage {
-	w := walker{res: res, dir: dir, home: home, seen: map[string]bool{}, named: map[string]bool{}}
+	return walkConfig(res, dir, home).split()
+}
+
+func Reaches(res Result, dir, home, rel string) bool {
+	_, ok := walkConfig(res, dir, home).seen[rel]
+	return ok
+}
+
+func walkConfig(res Result, dir, home string) *walker {
+	w := &walker{res: res, dir: dir, home: home, seen: map[string]bool{}, named: map[string]bool{}}
 	if f, ok := w.config("config"); ok {
 		w.walk(f)
 	}
-	return w.split()
+	return w
 }
 
 type walker struct {

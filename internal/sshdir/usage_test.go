@@ -211,3 +211,27 @@ func TestReadUsageOverScan(t *testing.T) {
 	checkList(t, "missing", u.Missing, []string{"gone"})
 	checkWarns(t, u.Warnings, nil)
 }
+
+func TestReaches(t *testing.T) {
+	home := t.TempDir()
+	dir := filepath.Join(home, ".ssh")
+	cases := []struct {
+		top  string
+		rel  string
+		want bool
+	}{
+		{"Include config.d/*\n", "config.d/a", true},
+		{"Include config.d/*\n", "config.d/deep/c", false},
+		{"Include config.d/*/*\n", "config.d/deep/c", true},
+		{"Include ~/.ssh/config.d/deep/*\n", "config.d/deep/c", true},
+		{"Host x\n", "config.d/a", false},
+	}
+	for _, tc := range cases {
+		if got := Reaches(fakeResult(withConfig(tc.top), nil, dir), dir, home, tc.rel); got != tc.want {
+			t.Errorf("%q reaches %s: got %v", tc.top, tc.rel, got)
+		}
+	}
+	if Reaches(fakeResult(includeTree, nil, dir), dir, home, "config.d/a") {
+		t.Error("no config reaches nothing")
+	}
+}

@@ -77,11 +77,11 @@ func (iv *interview) path(prompt string) func() (string, error) {
 	return func() (string, error) { return askPath(iv.p, prompt, "") }
 }
 
-func (iv *interview) text(name, prompt, def string) error {
+func (iv *interview) text(name, prompt string) error {
 	if iv.changed(name) {
 		return nil
 	}
-	v, err := iv.p.Input(prompt, def)
+	v, err := iv.p.Input(prompt, "")
 	if err != nil || v == "" {
 		return err
 	}
