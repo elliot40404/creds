@@ -26,6 +26,7 @@ func (s sshScreen) keys() []keyHelp {
 		{"g", "make a new key"},
 		{"P", "conflict: keep this file, replace the vault copy"},
 		{"L", "conflict or delete: take the vault side here"},
+		{"u", "push a skipped unused key"},
 		{"r", "refresh"},
 		{"up/down j/k", "move"},
 		{"esc q", "back"},
@@ -59,7 +60,7 @@ func (s sshScreen) key(key tea.KeyPressMsg) (Screen, tea.Cmd) {
 	case "esc", "q":
 		return s, send(popMsg{})
 	case "p":
-		return s, send(sshPushMsg{})
+		return s, s.push()
 	case "l":
 		return s, send(sshPullMsg{})
 	case "r":
@@ -86,6 +87,8 @@ func (s sshScreen) fileKey(key string) tea.Cmd {
 		return keepHere(f)
 	case "L":
 		return takeVault(f, s.status.Dir)
+	case "u":
+		return pushSkipped(f, s.status.Dir)
 	}
 	return nil
 }

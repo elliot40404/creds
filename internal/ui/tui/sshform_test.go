@@ -29,6 +29,14 @@ func (f *fakeBackend) SSHAddKey(file, name string) (app.SSHAddKeyResult, error) 
 	if f.addErr != nil {
 		return app.SSHAddKeyResult{}, f.addErr
 	}
+	if name == "" {
+		return app.SSHAddKeyResult{Files: f.sshApply(func(s app.SSHFileStatus) app.SSHAction {
+			if filepath.Join(f.ssh.Dir, filepath.FromSlash(s.Rel)) == file {
+				return app.SSHPushed
+			}
+			return app.SSHNoChange
+		})}, nil
+	}
 	f.sshAdded(name, sshdir.KindPrivateKey)
 	return app.SSHAddKeyResult{Rel: name, Files: []app.SSHFileResult{{Rel: name, Action: app.SSHCreated}}, Unused: true}, nil
 }

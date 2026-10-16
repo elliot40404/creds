@@ -9,9 +9,12 @@ import (
 )
 
 type (
-	sshOpenMsg   struct{}
-	sshLoadMsg   struct{}
-	sshPushMsg   struct{ rel string }
+	sshOpenMsg struct{}
+	sshLoadMsg struct{}
+	sshPushMsg struct {
+		rel  string
+		keys map[string]bool
+	}
 	sshPullMsg   struct{ rel string }
 	sshDiffMsg   struct{ file app.SSHFileStatus }
 	sshStatusMsg struct {
@@ -32,7 +35,7 @@ func (sshLoadMsg) apply(m Model) (tea.Model, tea.Cmd) { return m.loadSSH(false) 
 func (msg sshDiffMsg) screen() Screen                 { return newSSHDiff(msg.file) }
 
 func (msg sshPushMsg) apply(m Model) (tea.Model, tea.Cmd) {
-	b, o := m.opts.Backend, app.SSHPushOptions{AskConflict: onlyRel(msg.rel)}
+	b, o := m.opts.Backend, app.SSHPushOptions{AskConflict: onlyRel(msg.rel), AskKey: pickedKeys(msg.keys)}
 	return m.afterSync().start(opAction, func() tea.Msg {
 		res, err := b.SSHPush(o)
 		return sshRan(b, false, res.Files, err)
@@ -52,6 +55,13 @@ func onlyRel(rel string) func(string) (bool, error) {
 		return nil
 	}
 	return func(r string) (bool, error) { return r == rel, nil }
+}
+
+func pickedKeys(keys map[string]bool) func(string) (bool, error) {
+	if keys == nil {
+		return nil
+	}
+	return func(r string) (bool, error) { return keys[r], nil }
 }
 
 func onlyFile(rel string) func(app.SSHFileStatus) (bool, error) {

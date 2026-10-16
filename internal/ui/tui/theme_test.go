@@ -83,6 +83,7 @@ func TestViewSnapshots(t *testing.T) {
 			"ssh":       press(sized(t, snapshotFake(), w, h), ch('S'), down),
 			"sshdiff":   press(sized(t, snapshotFake(), w, h), ch('S'), enter),
 			"sshhost":   press(sized(t, snapshotFake(), w, h), append(append([]tea.KeyPressMsg{ch('S'), ch('a')}, text("beam/web")...), ctrl('s'))...),
+			"sshpick":   press(sized(t, snapshotFake(), w, h), ch('S'), ch('p'), ch(' ')),
 			"sshkey":    press(sized(t, snapshotFake(), w, h), ch('S'), ch('i')),
 			"sshkeygen": press(sized(t, snapshotFake(), w, h), append([]tea.KeyPressMsg{ch('S'), ch('g'), tabKey, tabKey, ch(' '), tabKey}, text(secretA)...)...),
 			"form":      press(step(start(t, snapshotFake(), DefaultHooks()), tea.WindowSizeMsg{Width: w, Height: h}), ch('a'), enter),

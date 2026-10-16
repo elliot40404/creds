@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/elliot40404/creds/internal/app"
-	"github.com/elliot40404/creds/internal/sshdir"
 )
 
 const (
@@ -76,8 +75,8 @@ func sshHint(f app.SSHFileStatus) string {
 		return "deleted here, L takes the vault copy"
 	case f.Change == app.SSHConflict:
 		return "P keeps this file, L takes the vault copy"
-	case f.Change == app.SSHLocalNew && f.Unused && f.Kind == sshdir.KindPrivateKey && !f.Skipped:
-		return "unused key, not asked"
+	case asksKey(f):
+		return "unused key, p asks"
 	}
 	switch f.Next() {
 	case app.SSHNeedsPush:
@@ -85,7 +84,7 @@ func sshHint(f app.SSHFileStatus) string {
 	case app.SSHNeedsPull:
 		return "l pulls it"
 	case app.SSHSkippedKey:
-		return "unused key, skipped"
+		return "unused key, skipped, u pushes it"
 	case app.SSHKeptDelete:
 		return "deleted here, still in the vault"
 	}

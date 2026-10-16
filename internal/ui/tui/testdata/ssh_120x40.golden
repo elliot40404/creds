@@ -10,7 +10,7 @@ last sync failed: network down. press s to retry
 │   config.d/web    remote new      l pulls it                                                                         │
 │   id_ed25519      conflict        P keeps this file, L takes the vault copy                                          │
 │   id_ed25519.pub  same                                                                                               │
-│   id_spare        local new       unused key, not asked                                                              │
+│   id_spare        local new       unused key, p asks                                                                 │
 │ ssh config names a missing key file: id_gone                                                                         │
 │ warning: config line 4 uses %h, skipped                                                                              │
 │                                                                                                                      │

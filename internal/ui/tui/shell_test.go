@@ -30,26 +30,27 @@ type copied struct {
 }
 
 type fakeBackend struct {
-	entries   []vault.Entry
-	status    app.SyncStatus
-	syncRes   string
-	syncs     int
-	syncErr   error
-	saveErr   error
-	locked    int
-	expired   bool
-	added     []vault.Entry
-	updated   []string
-	copies    []copied
-	warnings  []string
-	shell     render.Shell
-	variesErr error
-	ssh       app.SSHStatus
-	sshErr    error
-	pushes    []app.SSHPushOptions
-	pulls     []app.SSHPullOptions
-	sshAdds   []string
-	addErr    error
+	entries    []vault.Entry
+	status     app.SyncStatus
+	syncRes    string
+	syncs      int
+	syncErr    error
+	saveErr    error
+	locked     int
+	expired    bool
+	added      []vault.Entry
+	updated    []string
+	copies     []copied
+	warnings   []string
+	shell      render.Shell
+	variesErr  error
+	ssh        app.SSHStatus
+	sshErr     error
+	pushes     []app.SSHPushOptions
+	pulls      []app.SSHPullOptions
+	sshAdds    []string
+	keyAnswers []string
+	addErr     error
 }
 
 func newFake() *fakeBackend {

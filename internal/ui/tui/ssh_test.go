@@ -52,8 +52,8 @@ func (f *fakeBackend) SSHPush(o app.SSHPushOptions) (app.SSHPushResult, error) {
 		switch {
 		case s.Change == app.SSHConflict && o.AskConflict != nil && asked(o.AskConflict(s.Rel)):
 			return app.SSHPushed
-		case s.Unused:
-			return app.SSHNotAsked
+		case asksKey(s):
+			return f.askKey(o, s.Rel)
 		case s.Next() == app.SSHNeedsPush:
 			return app.SSHPushed
 		}
@@ -76,6 +76,18 @@ func (f *fakeBackend) SSHPull(o app.SSHPullOptions) (app.SSHPullResult, error) {
 	})}, f.sshErr
 }
 
+func (f *fakeBackend) askKey(o app.SSHPushOptions, rel string) app.SSHAction {
+	if o.AskKey == nil {
+		return app.SSHNotAsked
+	}
+	if asked(o.AskKey(rel)) {
+		f.keyAnswers = append(f.keyAnswers, rel+" yes")
+		return app.SSHPushed
+	}
+	f.keyAnswers = append(f.keyAnswers, rel+" no")
+	return app.SSHSkippedKey
+}
+
 func asked(ok bool, err error) bool {
 	return ok && err == nil
 }
@@ -91,6 +103,8 @@ func (f *fakeBackend) sshApply(decide func(app.SSHFileStatus) app.SSHAction) []a
 			continue
 		case app.SSHPushed, app.SSHCreated, app.SSHUpdated:
 			s.Change = app.SSHSame
+		case app.SSHSkippedKey:
+			s.Skipped = true
 		}
 		kept = append(kept, s)
 	}
@@ -117,7 +131,7 @@ func TestSSHScreenOpensAndGoesBack(t *testing.T) {
 		t.Fatalf("top %T busy %v", m.top(), m.op.busy())
 	}
 	v := view(m)
-	for _, want := range []string{"ssh files", "6 of 7 files differ", "config.d/db", "local changed", "p pushes it", "unused key, not asked", "missing key file: id_gone"} {
+	for _, want := range []string{"ssh files", "6 of 7 files differ", "config.d/db", "local changed", "p pushes it", "unused key, p asks", "missing key file: id_gone"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q:\n%s", want, v)
 		}
@@ -155,11 +169,11 @@ func TestSSHScreenLoadError(t *testing.T) {
 
 func TestSSHPushKeepsConflicts(t *testing.T) {
 	f := sshFake()
-	m := press(start(t, f, Hooks{}), ch('S'), ch('p'))
+	m := press(start(t, f, Hooks{}), ch('S'), ch('p'), enter)
 	if len(f.pushes) != 1 || f.pushes[0].AskConflict != nil || f.pushes[0].Overwrite || f.pushes[0].All {
 		t.Fatalf("pushes %+v", f.pushes)
 	}
-	if v := view(m); !strings.Contains(v, "pushed 1 files, 3 left for you to pick") {
+	if v := view(m); !strings.Contains(v, "pushed 1 files, 2 left for you to pick") {
 		t.Fatalf("view %q", v)
 	}
 	if sshChange(m, "config.d/db") != app.SSHSame || sshChange(m, "config") != app.SSHConflict {
@@ -185,7 +199,7 @@ func TestSSHPushFailure(t *testing.T) {
 	f := sshFake()
 	m := press(start(t, f, Hooks{}), ch('S'))
 	f.sshErr = errors.New("disk on fire")
-	m = press(m, ch('p'))
+	m = press(m, ch('p'), enter)
 	if v := view(m); !strings.Contains(v, "disk on fire") || m.op.busy() {
 		t.Fatalf("view %q", v)
 	}
