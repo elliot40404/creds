@@ -48,6 +48,10 @@ linters:
         linters:
           - gosec
         text: G103
+      - path: internal/keystore/keychain_darwin.go
+        linters:
+          - gosec
+        text: G204
       - path: internal/keystore/aead.go
         linters:
           - gosec
