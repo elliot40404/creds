@@ -63,6 +63,23 @@ func TestSSHKeygenWithPassphrase(t *testing.T) {
 	}
 }
 
+func TestSSHKeygenWithGivenPassphrase(t *testing.T) {
+	t.Parallel()
+	s, fp, _, _ := initVault(t)
+	fp.prompts, fp.warned = nil, nil
+	pass := []byte("open sesame")
+	if _, err := s.SSHKeygen(SSHKeygen{Name: "id_given", Passphrase: true, PassphraseBytes: pass}); err != nil {
+		t.Fatal(err)
+	}
+	if len(fp.prompts) != 0 || string(pass) != strings.Repeat("\x00", len(pass)) {
+		t.Fatalf("asked %q, bytes %q", fp.prompts, pass)
+	}
+	priv := []byte(diskSSH(t, filepath.Join(s.UserHome, ".ssh"), "id_given"))
+	if _, err := ssh.ParseRawPrivateKeyWithPassphrase(priv, []byte("open sesame")); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestSSHKeygenRefusesEmptyPassphrase(t *testing.T) {
 	t.Parallel()
 	s, fp, _, _ := initVault(t)

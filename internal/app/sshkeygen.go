@@ -18,9 +18,10 @@ var (
 const maxSSHComment = 255
 
 type SSHKeygen struct {
-	Name       string
-	Comment    string
-	Passphrase bool
+	Name            string
+	Comment         string
+	Passphrase      bool
+	PassphraseBytes []byte
 }
 
 type SSHKeygenResult struct {
@@ -31,6 +32,7 @@ type SSHKeygenResult struct {
 }
 
 func (s *Service) SSHKeygen(k SSHKeygen) (SSHKeygenResult, error) {
+	defer clear(k.PassphraseBytes)
 	if err := k.check(); err != nil {
 		return SSHKeygenResult{}, err
 	}
@@ -71,14 +73,11 @@ func (k SSHKeygen) comment() string {
 }
 
 func (s *Service) newSSHKey(k SSHKeygen) ([]sshdir.File, error) {
-	var pass []byte
-	if k.Passphrase {
-		var err error
-		if pass, err = Retry(s.Prompter, s.askSSHPassphrase, ErrSSHPassphrase, ErrPasswordMismatch); err != nil {
-			return nil, err
-		}
-		defer clear(pass)
+	pass, err := s.keyPassphrase(k)
+	if err != nil {
+		return nil, err
 	}
+	defer clear(pass)
 	priv, pub, err := sshdir.NewKey(k.comment(), pass)
 	if err != nil {
 		return nil, err
@@ -87,6 +86,16 @@ func (s *Service) newSSHKey(k SSHKeygen) ([]sshdir.File, error) {
 		{Rel: k.Name, Kind: sshdir.KindPrivateKey, Data: priv},
 		{Rel: k.Name + ".pub", Kind: sshdir.KindPublicKey, Data: pub},
 	}, nil
+}
+
+func (s *Service) keyPassphrase(k SSHKeygen) ([]byte, error) {
+	switch {
+	case len(k.PassphraseBytes) > 0:
+		return k.PassphraseBytes, nil
+	case !k.Passphrase:
+		return nil, nil
+	}
+	return Retry(s.Prompter, s.askSSHPassphrase, ErrSSHPassphrase, ErrPasswordMismatch)
 }
 
 func (s *Service) askSSHPassphrase() ([]byte, error) {
