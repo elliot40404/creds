@@ -318,10 +318,13 @@ Keys no ssh config uses (`IdentityFile`, through `Include`, plus the default `id
 asked about once at push, one yes or no each. A no is saved, later pushes only ask about new keys.
 Without a terminal they are left out and listed, `--all` pushes them.
 
-After the first push, any other creds command run while the vault is unlocked pushes files you
-edited here that were pushed before. It only checks file size and time, so it adds well under a
-millisecond. New files, conflicts and deletes are never pushed by it, a one line hint says to run
-`creds ssh status`. Nothing happens while the vault is locked.
+The first `creds ssh push` or `creds ssh pull` turns on `ssh.auto`. Then any other creds command
+run while the vault is unlocked pushes files you edited here that were pushed before. It only checks
+file size and time, so it adds well under a millisecond. New files, conflicts and deletes are never
+pushed by it, a one line hint says to run `creds ssh status`. After a sync brings ssh changes, new
+files and files you did not edit here are written, conflicts and deletes only get a hint to run
+`creds ssh pull`. Nothing happens while the vault is locked. `creds config set ssh.auto false`
+turns it off for good, later pushes and pulls do not turn it back on.
 
 Status names each change: `local new`, `local changed`, `local deleted`, `remote new`,
 `remote changed`, `remote deleted`, `conflict`. Local means `~/.ssh`, remote means the vault.
@@ -533,6 +536,7 @@ Set the key and the note goes away, because your value is then the answer.
 | `vault.machine` | name recorded on each edit, blank uses the hostname | blank |
 | `device.max_age` | a trusted device asks the master password again after this long, `0` never asks | `72h` |
 | `search.frecency` | rank results by how often and how lately you use each entry, `false` stops recording and ranking | `true` |
+| `ssh.auto` | push edited `~/.ssh` files and write synced ones on their own, the first `creds ssh push` or `pull` turns it on | `false` |
 | `render.shell` | `bash` or `pwsh` | `pwsh` on Windows, else `bash` |
 | `render.formats.<engine>.<name>` | template override, for example `render.formats.postgres.psql` | none |
 
