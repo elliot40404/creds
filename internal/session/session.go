@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"encoding/json/v2"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/elliot40404/creds/internal/fsutil"
+	"github.com/elliot40404/creds/internal/keystore"
 )
 
 const (
@@ -31,10 +33,14 @@ type Store struct {
 	Idle time.Duration
 	Hard time.Duration
 	Now  func() time.Time
+	Keys keystore.Store
 }
 
 type record struct {
-	Identity string    `json:"identity"`
+	Version  int       `json:"version,omitzero"`
+	Method   string    `json:"method,omitzero"`
+	Identity string    `json:"identity,omitzero"`
+	Sealed   []byte    `json:"sealed,omitzero"`
 	Created  time.Time `json:"created"`
 	LastUsed time.Time `json:"last_used"`
 }
@@ -47,8 +53,13 @@ func (s *Store) now() time.Time {
 }
 
 func (s *Store) Save(identity string) error {
-	now := s.now()
-	return s.write(record{Identity: identity, Created: now, LastUsed: now})
+	r, sealErr := s.protect(identity)
+	r.Created = s.now()
+	r.LastUsed = r.Created
+	if err := s.write(r); err != nil {
+		return err
+	}
+	return sealErr
 }
 
 func (s *Store) write(r record) error {
@@ -64,9 +75,17 @@ func (s *Store) Load() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	id, err := s.reveal(r)
+	if err != nil {
+		return "", s.discard(fmt.Errorf("%w: %w", ErrNoSession, err))
+	}
 	r.LastUsed = now
-	s.refresh(r, raw)
-	return r.Identity, nil
+	if s.upgradable(r) {
+		s.upgrade(r, id, raw)
+	} else {
+		s.refresh(r, raw)
+	}
+	return id, nil
 }
 
 func (s *Store) Left() (time.Duration, error) {
@@ -96,17 +115,39 @@ func (s *Store) live(now time.Time) (record, []byte, error) {
 }
 
 func (s *Store) refresh(r record, raw []byte) {
+	s.swap(raw, func() record { return r })
+}
+
+func (s *Store) upgrade(r record, id string, raw []byte) {
+	s.swap(raw, func() record {
+		next, err := s.protect(id)
+		if err != nil {
+			return r
+		}
+		next.Created, next.LastUsed = r.Created, r.LastUsed
+		return next
+	})
+}
+
+func (s *Store) swap(raw []byte, next func() record) {
 	_ = s.locked(func() error {
 		current, err := fsutil.ReadFileLimit(s.Path, maxSessionSize)
 		if err != nil || !bytes.Equal(current, raw) {
 			return err
 		}
 		beforeRefresh()
-		return s.write(r)
+		return s.write(next())
 	})
 }
 
 func (s *Store) Delete() error {
+	if err := s.drop(); err != nil {
+		return err
+	}
+	return s.forget()
+}
+
+func (s *Store) drop() error {
 	err := s.locked(s.remove)
 	if errors.Is(err, fsutil.ErrBusy) || errors.Is(err, fs.ErrNotExist) {
 		return s.remove()
@@ -131,9 +172,10 @@ func (s *Store) expired(r record, now time.Time) bool {
 }
 
 func (s *Store) discard(reason error) error {
-	if err := s.Delete(); err != nil {
+	if err := s.drop(); err != nil {
 		return err
 	}
+	_ = s.forget()
 	return reason
 }
 
@@ -163,7 +205,7 @@ func (s *Store) read(now time.Time) (record, []byte, error) {
 }
 
 func valid(r record, now time.Time) bool {
-	return r.Identity != "" &&
+	return validSecret(r) &&
 		!r.Created.IsZero() &&
 		!r.LastUsed.Before(r.Created) &&
 		!r.LastUsed.After(now)

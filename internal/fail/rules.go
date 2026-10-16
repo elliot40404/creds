@@ -38,6 +38,7 @@ var vaultRules = []Rule{
 	{Target: session.ErrNoSession, Code: Locked, Msg: "vault is locked", Hint: hintUnlock},
 	{Target: session.ErrExpired, Code: Locked, Msg: "session expired", Hint: hintUnlock},
 	{Target: session.ErrUnprotected, Code: Locked, Msg: "session file was readable by others and was dropped", Hint: hintUnlock},
+	{Target: session.ErrPlainFallback, Code: General, Msg: "session saved without OS key store protection", Hint: "creds keeps a plain session file here, run creds lock when done"},
 	{Target: keystore.ErrOpen, Code: Locked, Msg: "protected session could not be opened", Hint: hintUnlock},
 	{Target: keystore.ErrUnavailable, Code: General, Msg: "no OS key store on this system", Hint: "creds keeps a plain session file here, run creds lock when done"},
 	{Target: device.ErrNotTrusted, Code: General, Hint: "run creds device trust --touchid or --identity <file>"},

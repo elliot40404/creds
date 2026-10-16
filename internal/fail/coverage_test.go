@@ -174,6 +174,7 @@ var known = map[string]error{
 	"keystore.ErrUnavailable":    keystore.ErrUnavailable,
 	"session.ErrExpired":         session.ErrExpired,
 	"session.ErrNoSession":       session.ErrNoSession,
+	"session.ErrPlainFallback":   session.ErrPlainFallback,
 	"session.ErrUnprotected":     session.ErrUnprotected,
 	"vault.ErrBadBucket":         vault.ErrBadBucket,
 	"vault.ErrBadPath":           vault.ErrBadPath,

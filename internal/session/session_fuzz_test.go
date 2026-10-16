@@ -21,6 +21,11 @@ func FuzzLoad(f *testing.F) {
 		`{"identity":"x","created":"0001-01-01T00:00:00Z","last_used":"2026-01-01T11:59:30Z"}`,
 		`{"identity":"../\u0000","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:00Z","extra":1}`,
 		`{"identity":"x","created":"2026-01-01T11:59:00+14:00","last_used":"2026-01-01T11:59:00-12:00"}`,
+		`{"version":2,"method":"plain","identity":"x","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:30Z"}`,
+		`{"version":2,"method":"dpapi","sealed":"AQID","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:30Z"}`,
+		`{"version":2,"method":"plain","identity":"x","sealed":"AQID","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:30Z"}`,
+		`{"version":3,"method":"plain","identity":"x","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:30Z"}`,
+		`{"version":2,"method":"dpapi","sealed":"!!","created":"2026-01-01T11:59:00Z","last_used":"2026-01-01T11:59:30Z"}`,
 		"\xff\xfe",
 	} {
 		f.Add([]byte(s))
