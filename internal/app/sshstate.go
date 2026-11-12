@@ -9,9 +9,9 @@ import (
 	"github.com/elliot40404/creds/internal/sshdir"
 )
 
-func (s *Service) saveSSHState(next func(sshdir.State) sshdir.State) error {
+func (x SSH) saveState(next func(sshdir.State) sshdir.State) error {
 	known := false
-	_, err := sshdir.UpdateState(s.Paths.SSHState(), func(cur *sshdir.State) (bool, error) {
+	_, err := sshdir.UpdateState(x.s.Paths.SSHState(), func(cur *sshdir.State) (bool, error) {
 		n := next(*cur)
 		known = len(n.Files) > 0
 		if sameSSHState(*cur, n) {
@@ -21,7 +21,7 @@ func (s *Service) saveSSHState(next func(sshdir.State) sshdir.State) error {
 		return true, nil
 	})
 	if err == nil && known {
-		s.turnOnSSHAuto()
+		x.s.turnOnSSHAuto()
 	}
 	return err
 }

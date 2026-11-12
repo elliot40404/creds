@@ -80,7 +80,7 @@ func TestSSHStatusEveryCase(t *testing.T) {
 	t.Parallel()
 	s, dir := sshService(t)
 	plantSSHCases(t, s, dir)
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestSSHStatusKeysAndNotes(t *testing.T) {
 	if err := sshdir.SaveState(s.Paths.SSHState(), sshdir.State{Skipped: []string{"work_key"}}); err != nil {
 		t.Fatal(err)
 	}
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestSSHStatusNoSSHDir(t *testing.T) {
 	t.Parallel()
 	s, _ := sshService(t)
 	addSSHEntry(t, s, sshdir.File{Rel: "config", Kind: sshdir.KindConfig, Data: []byte("Host a\n")})
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ func TestSSHStatusListsBadEntries(t *testing.T) {
 	if _, err := s.Add(vault.Entry{Path: "ssh/server", Type: vault.TypeNote}); err != nil {
 		t.Fatal(err)
 	}
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,13 +196,13 @@ func TestSSHStatusErrors(t *testing.T) {
 	s, dir := sshService(t)
 	writeSSHFile(t, dir, "config", []byte("Host a\n"))
 	writeSSHFile(t, s.Paths.Home, "ssh.json", []byte("{"))
-	if _, err := s.SSHStatus(); !errors.Is(err, sshdir.ErrStateCorrupt) {
+	if _, err := s.SSH().Status(); !errors.Is(err, sshdir.ErrStateCorrupt) {
 		t.Fatalf("corrupt state: %v", err)
 	}
 	if err := s.Lock(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.SSHStatus(); !errors.Is(err, errEmpty) {
+	if _, err := s.SSH().Status(); !errors.Is(err, errEmpty) {
 		t.Fatalf("locked: %v", err)
 	}
 }

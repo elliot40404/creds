@@ -29,7 +29,7 @@ func sshStatusCmd(env Env) *cobra.Command {
 		Long:  sshStatusLong,
 		Args:  cobra.NoArgs,
 		RunE: env.run(func(s *app.Service, _ []string) error {
-			st, err := s.SSHStatus()
+			st, err := s.SSH().Status()
 			if err != nil {
 				return err
 			}

@@ -28,7 +28,7 @@ func sshPushCmd(env Env) *cobra.Command {
 		Long:  sshPushLong,
 		Args:  cobra.NoArgs,
 		RunE: env.run(func(s *app.Service, _ []string) error {
-			res, err := s.SSHPush(env.sshAsk(o))
+			res, err := s.SSH().Push(env.sshAsk(o))
 			if err != nil {
 				return err
 			}

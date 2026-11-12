@@ -28,7 +28,7 @@ func sshPullCmd(env Env) *cobra.Command {
 		Long:  sshPullLong,
 		Args:  cobra.NoArgs,
 		RunE: env.run(func(s *app.Service, _ []string) error {
-			res, err := s.SSHPull(env.sshPullAsk(o))
+			res, err := s.SSH().Pull(env.sshPullAsk(o))
 			if err != nil {
 				return err
 			}

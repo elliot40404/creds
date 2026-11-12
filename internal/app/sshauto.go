@@ -25,7 +25,7 @@ func (s *Service) SSHAutoPush() string {
 		return ""
 	}
 	c := s.sessionOnlyService()
-	res, err := c.SSHPush(SSHPushOptions{KnownOnly: true})
+	res, err := c.SSH().Push(SSHPushOptions{KnownOnly: true})
 	for _, w := range c.takeWarnings() {
 		s.warn(w)
 	}

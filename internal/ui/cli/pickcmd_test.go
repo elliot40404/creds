@@ -218,7 +218,9 @@ func TestPickDoesNotSpawnSyncChildren(t *testing.T) {
 	pk := picker{
 		interactive: func() bool { return true },
 		open: func(o tui.Options) error {
-			got, _ = o.Backend.(*app.Service)
+			if sb, ok := o.Backend.(tui.ServiceBackend); ok {
+				got = sb.Service
+			}
 			return nil
 		},
 	}

@@ -9,12 +9,12 @@ import (
 	"github.com/elliot40404/creds/internal/vault"
 )
 
-func (s *Service) pushSSH(files []SSHFileStatus, out []SSHFileResult) error {
+func (x SSH) push(files []SSHFileStatus, out []SSHFileResult) error {
 	if !slices.ContainsFunc(out, func(f SSHFileResult) bool { return f.Action == SSHPushed }) {
 		return nil
 	}
 	errs := make([]error, len(out))
-	_, err := s.write(func(v *vault.Vault) (vault.Entry, error) {
+	_, err := x.s.write(func(v *vault.Vault) (vault.Entry, error) {
 		for i := range out {
 			errs[i] = nil
 			if out[i].Action == SSHPushed {

@@ -103,7 +103,7 @@ func realCopy(t *testing.T) *app.Service {
 func realLoop(t *testing.T, autosync bool) (*loop, *app.Service) {
 	t.Helper()
 	s := realCopy(t)
-	opts := Options{Backend: noWatch{Backend: s}, Hooks: DefaultHooks(), Unlock: s.UnlockWith, VaultPath: s.Paths.Vault()}
+	opts := Options{Backend: noWatch{Backend: NewBackend(s)}, Hooks: DefaultHooks(), Unlock: s.UnlockWith, VaultPath: s.Paths.Vault()}
 	if autosync {
 		opts.Config = s
 	}

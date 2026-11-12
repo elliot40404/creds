@@ -43,7 +43,7 @@ func TestSSHAddKeyCopiesOutsideKey(t *testing.T) {
 			t.Fatalf("%s state", rel)
 		}
 	}
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}

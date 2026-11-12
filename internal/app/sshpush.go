@@ -15,8 +15,8 @@ type SSHPushResult struct {
 	Files  []SSHFileResult
 }
 
-func (s *Service) SSHPush(o SSHPushOptions) (SSHPushResult, error) {
-	st, err := s.SSHStatus()
+func (x SSH) Push(o SSHPushOptions) (SSHPushResult, error) {
+	st, err := x.Status()
 	if err != nil {
 		return SSHPushResult{}, err
 	}
@@ -28,10 +28,10 @@ func (s *Service) SSHPush(o SSHPushOptions) (SSHPushResult, error) {
 		}
 		res.Files[i] = SSHFileResult{Rel: f.Rel, Change: f.Change, Action: a}
 	}
-	if err := s.pushSSH(st.Files, res.Files); err != nil {
+	if err := x.push(st.Files, res.Files); err != nil {
 		return SSHPushResult{}, err
 	}
-	return res, s.saveSSHState(func(cur sshdir.State) sshdir.State { return nextSSHState(cur, st, res.Files) })
+	return res, x.saveState(func(cur sshdir.State) sshdir.State { return nextSSHState(cur, st, res.Files) })
 }
 
 func (o SSHPushOptions) decide(f SSHFileStatus) (SSHAction, error) {

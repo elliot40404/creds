@@ -36,7 +36,7 @@ func (s *Service) sshSafePull() (string, bool) {
 		return "", err == nil
 	}
 	c := s.sessionOnlyService()
-	res, err := c.SSHPull(SSHPullOptions{})
+	res, err := c.SSH().Pull(SSHPullOptions{})
 	for _, w := range c.takeWarnings() {
 		s.warn(w)
 	}

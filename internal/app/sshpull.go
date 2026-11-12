@@ -13,8 +13,8 @@ type SSHPullResult struct {
 	Files  []SSHFileResult
 }
 
-func (s *Service) SSHPull(o SSHPullOptions) (SSHPullResult, error) {
-	st, err := s.SSHStatus()
+func (x SSH) Pull(o SSHPullOptions) (SSHPullResult, error) {
+	st, err := x.Status()
 	if err != nil {
 		return SSHPullResult{}, err
 	}
@@ -29,7 +29,7 @@ func (s *Service) SSHPull(o SSHPullOptions) (SSHPullResult, error) {
 	if err := writeSSH(st, res.Files); err != nil {
 		return SSHPullResult{}, err
 	}
-	return res, s.saveSSHState(func(cur sshdir.State) sshdir.State {
+	return res, x.saveState(func(cur sshdir.State) sshdir.State {
 		next := nextSSHState(cur, st, res.Files)
 		next.Skipped = cur.Skipped
 		return next

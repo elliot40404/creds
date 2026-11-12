@@ -14,7 +14,7 @@ import (
 
 func pullSSH(t *testing.T, s *Service, o SSHPullOptions) map[string]SSHFileResult {
 	t.Helper()
-	res, err := s.SSHPull(o)
+	res, err := s.SSH().Pull(o)
 	if err != nil {
 		t.Fatal(err)
 	}

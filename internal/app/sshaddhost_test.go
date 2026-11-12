@@ -40,7 +40,7 @@ func TestSSHAddHostWritesDiskVaultAndState(t *testing.T) {
 	if got := loadSSHState(t, s).Files[res.Rel].Sum; got != sha256.Sum256([]byte(want)) {
 		t.Fatalf("state sum %x", got)
 	}
-	st, err := s.SSHStatus()
+	st, err := s.SSH().Status()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 
 func pushSSH(t *testing.T, s *Service, o SSHPushOptions) map[string]SSHFileResult {
 	t.Helper()
-	res, err := s.SSHPush(o)
+	res, err := s.SSH().Push(o)
 	if err != nil {
 		t.Fatal(err)
 	}

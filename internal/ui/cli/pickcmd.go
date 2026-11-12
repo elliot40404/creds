@@ -117,7 +117,7 @@ func (e Env) pick(s *app.Service, pk picker, layout tui.Layout) error {
 	s.Prompter = tuiPrompter{}
 	s.Spawn = nil
 	return pk.open(tui.Options{
-		Backend:   s,
+		Backend:   tui.NewBackend(s),
 		Config:    s,
 		Copy:      e.tuiCopy(s),
 		Hooks:     tui.DefaultHooks(),

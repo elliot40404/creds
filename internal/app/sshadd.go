@@ -39,7 +39,7 @@ func (s *Service) addSSHFiles(dir string, adds []sshAdd) ([]SSHFileResult, error
 	for i, a := range adds {
 		out[i] = SSHFileResult{Rel: a.file.Rel, Action: a.action()}
 	}
-	return out, s.saveSSHState(func(cur sshdir.State) sshdir.State { return addedSSHState(cur, dir, adds) })
+	return out, s.SSH().saveState(func(cur sshdir.State) sshdir.State { return addedSSHState(cur, dir, adds) })
 }
 
 func writeSSHAdds(dir string, adds []sshAdd) error {
@@ -61,7 +61,7 @@ func (s *Service) pushSSHAdds(adds []sshAdd) error {
 		files[i] = SSHFileStatus{Rel: f.Rel, Kind: f.Kind, Disk: f}
 		out[i] = sshAddStep(f.Rel, adds[i].vault, SSHPushed)
 	}
-	return firstSSHErr(s.pushSSH(files, out), out)
+	return firstSSHErr(s.SSH().push(files, out), out)
 }
 
 func sshAddStep(rel string, do bool, a SSHAction) SSHFileResult {

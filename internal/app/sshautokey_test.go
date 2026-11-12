@@ -33,7 +33,7 @@ func TestSSHPullTurnsOnAuto(t *testing.T) {
 	t.Parallel()
 	s, dir := sshService(t)
 	addSSHEntry(t, s, sshdir.File{Rel: "config", Kind: sshdir.KindConfig, Data: []byte("Host a\n")})
-	if _, err := s.SSHPull(SSHPullOptions{}); err != nil {
+	if _, err := s.SSH().Pull(SSHPullOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	if got := diskSSH(t, dir, "config"); got != "Host a\n" {

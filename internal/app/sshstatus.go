@@ -31,12 +31,12 @@ type SSHStatus struct {
 	Invalid  []error
 }
 
-func (s *Service) SSHStatus() (SSHStatus, error) {
-	dir, home, err := s.sshDirs()
+func (x SSH) Status() (SSHStatus, error) {
+	dir, home, err := x.s.sshDirs()
 	if err != nil {
 		return SSHStatus{}, err
 	}
-	remote, invalid, err := s.sshVaultFiles()
+	remote, invalid, err := x.vaultFiles()
 	if err != nil {
 		return SSHStatus{}, err
 	}
@@ -44,7 +44,7 @@ func (s *Service) SSHStatus() (SSHStatus, error) {
 	if err != nil {
 		return SSHStatus{}, err
 	}
-	st, err := sshdir.LoadState(s.Paths.SSHState())
+	st, err := sshdir.LoadState(x.s.Paths.SSHState())
 	if err != nil {
 		return SSHStatus{}, err
 	}
@@ -69,8 +69,8 @@ func (s *Service) sshDirs() (dir, home string, err error) {
 	return filepath.Join(home, ".ssh"), home, nil
 }
 
-func (s *Service) sshVaultFiles() ([]sshdir.File, []error, error) {
-	v, err := s.open()
+func (x SSH) vaultFiles() ([]sshdir.File, []error, error) {
+	v, err := x.s.open()
 	if err != nil {
 		return nil, nil, err
 	}
