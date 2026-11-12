@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/elliot40404/creds/internal/config"
+	"github.com/elliot40404/creds/internal/keystore"
 	"github.com/elliot40404/creds/internal/testutil"
 )
 
@@ -89,6 +90,7 @@ type harness struct {
 	user string
 	now  time.Time
 	clip *fakeClip
+	keys func() (keystore.Store, error)
 }
 
 type result struct {
@@ -105,7 +107,11 @@ func newHarness(t *testing.T) *harness {
 
 func (h *harness) env(f *fake) (Env, *bytes.Buffer, *bytes.Buffer) {
 	var out, errb bytes.Buffer
-	return Env{Out: &out, Err: &errb, Prompter: f, Now: func() time.Time { return h.now }, LogN: 10, Clip: h.clip.env(), Home: h.home, UserHome: h.user}, &out, &errb
+	keys := h.keys
+	if keys == nil {
+		keys = testutil.Keystore
+	}
+	return Env{Out: &out, Err: &errb, Prompter: f, Now: func() time.Time { return h.now }, LogN: 10, Clip: h.clip.env(), Home: h.home, UserHome: h.user, Keystore: keys}, &out, &errb
 }
 
 func (h *harness) run(f *fake, args ...string) result {

@@ -123,7 +123,7 @@ func (h *fakeHost) Repos(context.Context) ([]string, error) { return h.repos, h.
 func newSetupUnit(t *testing.T, ui app.Prompter) *app.Setup {
 	t.Helper()
 	home := filepath.Join(t.TempDir(), "home")
-	s := &app.Service{Paths: config.Paths{Home: home}, Config: config.Default(), Prompter: ui, LogN: 10}
+	s := &app.Service{Paths: config.Paths{Home: home}, Config: config.Default(), Prompter: ui, LogN: 10, Keystore: testutil.Keystore}
 	u := s.Setup()
 	u.OS = "linux"
 	u.Look = func(file string) (string, error) {

@@ -58,17 +58,14 @@ func (s *Service) remoteNote() string {
 }
 
 func (s *Service) sessionNote() string {
-	left, err := s.sessions().Left()
-	if errors.Is(err, session.ErrNoSession) {
-		return ""
-	}
+	info, err := s.sessions().Info()
 	if errors.Is(err, session.ErrExpired) {
 		return "expired, removed"
 	}
 	if err != nil {
 		return ""
 	}
-	return left.Round(time.Second).String() + " left"
+	return info.Method + ", " + info.Left.Round(time.Second).String() + " left"
 }
 
 func (s *Service) SessionLeft() time.Duration {

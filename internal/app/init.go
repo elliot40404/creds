@@ -35,7 +35,7 @@ func (s *Service) Init() error {
 	if err := s.commit(id); err != nil {
 		return err
 	}
-	return s.sessions().Save(id.String())
+	return s.saveSession(id.String())
 }
 
 func (s *Service) CheckFresh() error {

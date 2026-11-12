@@ -9,6 +9,7 @@ import (
 
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/sshdir"
+	"github.com/elliot40404/creds/internal/testutil"
 )
 
 func knownSSHFiles(tb testing.TB, n int) (*Service, string) {
@@ -17,7 +18,7 @@ func knownSSHFiles(tb testing.TB, n int) (*Service, string) {
 	if err != nil {
 		tb.Fatal(err)
 	}
-	s := &Service{Paths: config.Paths{Home: tb.TempDir()}, Config: cfg, Prompter: &fakePrompter{}, UserHome: tb.TempDir()}
+	s := &Service{Paths: config.Paths{Home: tb.TempDir()}, Config: cfg, Prompter: &fakePrompter{}, UserHome: tb.TempDir(), Keystore: testutil.Keystore}
 	dir := filepath.Join(s.UserHome, ".ssh")
 	st := sshdir.State{Files: map[string]sshdir.FileState{}}
 	for i := range n {

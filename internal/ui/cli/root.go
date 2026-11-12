@@ -12,6 +12,7 @@ import (
 	"github.com/elliot40404/creds/internal/buildinfo"
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/fail"
+	"github.com/elliot40404/creds/internal/keystore"
 	"github.com/elliot40404/creds/internal/safetext"
 	"github.com/elliot40404/creds/internal/update"
 	"github.com/spf13/cobra"
@@ -34,6 +35,7 @@ type Env struct {
 	UserHome string
 	Setup    func(*app.Setup)
 	Editor   func(path string) error
+	Keystore func() (keystore.Store, error)
 	json     *bool
 }
 
@@ -134,7 +136,7 @@ func (e Env) serviceFor(cmd *cobra.Command, p app.Prompter) (*app.Service, error
 		e.note("warning: using default settings, fix %s with creds config edit", paths.Config())
 		cfg = config.Default()
 	}
-	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn, UserHome: e.UserHome, Release: e.Release}, nil
+	return &app.Service{Paths: paths, Config: cfg, Prompter: p, Now: e.Now, LogN: e.LogN, Spawn: e.Spawn, UserHome: e.UserHome, Release: e.Release, Keystore: e.Keystore}, nil
 }
 
 func configOptional(cmd *cobra.Command) bool {

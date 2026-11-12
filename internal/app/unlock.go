@@ -58,7 +58,7 @@ func (s *Service) replacePassword(id *crypto.Identity) error {
 	if err := s.withLock(func(lock *gitsync.Lock) (bool, error) { return s.writePassword(lock, id, pw) }); err != nil {
 		return err
 	}
-	return s.sessions().Save(id.String())
+	return s.saveSession(id.String())
 }
 
 func (s *Service) writePassword(lock *gitsync.Lock, id *crypto.Identity, pw string) (bool, error) {
@@ -168,7 +168,7 @@ func (s *Service) openIdentity(ask func() (*crypto.Identity, error), device bool
 	if id, err = s.freshIdentity(ask, device); err != nil {
 		return nil, false, err
 	}
-	return id, upgraded, s.sessions().Save(id.String())
+	return id, upgraded, s.saveSession(id.String())
 }
 
 func (s *Service) freshIdentity(ask func() (*crypto.Identity, error), device bool) (*crypto.Identity, error) {

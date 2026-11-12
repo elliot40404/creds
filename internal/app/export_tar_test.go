@@ -100,7 +100,7 @@ func TestExportEncrypted(t *testing.T) {
 			t.Fatalf("unexpected %s", name)
 		}
 	}
-	dst := &Service{Paths: restored, Config: s.Config, Prompter: fp, Now: s.Now, LogN: s.LogN}
+	dst := &Service{Paths: restored, Config: s.Config, Prompter: fp, Now: s.Now, LogN: s.LogN, Keystore: s.Keystore}
 	fp.passwords = []string{mainWord}
 	if !reflect.DeepEqual(allEntries(t, dst), allEntries(t, s)) {
 		t.Fatal("restored vault differs")

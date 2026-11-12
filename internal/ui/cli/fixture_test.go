@@ -47,7 +47,7 @@ func (h *harness) fromFixture(name string, build func(*harness)) {
 	fixtures.mu.Unlock()
 	src := filepath.Join(fixtures.dir, name)
 	f.once.Do(func() {
-		build(&harness{t: h.t, home: src, now: h.now, clip: &fakeClip{}})
+		build(&harness{t: h.t, home: src, now: h.now, clip: &fakeClip{}, keys: testutil.NoKeystore})
 		f.ok = true
 	})
 	if !f.ok {

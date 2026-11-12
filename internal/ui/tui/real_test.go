@@ -55,6 +55,7 @@ type noWatch struct {
 var realFixture = sync.OnceValues(func() (string, error) {
 	home := filepath.Join(fixtureDir, "real")
 	s := realService(home, filepath.Join(fixtureDir, "user"), &initPrompter{})
+	s.Keystore = testutil.NoKeystore
 	if err := s.Init(); err != nil {
 		return "", err
 	}
@@ -76,7 +77,7 @@ func realEntries() []vault.Entry {
 func realService(home, user string, p app.Prompter) *app.Service {
 	c := config.Default()
 	c.Sync.After = time.Millisecond
-	return &app.Service{Paths: config.Paths{Home: home}, Config: c, Prompter: p, Now: time.Now, LogN: 10, UserHome: user}
+	return &app.Service{Paths: config.Paths{Home: home}, Config: c, Prompter: p, Now: time.Now, LogN: 10, UserHome: user, Keystore: testutil.Keystore}
 }
 
 func realCopy(t *testing.T) *app.Service {

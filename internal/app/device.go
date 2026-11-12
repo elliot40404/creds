@@ -32,7 +32,7 @@ func (s *Service) DeviceTrust(key string) error {
 	if err := s.devices().Trust(id, pid, rec, s.pluginUI()); err != nil {
 		return err
 	}
-	return s.sessions().Save(id.String())
+	return s.saveSession(id.String())
 }
 
 func (s *Service) DeviceUntrust() error {

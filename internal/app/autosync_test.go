@@ -23,7 +23,7 @@ func spawning(s *Service) *spawnCounter {
 }
 
 func (s *Service) fresh() *Service {
-	return &Service{Paths: s.Paths, Config: s.Config, Prompter: s.Prompter, Now: s.Now, LogN: s.LogN, Spawn: s.Spawn}
+	return &Service{Paths: s.Paths, Config: s.Config, Prompter: s.Prompter, Now: s.Now, LogN: s.LogN, Spawn: s.Spawn, Keystore: s.Keystore}
 }
 
 func TestWriteSpawnsOnlyWithRemote(t *testing.T) {

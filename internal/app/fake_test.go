@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/elliot40404/creds/internal/config"
+	"github.com/elliot40404/creds/internal/testutil"
 )
 
 const (
@@ -80,6 +81,7 @@ func newService(t *testing.T) (*Service, *fakePrompter, *clock) {
 		Now:      c.now,
 		LogN:     10,
 		UserHome: t.TempDir(),
+		Keystore: testutil.Keystore,
 	}
 	return s, fp, c
 }

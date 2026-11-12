@@ -8,7 +8,7 @@ import (
 
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/crypto"
-	"github.com/elliot40404/creds/internal/session"
+	"github.com/elliot40404/creds/internal/keystore"
 )
 
 var (
@@ -30,12 +30,14 @@ type Service struct {
 	Waiting  func()
 	UserHome string
 	Release  string
+	Keystore func() (keystore.Store, error)
 
 	mu           sync.Mutex
 	readChecked  bool
 	sessionOnly  bool
 	strayChecked bool
 	warnings     []string
+	keys         sessionKeys
 }
 
 func (s *Service) logN() int {
@@ -65,16 +67,6 @@ func (s *Service) firstTime(done *bool) bool {
 	}
 	*done = true
 	return true
-}
-
-func (s *Service) sessions() *session.Store {
-	c := s.CurrentConfig()
-	return &session.Store{
-		Path: s.Paths.Session(),
-		Idle: c.Session.Idle,
-		Hard: c.Session.Hard,
-		Now:  s.Now,
-	}
 }
 
 func (s *Service) vaultFile(name string) string {
