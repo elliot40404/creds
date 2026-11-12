@@ -11,3 +11,7 @@ func tryLockFile(*os.File) error {
 func unlockFile(*os.File) error {
 	return nil
 }
+
+func isBusy(error) bool {
+	return false
+}

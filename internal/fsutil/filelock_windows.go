@@ -1,6 +1,7 @@
 package fsutil
 
 import (
+	"errors"
 	"os"
 
 	"golang.org/x/sys/windows"
@@ -13,4 +14,8 @@ func tryLockFile(f *os.File) error {
 
 func unlockFile(f *os.File) error {
 	return windows.UnlockFileEx(windows.Handle(f.Fd()), 0, 1, 0, new(windows.Overlapped))
+}
+
+func isBusy(err error) bool {
+	return errors.Is(err, windows.ERROR_LOCK_VIOLATION)
 }
