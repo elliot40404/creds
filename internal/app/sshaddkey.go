@@ -21,8 +21,8 @@ type SSHAddKeyResult struct {
 	PubNote string
 }
 
-func (s *Service) SSHAddKey(file, name string) (SSHAddKeyResult, error) {
-	dir, home, err := s.sshDirs()
+func (x SSH) AddKey(file, name string) (SSHAddKeyResult, error) {
+	dir, home, err := x.dirs()
 	if err != nil {
 		return SSHAddKeyResult{}, err
 	}
@@ -34,11 +34,11 @@ func (s *Service) SSHAddKey(file, name string) (SSHAddKeyResult, error) {
 	if err != nil {
 		return SSHAddKeyResult{}, err
 	}
-	adds, err := s.planSSHAdd(dir, files, inside)
+	adds, err := x.planAdd(dir, files, inside)
 	if err != nil {
 		return SSHAddKeyResult{}, err
 	}
-	out, err := s.addSSHFiles(dir, adds)
+	out, err := x.addFiles(dir, adds)
 	if err != nil {
 		return SSHAddKeyResult{}, err
 	}
@@ -71,8 +71,8 @@ func sshKeyFiles(res sshdir.Result, dir, file, name string) ([]sshdir.File, stri
 	return files, note, false, nil
 }
 
-func (s *Service) planSSHAdd(dir string, files []sshdir.File, inside bool) ([]sshAdd, error) {
-	v, err := s.open()
+func (x SSH) planAdd(dir string, files []sshdir.File, inside bool) ([]sshAdd, error) {
+	v, err := x.s.open()
 	if err != nil {
 		return nil, err
 	}

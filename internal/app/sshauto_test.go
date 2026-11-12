@@ -60,7 +60,7 @@ func TestSSHAutoPushesAChangedKnownFile(t *testing.T) {
 	s, _, dir := pushedSSH(t)
 	writeSSHFile(t, dir, "config", []byte("Host a\n  Port 2222\n"))
 	writeSSHFile(t, dir, "config.d/new", []byte("Host n\n"))
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	if got := vaultSSH(t, s, "config"); got != "Host a\n  Port 2222\n" {
@@ -81,11 +81,11 @@ func TestSSHAutoPushesAChangedKnownFile(t *testing.T) {
 func TestSSHAutoUnchangedOpensNoVault(t *testing.T) {
 	t.Parallel()
 	s, dir := knownSSHFiles(t, 3)
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	writeSSHFile(t, dir, "config.d/host1", []byte("Host changed\n"))
-	if hint := s.SSHAutoPush(); hint != "ssh: auto push failed, run creds ssh push" {
+	if hint := s.SSH().AutoPush(); hint != "ssh: auto push failed, run creds ssh push" {
 		t.Fatalf("changed file did not reach the vault: %q", hint)
 	}
 }
@@ -98,7 +98,7 @@ func TestSSHAutoRefreshesStatWhenOnlyTimeChanged(t *testing.T) {
 	if err := os.Chtimes(filepath.Join(dir, "config"), later, later); err != nil {
 		t.Fatal(err)
 	}
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	after := loadSSHState(t, s).Files["config"]
@@ -120,7 +120,7 @@ func TestSSHAutoConflictHint(t *testing.T) {
 	if err := sshdir.SaveState(s.Paths.SSHState(), st); err != nil {
 		t.Fatal(err)
 	}
-	if hint := s.SSHAutoPush(); hint != "ssh: config changed here and in the vault, run creds ssh status" {
+	if hint := s.SSH().AutoPush(); hint != "ssh: config changed here and in the vault, run creds ssh status" {
 		t.Fatalf("hint %q", hint)
 	}
 	if got := vaultSSH(t, s, "config"); got != "Host c\n" {
@@ -133,7 +133,7 @@ func TestSSHAutoEveryCase(t *testing.T) {
 	s, dir := sshService(t)
 	setSSHAuto(t, s, "true")
 	plantSSHCases(t, s, dir)
-	if hint := s.SSHAutoPush(); hint != "ssh: 4 files not pushed, run creds ssh status" {
+	if hint := s.SSH().AutoPush(); hint != "ssh: 4 files not pushed, run creds ssh status" {
 		t.Fatalf("hint %q", hint)
 	}
 	if got := vaultSSH(t, s, "config.d/local_changed"); got != "Host b\n" {
@@ -156,7 +156,7 @@ func TestSSHAutoOffWhenLocked(t *testing.T) {
 	writeSSHFile(t, dir, "config", []byte("Host locked\n"))
 	before := loadSSHState(t, s)
 	fp.prompts, fp.warned = nil, nil
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	if len(fp.prompts) != 0 || len(fp.warned) != 0 {
@@ -175,13 +175,13 @@ func TestSSHAutoOffWithoutKnownFiles(t *testing.T) {
 	t.Parallel()
 	s, dir := knownSSHFiles(t, 0)
 	writeSSHFile(t, dir, "config", []byte("Host a\n"))
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	if err := sshdir.SaveState(s.Paths.SSHState(), sshdir.State{Skipped: []string{"config"}}); err != nil {
 		t.Fatal(err)
 	}
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 }
@@ -190,7 +190,7 @@ func BenchmarkSSHAutoPushUnchanged(b *testing.B) {
 	s, _ := knownSSHFiles(b, 30)
 	b.ReportAllocs()
 	for b.Loop() {
-		if hint := s.SSHAutoPush(); hint != "" {
+		if hint := s.SSH().AutoPush(); hint != "" {
 			b.Fatal(hint)
 		}
 	}

@@ -63,19 +63,19 @@ func TestSSHAutoOffStaysOffAndDoesNothing(t *testing.T) {
 		t.Fatalf("push flipped an explicit false: %v", on)
 	}
 	writeSSHFile(t, dir, "config", []byte("Host a\n  Port 2222\n"))
-	if hint := s.SSHAutoPush(); hint != "" {
+	if hint := s.SSH().AutoPush(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	if got := vaultSSH(t, s, "config"); got != "Host a\n  Port 22\n" {
 		t.Fatalf("auto pushed while off: %q", got)
 	}
 	addSSHEntry(t, s, sshdir.File{Rel: "config.d/c", Kind: sshdir.KindConfig, Data: []byte("Host c\n")})
-	s.markSSHPull()
+	s.SSH().markPull()
 	if sshPullFlag(t, s) {
 		t.Fatal("flag set while off")
 	}
-	s.setSSHPull(true)
-	if hint := s.SSHAutoPull(); hint != "" || sshPullFlag(t, s) {
+	s.SSH().setPull(true)
+	if hint := s.SSH().AutoPull(); hint != "" || sshPullFlag(t, s) {
 		t.Fatalf("hint %q flag %v", hint, sshPullFlag(t, s))
 	}
 	if _, err := os.Stat(filepath.Join(dir, "config.d", "c")); !os.IsNotExist(err) {

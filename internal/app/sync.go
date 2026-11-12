@@ -240,3 +240,11 @@ func conflictPaths(pending []gitsync.PendingConflict) []string {
 	}
 	return out
 }
+
+func (s *Service) runSync(ctx context.Context, sy *gitsync.Syncer) (gitsync.SyncResult, error) {
+	res, err := sy.Sync(ctx)
+	if res == gitsync.FastForwarded || res == gitsync.Merged {
+		s.SSH().markPull()
+	}
+	return res, err
+}

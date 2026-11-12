@@ -25,11 +25,11 @@ func (a sshAdd) action() SSHAction {
 	return SSHNoChange
 }
 
-func (s *Service) addSSHFiles(dir string, adds []sshAdd) ([]SSHFileResult, error) {
+func (x SSH) addFiles(dir string, adds []sshAdd) ([]SSHFileResult, error) {
 	if err := writeSSHAdds(dir, adds); err != nil {
 		return nil, err
 	}
-	if err := s.pushSSHAdds(adds); err != nil {
+	if err := x.pushAdds(adds); err != nil {
 		if w := sshWritten(adds); w != "" {
 			return nil, fmt.Errorf("%s is written in %s but not saved in the vault, run creds ssh push: %w", w, dir, err)
 		}
@@ -39,7 +39,7 @@ func (s *Service) addSSHFiles(dir string, adds []sshAdd) ([]SSHFileResult, error
 	for i, a := range adds {
 		out[i] = SSHFileResult{Rel: a.file.Rel, Action: a.action()}
 	}
-	return out, s.SSH().saveState(func(cur sshdir.State) sshdir.State { return addedSSHState(cur, dir, adds) })
+	return out, x.saveState(func(cur sshdir.State) sshdir.State { return addedSSHState(cur, dir, adds) })
 }
 
 func writeSSHAdds(dir string, adds []sshAdd) error {
@@ -53,7 +53,7 @@ func writeSSHAdds(dir string, adds []sshAdd) error {
 	return firstSSHErr(writeSSH(st, out), out)
 }
 
-func (s *Service) pushSSHAdds(adds []sshAdd) error {
+func (x SSH) pushAdds(adds []sshAdd) error {
 	files := make([]SSHFileStatus, len(adds))
 	out := make([]SSHFileResult, len(adds))
 	for i := range adds {
@@ -61,7 +61,7 @@ func (s *Service) pushSSHAdds(adds []sshAdd) error {
 		files[i] = SSHFileStatus{Rel: f.Rel, Kind: f.Kind, Disk: f}
 		out[i] = sshAddStep(f.Rel, adds[i].vault, SSHPushed)
 	}
-	return firstSSHErr(s.SSH().push(files, out), out)
+	return firstSSHErr(x.push(files, out), out)
 }
 
 func sshAddStep(rel string, do bool, a SSHAction) SSHFileResult {

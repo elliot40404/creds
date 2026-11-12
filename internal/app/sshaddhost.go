@@ -19,11 +19,11 @@ type SSHAddHostResult struct {
 	Include string
 }
 
-func (s *Service) SSHAddHost(h SSHHost) (SSHAddHostResult, error) {
+func (x SSH) AddHost(h SSHHost) (SSHAddHostResult, error) {
 	if err := h.check(); err != nil {
 		return SSHAddHostResult{}, err
 	}
-	dir, home, err := s.sshDirs()
+	dir, home, err := x.dirs()
 	if err != nil {
 		return SSHAddHostResult{}, err
 	}
@@ -35,10 +35,10 @@ func (s *Service) SSHAddHost(h SSHHost) (SSHAddHostResult, error) {
 		return SSHAddHostResult{}, err
 	}
 	f := sshdir.File{Rel: h.Rel(), Kind: sshdir.KindConfig, Data: h.config()}
-	if err := s.sshFree(dir, f.Rel); err != nil {
+	if err := x.free(dir, f.Rel); err != nil {
 		return SSHAddHostResult{}, err
 	}
-	if _, err := s.addSSHFiles(dir, []sshAdd{{file: f, disk: true, vault: true}}); err != nil {
+	if _, err := x.addFiles(dir, []sshAdd{{file: f, disk: true, vault: true}}); err != nil {
 		return SSHAddHostResult{}, err
 	}
 	out := SSHAddHostResult{Dir: dir, Rel: f.Rel, Alias: h.Alias()}
@@ -55,7 +55,7 @@ func checkSSHKey(res sshdir.Result, key string) error {
 	return fmt.Errorf("%w: key %q is not a private key file in ~/.ssh", ErrSSHHost, key)
 }
 
-func (s *Service) sshFree(dir string, rels ...string) error {
+func (x SSH) free(dir string, rels ...string) error {
 	for _, rel := range rels {
 		_, err := os.Lstat(filepath.Join(dir, filepath.FromSlash(rel)))
 		switch {
@@ -65,7 +65,7 @@ func (s *Service) sshFree(dir string, rels ...string) error {
 			return err
 		}
 	}
-	v, err := s.open()
+	v, err := x.s.open()
 	if err != nil {
 		return err
 	}

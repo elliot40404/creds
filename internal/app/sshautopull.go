@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"errors"
 
 	"github.com/elliot40404/creds/internal/gitsync"
@@ -9,36 +8,36 @@ import (
 	"github.com/elliot40404/creds/internal/sshdir"
 )
 
-func (s *Service) SSHAuto() string {
-	pulled := s.SSHAutoPull()
-	pushed := s.SSHAutoPush()
+func (x SSH) Auto() string {
+	pulled := x.AutoPull()
+	pushed := x.AutoPush()
 	if pulled != "" {
 		return pulled
 	}
 	return pushed
 }
 
-func (s *Service) SSHAutoPull() string {
-	st, err := gitsync.LoadState(s.Paths.State())
+func (x SSH) AutoPull() string {
+	st, err := gitsync.LoadState(x.s.Paths.State())
 	if err != nil || !st.SSHPull {
 		return ""
 	}
-	hint, done := s.sshSafePull()
+	hint, done := x.safePull()
 	if done {
-		s.setSSHPull(false)
+		x.setPull(false)
 	}
 	return hint
 }
 
-func (s *Service) sshSafePull() (string, bool) {
-	st, err := sshdir.LoadState(s.Paths.SSHState())
-	if err != nil || !s.sshAutoOn(st) {
+func (x SSH) safePull() (string, bool) {
+	st, err := sshdir.LoadState(x.s.Paths.SSHState())
+	if err != nil || !x.autoOn(st) {
 		return "", err == nil
 	}
-	c := s.sessionOnlyService()
+	c := x.sessionService()
 	res, err := c.SSH().Pull(SSHPullOptions{})
 	for _, w := range c.takeWarnings() {
-		s.warn(w)
+		x.s.warn(w)
 	}
 	switch {
 	case errors.Is(err, session.ErrNoSession):
@@ -59,23 +58,15 @@ func sshPullLeft(files []SSHFileResult) []SSHFileResult {
 	return left
 }
 
-func (s *Service) runSync(ctx context.Context, sy *gitsync.Syncer) (gitsync.SyncResult, error) {
-	res, err := sy.Sync(ctx)
-	if res == gitsync.FastForwarded || res == gitsync.Merged {
-		s.markSSHPull()
-	}
-	return res, err
-}
-
-func (s *Service) markSSHPull() {
-	st, err := sshdir.LoadState(s.Paths.SSHState())
-	if err == nil && s.sshAutoOn(st) {
-		s.setSSHPull(true)
+func (x SSH) markPull() {
+	st, err := sshdir.LoadState(x.s.Paths.SSHState())
+	if err == nil && x.autoOn(st) {
+		x.setPull(true)
 	}
 }
 
-func (s *Service) setSSHPull(on bool) {
-	_, _ = gitsync.UpdateState(s.Paths.State(), func(st *gitsync.State) (bool, error) {
+func (x SSH) setPull(on bool) {
+	_, _ = gitsync.UpdateState(x.s.Paths.State(), func(st *gitsync.State) (bool, error) {
 		if st.SSHPull == on {
 			return false, nil
 		}

@@ -32,7 +32,7 @@ type SSHStatus struct {
 }
 
 func (x SSH) Status() (SSHStatus, error) {
-	dir, home, err := x.s.sshDirs()
+	dir, home, err := x.dirs()
 	if err != nil {
 		return SSHStatus{}, err
 	}
@@ -59,8 +59,8 @@ func (x SSH) Status() (SSHStatus, error) {
 	}, nil
 }
 
-func (s *Service) sshDirs() (dir, home string, err error) {
-	home = s.UserHome
+func (x SSH) dirs() (dir, home string, err error) {
+	home = x.s.UserHome
 	if home == "" {
 		if home, err = os.UserHomeDir(); err != nil {
 			return "", "", err

@@ -30,7 +30,7 @@ func sshAddHostCmd(env Env) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: env.run(func(s *app.Service, args []string) error {
 			h.Name = args[0]
-			res, err := s.SSHAddHost(h)
+			res, err := s.SSH().AddHost(h)
 			if err != nil {
 				return err
 			}

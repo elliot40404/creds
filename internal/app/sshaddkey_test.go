@@ -27,7 +27,7 @@ func TestSSHAddKeyCopiesOutsideKey(t *testing.T) {
 	out := t.TempDir()
 	writeSSHFile(t, out, "work.pem", priv)
 	writeSSHFile(t, out, "work.pem.pub", pub)
-	res, err := s.SSHAddKey(filepath.Join(out, "work.pem"), "work_key")
+	res, err := s.SSH().AddKey(filepath.Join(out, "work.pem"), "work_key")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestSSHAddKeyCopiesOutsideKey(t *testing.T) {
 	if f := byRel(st)["work_key"]; f.Change != SSHSame {
 		t.Fatalf("status %+v", f)
 	}
-	if res, err = s.SSHAddKey(filepath.Join(out, "work.pem"), "work_key"); err != nil {
+	if res, err = s.SSH().AddKey(filepath.Join(out, "work.pem"), "work_key"); err != nil {
 		t.Fatal(err)
 	}
 	if got := sshActions(res.Files); !slices.Equal(got, []string{"work_key same", "work_key.pub same"}) {
@@ -65,7 +65,7 @@ func TestSSHAddKeyDefaultNameAndBadPub(t *testing.T) {
 	out := t.TempDir()
 	writeSSHFile(t, out, "id_ed25519", priv)
 	writeSSHFile(t, out, "id_ed25519.pub", []byte("not a key\n"))
-	res, err := s.SSHAddKey(filepath.Join(out, "id_ed25519"), "")
+	res, err := s.SSH().AddKey(filepath.Join(out, "id_ed25519"), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestSSHAddKeyPushesSkippedKeyInside(t *testing.T) {
 	if err := sshdir.SaveState(s.Paths.SSHState(), sshdir.State{Skipped: []string{"old_key", "other"}}); err != nil {
 		t.Fatal(err)
 	}
-	res, err := s.SSHAddKey(filepath.Join(dir, "old_key"), "")
+	res, err := s.SSH().AddKey(filepath.Join(dir, "old_key"), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestSSHAddKeyRefusesNonKeys(t *testing.T) {
 		{filepath.Join(dir, "key"), "other"},
 	}
 	for _, c := range cases {
-		if _, err := s.SSHAddKey(c[0], c[1]); !errors.Is(err, ErrSSHKey) {
+		if _, err := s.SSH().AddKey(c[0], c[1]); !errors.Is(err, ErrSSHKey) {
 			t.Errorf("%s %q: %v", c[0], c[1], err)
 		}
 	}
@@ -143,7 +143,7 @@ func TestSSHAddKeyRefusesNonKeys(t *testing.T) {
 	if err := os.Symlink(filepath.Join(out, "key"), filepath.Join(out, "link")); err != nil {
 		t.Skipf("no symlinks: %v", err)
 	}
-	if _, err := s.SSHAddKey(filepath.Join(out, "link"), ""); !errors.Is(err, ErrSSHKey) {
+	if _, err := s.SSH().AddKey(filepath.Join(out, "link"), ""); !errors.Is(err, ErrSSHKey) {
 		t.Fatalf("link: %v", err)
 	}
 }
@@ -162,7 +162,7 @@ func TestSSHAddKeyRefusesOtherContent(t *testing.T) {
 		addSSHEntry(t, s, sshdir.File{Rel: rel, Kind: sshdir.KindPrivateKey, Data: other})
 	}
 	for _, p := range []string{filepath.Join(out, "here"), filepath.Join(out, "vault"), filepath.Join(dir, "inside")} {
-		if _, err := s.SSHAddKey(p, ""); !errors.Is(err, ErrSSHExists) {
+		if _, err := s.SSH().AddKey(p, ""); !errors.Is(err, ErrSSHExists) {
 			t.Errorf("%s: %v", p, err)
 		}
 	}

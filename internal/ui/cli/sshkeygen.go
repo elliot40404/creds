@@ -27,7 +27,7 @@ func sshKeygenCmd(env Env) *cobra.Command {
 	var k app.SSHKeygen
 	run := env.run(func(s *app.Service, args []string) error {
 		k.Name = args[0]
-		res, err := s.SSHKeygen(k)
+		res, err := s.SSH().Keygen(k)
 		if err != nil {
 			return err
 		}

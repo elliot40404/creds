@@ -11,23 +11,23 @@ import (
 	"github.com/elliot40404/creds/internal/sshdir"
 )
 
-func (s *Service) SSHAutoPush() string {
-	dir, _, err := s.sshDirs()
+func (x SSH) AutoPush() string {
+	dir, _, err := x.dirs()
 	if err != nil {
 		return ""
 	}
-	st, err := sshdir.LoadState(s.Paths.SSHState())
-	if err != nil || !s.sshAutoOn(st) {
+	st, err := sshdir.LoadState(x.s.Paths.SSHState())
+	if err != nil || !x.autoOn(st) {
 		return ""
 	}
 	dirty := sshStatDirty(dir, st)
 	if len(dirty) == 0 {
 		return ""
 	}
-	c := s.sessionOnlyService()
+	c := x.sessionService()
 	res, err := c.SSH().Push(SSHPushOptions{KnownOnly: true})
 	for _, w := range c.takeWarnings() {
-		s.warn(w)
+		x.s.warn(w)
 	}
 	switch {
 	case errors.Is(err, session.ErrNoSession):
@@ -38,32 +38,32 @@ func (s *Service) SSHAutoPush() string {
 	return sshAutoHint(sshPushLeft(res.Files, dirty), sshPushWords)
 }
 
-func (s *Service) sshAutoOn(st sshdir.State) bool {
-	return len(st.Files) > 0 && s.CurrentConfig().SSH.AutoOn()
+func (x SSH) autoOn(st sshdir.State) bool {
+	return len(st.Files) > 0 && x.s.CurrentConfig().SSH.AutoOn()
 }
 
-func (s *Service) turnOnSSHAuto() {
-	c := s.CurrentConfig()
+func (x SSH) turnOnAuto() {
+	c := x.s.CurrentConfig()
 	if c.SSH.Auto != nil {
 		return
 	}
 	on := true
 	c.SSH.Auto = &on
-	if err := s.saveConfig(c); err != nil {
-		s.warn("ssh: could not turn on ssh.auto, run creds config set ssh.auto true")
+	if err := x.s.saveConfig(c); err != nil {
+		x.s.warn("ssh: could not turn on ssh.auto, run creds config set ssh.auto true")
 	}
 }
 
-func (s *Service) sessionOnlyService() *Service {
+func (x SSH) sessionService() *Service {
 	return &Service{
-		Paths:       s.Paths,
-		Config:      s.CurrentConfig(),
-		Prompter:    s.Prompter,
-		Now:         s.Now,
-		LogN:        s.LogN,
-		Spawn:       s.Spawn,
-		Waiting:     s.Waiting,
-		UserHome:    s.UserHome,
+		Paths:       x.s.Paths,
+		Config:      x.s.CurrentConfig(),
+		Prompter:    x.s.Prompter,
+		Now:         x.s.Now,
+		LogN:        x.s.LogN,
+		Spawn:       x.s.Spawn,
+		Waiting:     x.s.Waiting,
+		UserHome:    x.s.UserHome,
 		sessionOnly: true,
 	}
 }

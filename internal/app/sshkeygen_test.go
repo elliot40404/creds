@@ -17,7 +17,7 @@ func TestSSHKeygenWritesKeyPair(t *testing.T) {
 	s, fp, _, _ := initVault(t)
 	fp.prompts, fp.warned = nil, nil
 	dir := filepath.Join(s.UserHome, ".ssh")
-	res, err := s.SSHKeygen(SSHKeygen{Name: "id_work"})
+	res, err := s.SSH().Keygen(SSHKeygen{Name: "id_work"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestSSHKeygenWithPassphrase(t *testing.T) {
 	s, fp, _, _ := initVault(t)
 	fp.prompts, fp.warned = nil, nil
 	fp.passwords = []string{"", "one", "two", "open sesame", "open sesame"}
-	res, err := s.SSHKeygen(SSHKeygen{Name: "id_safe", Comment: "me@laptop", Passphrase: true})
+	res, err := s.SSH().Keygen(SSHKeygen{Name: "id_safe", Comment: "me@laptop", Passphrase: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestSSHKeygenWithGivenPassphrase(t *testing.T) {
 	s, fp, _, _ := initVault(t)
 	fp.prompts, fp.warned = nil, nil
 	pass := []byte("open sesame")
-	if _, err := s.SSHKeygen(SSHKeygen{Name: "id_given", Passphrase: true, PassphraseBytes: pass}); err != nil {
+	if _, err := s.SSH().Keygen(SSHKeygen{Name: "id_given", Passphrase: true, PassphraseBytes: pass}); err != nil {
 		t.Fatal(err)
 	}
 	if len(fp.prompts) != 0 || string(pass) != strings.Repeat("\x00", len(pass)) {
@@ -85,7 +85,7 @@ func TestSSHKeygenRefusesEmptyPassphrase(t *testing.T) {
 	s, fp, _, _ := initVault(t)
 	fp.prompts, fp.warned = nil, nil
 	fp.passwords = []string{"", "", ""}
-	if _, err := s.SSHKeygen(SSHKeygen{Name: "id_x", Passphrase: true}); !errors.Is(err, ErrSSHPassphrase) {
+	if _, err := s.SSH().Keygen(SSHKeygen{Name: "id_x", Passphrase: true}); !errors.Is(err, ErrSSHPassphrase) {
 		t.Fatal(err)
 	}
 	if got := diskSSH(t, filepath.Join(s.UserHome, ".ssh"), "id_x"); got != "" {
@@ -100,7 +100,7 @@ func TestSSHKeygenRefusesExisting(t *testing.T) {
 	priv, _ := sshKeyPair(t)
 	addSSHEntry(t, s, sshdir.File{Rel: "vault", Kind: sshdir.KindPrivateKey, Data: priv})
 	for _, name := range []string{"here", "vault"} {
-		if _, err := s.SSHKeygen(SSHKeygen{Name: name}); !errors.Is(err, ErrSSHExists) {
+		if _, err := s.SSH().Keygen(SSHKeygen{Name: name}); !errors.Is(err, ErrSSHExists) {
 			t.Errorf("%s: %v", name, err)
 		}
 	}
@@ -123,7 +123,7 @@ func TestSSHKeygenRefusesBadInput(t *testing.T) {
 		{Name: "x", Comment: "a\nb"},
 		{Name: "x", Comment: strings.Repeat("a", 256)},
 	} {
-		if _, err := s.SSHKeygen(k); !errors.Is(err, ErrSSHKeygen) {
+		if _, err := s.SSH().Keygen(k); !errors.Is(err, ErrSSHKeygen) {
 			t.Errorf("%+v: %v", k, err)
 		}
 	}

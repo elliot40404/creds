@@ -24,11 +24,11 @@ func TestSSHAutoPullWritesOnlySafeChanges(t *testing.T) {
 	s, dir := sshService(t)
 	setSSHAuto(t, s, "true")
 	plantSSHCases(t, s, dir)
-	if hint := s.SSHAutoPull(); hint != "" {
+	if hint := s.SSH().AutoPull(); hint != "" {
 		t.Fatalf("pulled without a sync: %q", hint)
 	}
-	s.markSSHPull()
-	if hint := s.SSHAutoPull(); hint != "ssh: 3 files not pulled, run creds ssh pull" {
+	s.SSH().markPull()
+	if hint := s.SSH().AutoPull(); hint != "ssh: 3 files not pulled, run creds ssh pull" {
 		t.Fatalf("hint %q", hint)
 	}
 	want := map[string]string{
@@ -46,7 +46,7 @@ func TestSSHAutoPullWritesOnlySafeChanges(t *testing.T) {
 	if sshPullFlag(t, s) {
 		t.Fatal("flag kept")
 	}
-	if hint := s.SSHAutoPull(); hint != "" {
+	if hint := s.SSH().AutoPull(); hint != "" {
 		t.Fatalf("hint shown twice: %q", hint)
 	}
 }
@@ -64,8 +64,8 @@ func TestSSHAutoPullConflictHint(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeSSHFile(t, dir, "config", []byte("Host here\n"))
-	s.markSSHPull()
-	if hint := s.SSHAuto(); hint != "ssh: config changed here and in the vault, run creds ssh pull" {
+	s.SSH().markPull()
+	if hint := s.SSH().Auto(); hint != "ssh: config changed here and in the vault, run creds ssh pull" {
 		t.Fatalf("hint %q", hint)
 	}
 	if got := diskSSH(t, dir, "config"); got != "Host here\n" {
@@ -79,12 +79,12 @@ func TestSSHAutoPullConflictHint(t *testing.T) {
 func TestSSHAutoPullWaitsForUnlock(t *testing.T) {
 	t.Parallel()
 	s, fp, dir := pushedSSH(t)
-	s.markSSHPull()
+	s.SSH().markPull()
 	if err := s.Lock(); err != nil {
 		t.Fatal(err)
 	}
 	fp.prompts, fp.warned = nil, nil
-	if hint := s.SSHAutoPull(); hint != "" {
+	if hint := s.SSH().AutoPull(); hint != "" {
 		t.Fatalf("hint %q", hint)
 	}
 	if len(fp.prompts) != 0 || len(fp.warned) != 0 || !sshPullFlag(t, s) {
@@ -98,12 +98,12 @@ func TestSSHAutoPullWaitsForUnlock(t *testing.T) {
 func TestSSHAutoPullOffWithoutKnownFiles(t *testing.T) {
 	t.Parallel()
 	s, _ := knownSSHFiles(t, 0)
-	s.markSSHPull()
+	s.SSH().markPull()
 	if sshPullFlag(t, s) {
 		t.Fatal("flag set with ssh auto off")
 	}
-	s.setSSHPull(true)
-	if hint := s.SSHAutoPull(); hint != "" || sshPullFlag(t, s) {
+	s.SSH().setPull(true)
+	if hint := s.SSH().AutoPull(); hint != "" || sshPullFlag(t, s) {
 		t.Fatalf("hint %q flag %v", hint, sshPullFlag(t, s))
 	}
 }

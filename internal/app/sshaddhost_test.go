@@ -23,7 +23,7 @@ func sshHostService(t *testing.T, config string) (*Service, string) {
 func TestSSHAddHostWritesDiskVaultAndState(t *testing.T) {
 	t.Parallel()
 	s, dir := sshHostService(t, "Include config.d/*/*\n")
-	res, err := s.SSHAddHost(SSHHost{Name: "beam/data_new", Host: "10.0.0.5", User: "ubuntu", Port: 2222, Key: "id_ed25519"})
+	res, err := s.SSH().AddHost(SSHHost{Name: "beam/data_new", Host: "10.0.0.5", User: "ubuntu", Port: 2222, Key: "id_ed25519"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestSSHAddHostIncludeHint(t *testing.T) {
 	}
 	for _, tc := range cases {
 		s, dir := sshHostService(t, tc.config)
-		res, err := s.SSHAddHost(SSHHost{Name: tc.name, Host: "db.example.com", Port: 22})
+		res, err := s.SSH().AddHost(SSHHost{Name: tc.name, Host: "db.example.com", Port: 22})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -78,7 +78,7 @@ func TestSSHAddHostRefusesExisting(t *testing.T) {
 	writeSSHFile(t, dir, "config.d/beam/here", []byte("Host here\n"))
 	addSSHEntry(t, s, sshdir.File{Rel: "config.d/beam/vault", Kind: sshdir.KindConfig, Data: []byte("Host vault\n")})
 	for _, name := range []string{"beam/here", "beam/vault"} {
-		if _, err := s.SSHAddHost(SSHHost{Name: name, Host: "h"}); !errors.Is(err, ErrSSHExists) {
+		if _, err := s.SSH().AddHost(SSHHost{Name: name, Host: "h"}); !errors.Is(err, ErrSSHExists) {
 			t.Errorf("%s: %v", name, err)
 		}
 	}
@@ -112,7 +112,7 @@ func TestSSHAddHostRefusesBadInput(t *testing.T) {
 		{Name: "x", Host: "h", Key: "../id_ed25519"},
 	}
 	for _, h := range bad {
-		if _, err := s.SSHAddHost(h); !errors.Is(err, ErrSSHHost) {
+		if _, err := s.SSH().AddHost(h); !errors.Is(err, ErrSSHHost) {
 			t.Errorf("%+v: %v", h, err)
 		}
 	}

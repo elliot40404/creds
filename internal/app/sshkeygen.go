@@ -31,24 +31,24 @@ type SSHKeygenResult struct {
 	PublicKey string
 }
 
-func (s *Service) SSHKeygen(k SSHKeygen) (SSHKeygenResult, error) {
+func (x SSH) Keygen(k SSHKeygen) (SSHKeygenResult, error) {
 	defer clear(k.PassphraseBytes)
 	if err := k.check(); err != nil {
 		return SSHKeygenResult{}, err
 	}
-	dir, _, err := s.sshDirs()
+	dir, _, err := x.dirs()
 	if err != nil {
 		return SSHKeygenResult{}, err
 	}
-	if err := s.sshFree(dir, k.Name, k.Name+".pub"); err != nil {
+	if err := x.free(dir, k.Name, k.Name+".pub"); err != nil {
 		return SSHKeygenResult{}, err
 	}
-	files, err := s.newSSHKey(k)
+	files, err := x.newKey(k)
 	if err != nil {
 		return SSHKeygenResult{}, err
 	}
 	adds := []sshAdd{{file: files[0], disk: true, vault: true}, {file: files[1], disk: true, vault: true}}
-	out, err := s.addSSHFiles(dir, adds)
+	out, err := x.addFiles(dir, adds)
 	if err != nil {
 		return SSHKeygenResult{}, err
 	}
@@ -72,8 +72,8 @@ func (k SSHKeygen) comment() string {
 	return k.Comment
 }
 
-func (s *Service) newSSHKey(k SSHKeygen) ([]sshdir.File, error) {
-	pass, err := s.keyPassphrase(k)
+func (x SSH) newKey(k SSHKeygen) ([]sshdir.File, error) {
+	pass, err := x.keyPassphrase(k)
 	if err != nil {
 		return nil, err
 	}
@@ -88,25 +88,25 @@ func (s *Service) newSSHKey(k SSHKeygen) ([]sshdir.File, error) {
 	}, nil
 }
 
-func (s *Service) keyPassphrase(k SSHKeygen) ([]byte, error) {
+func (x SSH) keyPassphrase(k SSHKeygen) ([]byte, error) {
 	switch {
 	case len(k.PassphraseBytes) > 0:
 		return k.PassphraseBytes, nil
 	case !k.Passphrase:
 		return nil, nil
 	}
-	return Retry(s.Prompter, s.askSSHPassphrase, ErrSSHPassphrase, ErrPasswordMismatch)
+	return Retry(x.s.Prompter, x.askPassphrase, ErrSSHPassphrase, ErrPasswordMismatch)
 }
 
-func (s *Service) askSSHPassphrase() ([]byte, error) {
-	pw, err := s.Prompter.Password("Key passphrase")
+func (x SSH) askPassphrase() ([]byte, error) {
+	pw, err := x.s.Prompter.Password("Key passphrase")
 	if err != nil {
 		return nil, err
 	}
 	if pw == "" {
 		return nil, ErrSSHPassphrase
 	}
-	again, err := s.Prompter.Password("Repeat key passphrase")
+	again, err := x.s.Prompter.Password("Repeat key passphrase")
 	if err != nil {
 		return nil, err
 	}

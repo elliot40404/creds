@@ -34,7 +34,7 @@ func sshAddKeyCmd(env Env) *cobra.Command {
 		Long:  sshAddKeyLong,
 		Args:  cobra.ExactArgs(1),
 		RunE: env.run(func(s *app.Service, args []string) error {
-			res, err := s.SSHAddKey(args[0], name)
+			res, err := s.SSH().AddKey(args[0], name)
 			if err != nil {
 				return err
 			}

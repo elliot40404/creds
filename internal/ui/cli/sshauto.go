@@ -11,7 +11,7 @@ func (e Env) autoSSH(cmd *cobra.Command, s *app.Service) {
 	if under(cmd, noAutoSSHCmds) {
 		return
 	}
-	e.sshHint(s.SSHAuto())
+	e.sshHint(s.SSH().Auto())
 }
 
 func (e Env) sshHint(hint string) {

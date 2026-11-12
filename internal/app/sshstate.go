@@ -21,7 +21,7 @@ func (x SSH) saveState(next func(sshdir.State) sshdir.State) error {
 		return true, nil
 	})
 	if err == nil && known {
-		x.s.turnOnSSHAuto()
+		x.turnOnAuto()
 	}
 	return err
 }

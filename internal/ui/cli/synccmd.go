@@ -112,7 +112,7 @@ func syncCmd(env Env) *cobra.Command {
 				s.Waiting = env.waiting
 				res, err := s.Sync()
 				err = env.synced(res, err)
-				env.sshHint(s.SSHAutoPull())
+				env.sshHint(s.SSH().AutoPull())
 				return err
 			})(cmd, args)
 		},
