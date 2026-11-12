@@ -8,7 +8,7 @@ build:
     go build -trimpath -o {{bin}} ./cmd/creds
 
 install:
-    go install -trimpath ./cmd/creds
+    go install -trimpath "-ldflags=-s -w" ./cmd/creds
 
 push *args: verify
     git push {{args}}
