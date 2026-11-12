@@ -76,9 +76,30 @@ func parseTreeRecord(rec string) (string, string, error) {
 
 func (r *Repo) readBlobs(ctx context.Context, shas []string) (map[string][]byte, error) {
 	out := map[string][]byte{}
-	if len(shas) == 0 {
+	var miss []string
+	for _, s := range shas {
+		if b, ok := r.cache.blob(s); ok {
+			out[s] = b
+		} else {
+			miss = append(miss, s)
+		}
+	}
+	if len(miss) == 0 {
 		return out, nil
 	}
+	got, err := r.catBlobs(ctx, miss)
+	if err != nil {
+		return nil, err
+	}
+	for s, b := range got {
+		r.cache.putBlob(s, b)
+		out[s] = b
+	}
+	return out, nil
+}
+
+func (r *Repo) catBlobs(ctx context.Context, shas []string) (map[string][]byte, error) {
+	out := map[string][]byte{}
 	var in, buf bytes.Buffer
 	for _, s := range shas {
 		in.WriteString(s + "\n")

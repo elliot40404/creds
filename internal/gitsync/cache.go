@@ -2,14 +2,20 @@ package gitsync
 
 import (
 	"maps"
+	"slices"
 	"sync"
 )
 
-const cacheLimit = 16
+const (
+	cacheLimit   = 16
+	blobLimit    = 32
+	blobMaxBytes = 32 << 10
+)
 
 type objCache struct {
 	mu    sync.Mutex
 	trees map[string]tree
+	blobs map[string][]byte
 }
 
 func (c *objCache) tree(sha string) (tree, bool) {
@@ -29,6 +35,25 @@ func (c *objCache) putTree(sha string, t tree) {
 		c.trees = map[string]tree{}
 	}
 	c.trees[sha] = maps.Clone(t)
+}
+
+func (c *objCache) blob(sha string) ([]byte, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	b, ok := c.blobs[sha]
+	return slices.Clone(b), ok
+}
+
+func (c *objCache) putBlob(sha string, b []byte) {
+	if !isObjectID(sha) || len(b) > blobMaxBytes {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.blobs == nil || len(c.blobs) >= blobLimit {
+		c.blobs = map[string][]byte{}
+	}
+	c.blobs[sha] = slices.Clone(b)
 }
 
 func isObjectID(s string) bool {

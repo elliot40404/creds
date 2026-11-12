@@ -41,6 +41,31 @@ func TestObjCacheSkipsNamesAndCaps(t *testing.T) {
 	}
 }
 
+func TestObjCacheBlobs(t *testing.T) {
+	t.Parallel()
+	var c objCache
+	c.putBlob(sampleID, []byte("small"))
+	got, ok := c.blob(sampleID)
+	if !ok || string(got) != "small" {
+		t.Fatalf("got %q %v", got, ok)
+	}
+	got[0] = 'X'
+	if again, _ := c.blob(sampleID); string(again) != "small" {
+		t.Fatalf("cache changed through a returned slice: %q", again)
+	}
+	big := fmt.Sprintf("%040x", 1)
+	c.putBlob(big, make([]byte, blobMaxBytes+1))
+	if _, ok := c.blob(big); ok {
+		t.Fatal("cached a large blob")
+	}
+	for i := range blobLimit + 1 {
+		c.putBlob(fmt.Sprintf("%040x", i+2), []byte("x"))
+	}
+	if len(c.blobs) > blobLimit {
+		t.Fatalf("cache grew to %d", len(c.blobs))
+	}
+}
+
 func TestReadTreeCachedPerCommit(t *testing.T) {
 	t.Parallel()
 	p := newPair(t)
