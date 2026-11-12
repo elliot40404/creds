@@ -13,6 +13,8 @@ import (
 
 var ErrNoAnswer = errors.New("fake: no answer queued")
 
+const quietGit = "[gc]\n\tauto = 0\n[receive]\n\tautogc = false\n"
+
 func Pop[T any](q *[]T) (T, error) {
 	var zero T
 	if len(*q) == 0 {
@@ -34,7 +36,7 @@ func Run(m *testing.M) int {
 	}
 	defer func() { _ = os.RemoveAll(dir) }()
 	global := filepath.Join(dir, "gitconfig")
-	if err := os.WriteFile(global, nil, 0o600); err != nil {
+	if err := os.WriteFile(global, []byte(quietGit), 0o600); err != nil {
 		return 1
 	}
 	if os.Setenv("GIT_CONFIG_GLOBAL", global) != nil || os.Setenv("GIT_CONFIG_NOSYSTEM", "1") != nil {
