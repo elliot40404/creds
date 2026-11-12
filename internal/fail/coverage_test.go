@@ -151,7 +151,6 @@ var known = map[string]error{
 	"gitsync.ErrDiverged":        gitsync.ErrDiverged,
 	"gitsync.ErrGitStart":        gitsync.ErrGitStart,
 	"gitsync.ErrLocked":          gitsync.ErrLocked,
-	"gitsync.ErrLockLost":        gitsync.ErrLockLost,
 	"gitsync.ErrNoConflict":      gitsync.ErrNoConflict,
 	"gitsync.ErrIncomplete":      gitsync.ErrIncomplete,
 	"gitsync.ErrNoRemote":        gitsync.ErrNoRemote,

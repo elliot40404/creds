@@ -32,7 +32,6 @@ type Lock struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	once   sync.Once
-	err    error
 }
 
 type lockInfo struct {
@@ -108,12 +107,17 @@ func oldHolder(path string, now time.Time) bool {
 	return pid <= 0 || (pid != os.Getpid() && processAlive(pid))
 }
 
+func (l *Lock) Context() context.Context {
+	return l.ctx
+}
+
 func (l *Lock) Release() error {
+	var err error
 	l.once.Do(func() {
 		l.cancel()
-		l.err = errors.Join(l.removeOwn(), l.held.Close())
+		err = errors.Join(l.removeOwn(), l.held.Close())
 	})
-	return l.err
+	return err
 }
 
 func (l *Lock) removeOwn() error {

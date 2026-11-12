@@ -55,17 +55,14 @@ func (s *Service) replacePassword(id *crypto.Identity) error {
 	if err != nil {
 		return err
 	}
-	if err := s.withLock(func(lock *gitsync.Lock) (bool, error) { return s.writePassword(lock, id, pw) }); err != nil {
+	if err := s.withLock(func(*gitsync.Lock) (bool, error) { return s.writePassword(id, pw) }); err != nil {
 		return err
 	}
 	return s.saveSession(id.String())
 }
 
-func (s *Service) writePassword(lock *gitsync.Lock, id *crypto.Identity, pw string) (bool, error) {
+func (s *Service) writePassword(id *crypto.Identity, pw string) (bool, error) {
 	if err := s.wrapTo(vaultfiles.PasswordFile, id, pw); err != nil {
-		return false, err
-	}
-	if err := lock.Err(); err != nil {
 		return false, err
 	}
 	changed, err := s.commitOnly(id)

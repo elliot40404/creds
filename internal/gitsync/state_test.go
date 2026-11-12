@@ -134,7 +134,9 @@ func TestSyncerFlagsPasswordChangeWhenPushFails(t *testing.T) {
 	}
 }
 
-func TestSyncerSkipsStateAfterLockLoss(t *testing.T) {
+var errTestCancel = errors.New("test cancel")
+
+func TestSyncerSkipsStateWhenCancelled(t *testing.T) {
 	t.Parallel()
 	p := newVaultPair(t)
 	s := newSyncer(t, p, p.b)
@@ -143,13 +145,13 @@ func TestSyncerSkipsStateAfterLockLoss(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancelCause(context.Background())
-	cancel(ErrLockLost)
-	if _, err := s.Sync(ctx); !errors.Is(err, ErrLockLost) {
-		t.Fatalf("want ErrLockLost, got %v", err)
+	cancel(errTestCancel)
+	if _, err := s.Sync(ctx); !errors.Is(err, errTestCancel) {
+		t.Fatalf("want errTestCancel, got %v", err)
 	}
 	st := mustState(t, s.StatePath)
 	if st.LastResult != "conflict" || len(st.Conflicts) != 1 || st.Conflicts[0].Choice != vault.Theirs {
-		t.Fatalf("state rewritten after lock loss: %+v", st)
+		t.Fatalf("state rewritten after cancel: %+v", st)
 	}
 }
 

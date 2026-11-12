@@ -94,7 +94,7 @@ func writeOldLock(t *testing.T, path string, pid int, at time.Time) {
 func TestReleaseCancelsContext(t *testing.T) {
 	t.Parallel()
 	l := mustAcquire(t, lockPath(t), time.Now())
-	if l.Context().Err() != nil || l.Err() != nil {
+	if l.Context().Err() != nil {
 		t.Fatal("fresh lock already done")
 	}
 	if err := l.Release(); err != nil {

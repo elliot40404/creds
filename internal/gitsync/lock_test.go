@@ -3,7 +3,6 @@ package gitsync
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -118,48 +117,16 @@ func deadPID(t *testing.T) int {
 	return cmd.ProcessState.Pid()
 }
 
-func TestDeadOwnerLockIsStale(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		t.Fatal(err)
-	}
-	data := fmt.Sprintf(`{"pid":%d,"time":%q}`, deadPID(t), now.Format(time.RFC3339Nano))
-	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	if Locked(path, now) {
-		t.Fatal("dead owner lock reported held")
-	}
-	l, err := AcquireLock(path, now)
-	if err != nil {
-		t.Fatalf("takeover: %v", err)
-	}
-	if !Locked(path, now) {
-		t.Fatal("live lock not held")
-	}
-	if err := l.Release(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestStaleTakeoverHasOneWinner(t *testing.T) {
+func TestOneContenderWins(t *testing.T) {
 	t.Parallel()
 	path := lockPath(t)
 	now := time.Now()
-	stale := fmt.Sprintf(`{"pid":%d,"time":%q}`, deadPID(t), now.Format(time.RFC3339Nano))
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		t.Fatal(err)
-	}
 	wins := 0
 	for range 10 {
-		if err := os.WriteFile(path, []byte(stale), 0o600); err != nil {
-			t.Fatal(err)
-		}
+		writeOldLock(t, path, deadPID(t), now)
 		locks := contend(path, now, 4)
 		if len(locks) > 1 {
-			t.Fatalf("%d contenders took the stale lock", len(locks))
+			t.Fatalf("%d contenders got the lock", len(locks))
 		}
 		for _, l := range locks {
 			wins++
@@ -169,7 +136,7 @@ func TestStaleTakeoverHasOneWinner(t *testing.T) {
 		}
 	}
 	if wins == 0 {
-		t.Fatal("stale lock never taken over")
+		t.Fatal("no contender got the lock")
 	}
 }
 

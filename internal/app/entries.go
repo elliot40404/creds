@@ -105,10 +105,10 @@ func (s *Service) write(fn func(*vault.Vault) (vault.Entry, error)) (vault.Entry
 		return vault.Entry{}, err
 	}
 	var e vault.Entry
-	err = s.withLock(func(lock *gitsync.Lock) (bool, error) {
+	err = s.withLock(func(*gitsync.Lock) (bool, error) {
 		var changed bool
 		var err error
-		e, changed, err = s.writeLocked(lock, id, fn)
+		e, changed, err = s.writeLocked(id, fn)
 		return changed, err
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *Service) write(fn func(*vault.Vault) (vault.Entry, error)) (vault.Entry
 	return e, nil
 }
 
-func (s *Service) writeLocked(lock *gitsync.Lock, id *crypto.Identity, fn func(*vault.Vault) (vault.Entry, error)) (vault.Entry, bool, error) {
+func (s *Service) writeLocked(id *crypto.Identity, fn func(*vault.Vault) (vault.Entry, error)) (vault.Entry, bool, error) {
 	v, err := s.loadWith(id)
 	if err != nil {
 		return vault.Entry{}, false, err
@@ -127,13 +127,7 @@ func (s *Service) writeLocked(lock *gitsync.Lock, id *crypto.Identity, fn func(*
 	if err != nil {
 		return vault.Entry{}, false, err
 	}
-	if err := lock.Err(); err != nil {
-		return vault.Entry{}, false, err
-	}
 	if err := v.Save(); err != nil {
-		return vault.Entry{}, false, err
-	}
-	if err := lock.Err(); err != nil {
 		return vault.Entry{}, false, err
 	}
 	changed, err := s.commitOnly(v.Identity())

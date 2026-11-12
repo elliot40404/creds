@@ -171,10 +171,7 @@ func (s *Service) withLock(fn func(*gitsync.Lock) (bool, error)) error {
 		return err
 	}
 	changed, err := fn(lock)
-	if rerr := lock.Release(); !errors.Is(err, gitsync.ErrLockLost) {
-		err = errors.Join(err, rerr)
-	}
-	if err != nil {
+	if err := errors.Join(err, lock.Release()); err != nil {
 		return err
 	}
 	if changed {

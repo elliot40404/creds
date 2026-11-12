@@ -31,7 +31,6 @@ var syncRules = []Rule{
 	{Target: gitsync.ErrProtected, Code: General, Msg: "remote changed the recovery file or vault recipient, sync stopped"},
 	{Target: gitsync.ErrBadVersion, Code: General, Msg: "remote vault has a format version this vault cannot take, sync stopped"},
 	{Target: gitsync.ErrBadMeta, Code: General, Msg: "remote vault.json is not valid, sync stopped"},
-	{Target: gitsync.ErrLockLost, Code: General, Msg: "another creds process took the sync lock", Hint: "run creds sync again"},
 	{Target: gitsync.ErrGitStart, Code: General, Msg: "git could not start", Hint: "install git and make sure it is on PATH, then run creds sync"},
 	{Target: gitsync.ErrUnreachable, Code: General, Msg: gitsync.ErrUnreachable.Error(), Hint: "check the network and the remote url, then run creds sync"},
 	{Target: gitsync.ErrAuthFailed, Code: General, Msg: gitsync.ErrAuthFailed.Error(), Hint: "check the saved login or ssh key for the remote, then run creds sync"},
