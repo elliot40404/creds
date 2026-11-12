@@ -20,6 +20,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
   device.json          vault identity sealed to a plugin key, local only (creds device trust)
   usage.age            frecency scores sealed to the vault key, local only
   sync.lock            present while a sync runs
+  sync.lock.break      OS file lock held while a sync runs
   update.lock          OS file lock held while a background update installs
   vault/               git repo, the only part that is synced
     .git/
@@ -434,14 +435,12 @@ record     entry id (16 bytes) | score (float64, big endian) | last use (int64 u
 {"pid":1234,"time":"2026-09-17T02:16:00Z"}
 ```
 
-Made with exclusive create. Stale when `time` is more than 6 minutes away from now
-(past or future), or the pid is gone. Taking a stale lock, refresh and release all run while
-holding an OS file lock (`LockFileEx` / `flock`) on `sync.lock.break`, and check the lock again
-first, so only one process can take a stale lock and nobody removes a lock that is not theirs.
-Removed when the holder ends. The holder rewrites `time` every 20 seconds. A failed rewrite
-(for example a reader has the file open on Windows) is tried again on the next tick. A holder
-that could not rewrite for 3 minutes (for example the machine slept), or finds the lock is not
-its own, gives up: it stops its work and does not save `state.json` or commit.
+The lock itself is an OS file lock (`LockFileEx` / `flock`) on `sync.lock.break`, held for the
+whole sync. The OS drops it when the holder ends, even on a crash or kill, so there is no
+heartbeat and no stale lock to take over. `sync.lock` is still written for older creds versions:
+they see a live holder, and they cannot take it over because that also needs `sync.lock.break`.
+A `sync.lock` left by an older version still blocks while its `time` is less than 6 minutes away
+from now and its pid is alive. Removed by its holder when the sync ends.
 `creds sync`, every write (add, edit, rm and the like) and `passwd` / `recover` wait for the
 lock up to 2 minutes.
 `creds sync --quiet` skips at once when the lock is held. Reads do not start a background

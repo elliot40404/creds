@@ -332,12 +332,10 @@ line, not from the vault. A test makes sure only that one command can start prog
   take in any remote change, it never asks for the password
 - A failed background sync prints `last sync failed: <error>, run creds sync` on later
   commands (not `sync` or `status`) until a sync works. Only the first line of the error is shown
-- `sync.lock` is refreshed every 20s and seen as stale after 6m. If the holder pauses for more
-  than 3m (laptop sleep), it gives the lock up: its git calls are cancelled and it does not save
-  `state.json` or commit. Stale takeover, refresh and release run under an OS file lock on
-  `sync.lock.break`, so two processes cannot both take one stale lock. A refresh write that fails
-  for a moment is retried, it does not drop the lock. Writes and `passwd` / `recover` hold the lock.
-  A pause of 3m inside one refresh can still let two holders overlap (accepted)
+- The sync lock is an OS file lock on `sync.lock.break`, held for the whole sync. Two holders
+  cannot overlap, even after a laptop sleep, and a crashed or killed holder frees it at once.
+  `sync.lock` is still written so older creds versions wait too. Writes and `passwd` / `recover`
+  hold the lock
 - Your remote URL and git credentials are handled by git, not creds
 
 ## If your vault may have leaked
