@@ -41,8 +41,8 @@ func (e *ConflictError) Error() string {
 
 func (e *ConflictError) Unwrap() error { return ErrConflict }
 
-func (r *Repo) merge(ctx context.Context, opts SyncOptions, local, remote string) (SyncResult, error) {
-	trees, err := r.mergeTrees(ctx, local, remote)
+func (r *Repo) merge(ctx context.Context, opts SyncOptions, base, local, remote string) (SyncResult, error) {
+	trees, err := r.treesAt(ctx, base, local, remote)
 	if err != nil {
 		return UpToDate, err
 	}
@@ -80,11 +80,16 @@ func (r *Repo) merge(ctx context.Context, opts SyncOptions, local, remote string
 }
 
 func (r *Repo) mergeTrees(ctx context.Context, local, remote string) ([3]tree, error) {
-	var trees [3]tree
 	base, err := r.mergeBase(ctx, local, remote)
 	if err != nil {
-		return trees, err
+		return [3]tree{}, err
 	}
+	return r.treesAt(ctx, base, local, remote)
+}
+
+func (r *Repo) treesAt(ctx context.Context, base, local, remote string) ([3]tree, error) {
+	var trees [3]tree
+	var err error
 	for i, rev := range []string{base, local, remote} {
 		if trees[i], err = r.readTree(ctx, rev); err != nil {
 			return trees, err

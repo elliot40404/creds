@@ -56,24 +56,18 @@ func (r *Repo) syncOnce(ctx context.Context, opts SyncOptions) (SyncResult, erro
 	case remote == "":
 		return r.push(ctx)
 	}
-	ahead, err := r.isAncestor(ctx, remote, local)
-	if err != nil {
+	base, err := r.mergeBase(ctx, local, remote)
+	switch {
+	case err != nil:
 		return UpToDate, err
-	}
-	if ahead {
+	case base == remote:
 		return r.push(ctx)
-	}
-	behind, err := r.isAncestor(ctx, local, remote)
-	if err != nil {
-		return UpToDate, err
-	}
-	if behind {
+	case base == local:
 		return r.fastForward(ctx, opts, local, remote)
-	}
-	if opts.Identity == nil {
+	case opts.Identity == nil:
 		return UpToDate, ErrDiverged
 	}
-	return r.merge(ctx, opts, local, remote)
+	return r.merge(ctx, opts, base, local, remote)
 }
 
 func (r *Repo) fetch(ctx context.Context) error {
@@ -89,14 +83,6 @@ func (r *Repo) fetch(ctx context.Context) error {
 func missingRemoteBranch(err error) bool {
 	gerr, ok := errors.AsType[*Error](err)
 	return ok && strings.Contains(gerr.Stderr, "couldn't find remote ref")
-}
-
-func (r *Repo) isAncestor(ctx context.Context, a, b string) (bool, error) {
-	_, err := r.git.Run(ctx, "merge-base", "--is-ancestor", a, b)
-	if exitCode(err) == 1 {
-		return false, nil
-	}
-	return err == nil, err
 }
 
 func (r *Repo) fastForward(ctx context.Context, opts SyncOptions, local, remote string) (SyncResult, error) {
