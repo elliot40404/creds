@@ -25,8 +25,16 @@ type vaultPair struct {
 
 func newVaultPair(t *testing.T) vaultPair {
 	t.Helper()
-	id := testutil.Identity(t)
-	bare, a, b := pushedPair(t, func(a *Repo) {
+	bare, a, b := copiedPair(t, "vaultpair", func() (string, *Repo, *Repo) {
+		vaultFixtureID = testutil.Identity(t)
+		return pushedVault(t, vaultFixtureID)
+	})
+	return vaultPair{bare: bare, a: a, b: b, id: vaultFixtureID}
+}
+
+func pushedVault(t *testing.T, id *crypto.Identity) (string, *Repo, *Repo) {
+	t.Helper()
+	return pushedPair(t, func(a *Repo) {
 		if _, err := vault.Init(a.Dir, id); err != nil {
 			t.Fatal(err)
 		}
@@ -34,7 +42,6 @@ func newVaultPair(t *testing.T) vaultPair {
 		writeFile(t, a, "identity.recovery.age", ageBlob)
 		sealManifest(t, a, id)
 	}, SyncOptions{Identity: id})
-	return vaultPair{bare: bare, a: a, b: b, id: id}
 }
 
 func (p vaultPair) opts() SyncOptions {

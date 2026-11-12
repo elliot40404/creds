@@ -3,13 +3,35 @@ package gitsync
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 	"uuid"
 
 	"github.com/elliot40404/creds/internal/vault"
 )
 
+var conflictState []byte
+
 func conflictedPair(t *testing.T) (vaultPair, *Syncer) {
+	t.Helper()
+	bare, a, b := copiedPair(t, "conflicted", func() (string, *Repo, *Repo) {
+		p, s := buildConflicted(t)
+		data, err := os.ReadFile(s.StatePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		conflictState = data
+		return p.bare, p.a, p.b
+	})
+	p := vaultPair{bare: bare, a: a, b: b, id: vaultFixtureID}
+	s := newSyncer(t, p, p.b)
+	if err := os.WriteFile(s.StatePath, conflictState, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return p, s
+}
+
+func buildConflicted(t *testing.T) (vaultPair, *Syncer) {
 	t.Helper()
 	p := newVaultPair(t)
 	p.put(t, p.a, secretEntry("e", "0"))

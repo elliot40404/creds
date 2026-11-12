@@ -16,7 +16,9 @@ type pair struct {
 
 func newPair(t *testing.T) pair {
 	t.Helper()
-	bare, a, b := pushedPair(t, func(a *Repo) { writeVault(t, a) }, SyncOptions{})
+	bare, a, b := copiedPair(t, "pair", func() (string, *Repo, *Repo) {
+		return pushedPair(t, func(a *Repo) { writeVault(t, a) }, SyncOptions{})
+	})
 	return pair{bare: bare, a: a, b: b}
 }
 
