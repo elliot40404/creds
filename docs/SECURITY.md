@@ -102,10 +102,14 @@ Protected:
 - Atomic writes: a crash leaves the old file or the new file, never half of one
 
 Leaks and limits:
-- `session` file holds the identity in plain text while unlocked (default 15m idle,
-  4h max). Any program running as you can read it and open the whole vault.
-  An expired session file stays on disk until the next creds command or `creds lock`.
-  Run `creds lock` when you step away
+- `session` file holds the identity while unlocked (default 15m idle, 4h max). It is sealed
+  with the OS key store (DPAPI on Windows, the user keyring on Linux, Keychain on macOS), so a
+  copy of the file (backup, synced folder, stolen disk image) does not open on another machine
+  or account. It does not stop a program running as you: that program can ask the same key
+  store to unseal it and open the whole vault. No key store: the identity is kept in plain text
+  and creds warns. `session.protect = false` keeps it plain with no warning. A sealed file that does not open is deleted
+  and the password is asked again. An expired session file stays on disk until the next creds
+  command or `creds lock`, which also forgets the key store entry. Run `creds lock` when you step away
 - The TUI loads the entry again on reveal and edit, and checks the session before the edit
   form shows a masked value (`ctrl+r`, or `ctrl+t` on a secret custom field), so after the
   session ends it asks for the password first. A field already revealed stays on screen until you move or leave

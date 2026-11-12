@@ -187,6 +187,11 @@ creds update                        # install the latest release, --check only l
 Unlock lasts 15 min idle, 4 h max. Commands ask for the password when needed,
 or run `creds unlock` first.
 
+The unlocked key is sealed with the OS key store (DPAPI on Windows, the user keyring on Linux,
+Keychain on macOS), so a copy of the session file is useless on another machine or account.
+No key store there: creds keeps a plain session file and warns, run `creds lock` when done.
+`creds config set session.protect false` always keeps it plain.
+
 Types: `login api database ssh note command env generic`.
 
 ### Guided mode
@@ -568,6 +573,7 @@ Set the key and the note goes away, because your value is then the answer.
 | --- | --- | --- |
 | `session.idle` | lock after this long without use | `15m` |
 | `session.hard` | lock this long after unlocking, whatever you do | `4h` |
+| `session.protect` | seal the session with the OS key store, `false` keeps a plain file | `true` |
 | `clipboard.clear` | wipe a copied secret after this long | `30s` |
 | `sync.stale` | pull again when the last sync is older than this | `5m` |
 | `ui.mode` | `fullscreen` or `inline` for the browse TUI | `fullscreen` |
@@ -766,7 +772,7 @@ creds paths          # every creds file, its full path and whether it exists
 creds paths --json   # same as data
 ```
 
-It lists the creds home, `config.toml`, the vault dir with its remote, the session with the time left, `state.json`, `ssh.json`, `trust.json`, `device.json`, `usage.age` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
+It lists the creds home, `config.toml`, the vault dir with its remote, the session with how it is kept (`dpapi`, `keyring`, `keychain` or `plain`) and the time left, `state.json`, `ssh.json`, `trust.json`, `device.json`, `usage.age` and `sync.lock`. When `CREDS_HOME` is set, it says so. The TUI settings screen shows the same list.
 
 ## Files
 

@@ -13,7 +13,7 @@ Home dir is `~/.config/creds` on every OS. Set `CREDS_HOME` to use another dir.
 ```
 <home>/
   config.toml          user settings, optional
-  session              unlocked identity, plaintext, 0600
+  session              unlocked identity, sealed by the OS key store or plain, 0600
   state.json           sync state, local only
   ssh.json             ssh file hashes and skipped keys, local only
   trust.json           approved project files, local only
@@ -277,7 +277,10 @@ has one with `invalid entry: unknown type "sshfile"`, there is no format version
 - Key store account: hex SHA-256 of `creds session\0<absolute session path>`
 - No key store, or sealing fails: a `plain` record is written and the caller is told
   (`ErrPlainFallback`), the unlock is kept
-- A plain record read while a key store is set is sealed and rewritten in place
+- A plain record read while a key store is set is sealed and rewritten in place. A failed seal is
+  not tried again in the same process
+- `session.protect = false`: new records are `plain`, an existing sealed one is still opened, and
+  `creds lock` still forgets the key store entry
 - A sealed record that cannot be opened (tampered, other user, other key store, Linux keys gone
   after a reboot) is deleted, user is asked again
 - Version 1 (no `version`, `{"identity":...,"created":...,"last_used":...}`) is still read
@@ -496,6 +499,7 @@ frecency = true
 | --- | --- | --- |
 | `session.idle` | `15m` | not more than `session.hard` |
 | `session.hard` | `4h` | |
+| `session.protect` | unset (`true`) | seal the session identity with the OS key store, `false` writes a plain record |
 | `clipboard.clear` | `30s` | |
 | `sync.stale` | `5m` | a read starts a background sync when the last sync try is older than this |
 | `device.max_age` | `72h` | a trusted device asks the master password again after this long, `0` never asks, max `720h` |
