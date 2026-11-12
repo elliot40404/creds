@@ -1,166 +1,101 @@
 package gitsync
 
 import (
-	"context"
+	"bufio"
 	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
 
-func holdLock(t *testing.T, path string, now time.Time) (*Lock, chan time.Time) {
+const lockHelperEnv = "GITSYNC_LOCK_HELPER_PATH"
+
+func TestLockHelperProcess(t *testing.T) {
+	path := os.Getenv(lockHelperEnv)
+	if path == "" {
+		t.Skip("helper only")
+	}
+	if _, err := AcquireLock(path, time.Now()); err != nil {
+		fmt.Println("error", err)
+		os.Exit(1)
+	}
+	fmt.Println("held")
+	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
+	os.Exit(0)
+}
+
+func startLockHolder(t *testing.T, path string) *exec.Cmd {
 	t.Helper()
-	tick := make(chan time.Time)
-	l, err := acquire(path, now, tick)
+	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
-	return l, tick
-}
-
-func beat(tick chan<- time.Time, at time.Time) {
-	tick <- at
-	tick <- at
-}
-
-func TestLiveHolderKeepsLockPastStale(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	start := time.Now()
-	l, tick := holdLock(t, path, start)
-	at := start
-	for !at.After(start.Add(LockStale)) {
-		at = at.Add(lockRefresh)
-		beat(tick, at)
-	}
-	if info, err := readInfo(path); err != nil || !info.Time.Equal(at.UTC()) {
-		t.Fatalf("lock not refreshed %+v %v", info, err)
-	}
-	if !Locked(path, at) {
-		t.Fatal("refreshed lock reported stale")
-	}
-	if _, err := AcquireLock(path, at); !errors.Is(err, ErrLocked) {
-		t.Fatalf("lock stolen from live holder: %v", err)
-	}
-	if err := l.Release(); err != nil {
+	cmd := &exec.Cmd{Path: exe, Args: []string{exe, "-test.run=^TestLockHelperProcess$"}}
+	cmd.Env = append(os.Environ(), lockHelperEnv+"="+path)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("lock file left: %v", err)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
 	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = stdin.Close()
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+	})
+	if line, err := bufio.NewReader(stdout).ReadString('\n'); err != nil || line != "held\n" {
+		t.Fatalf("holder said %q %v", line, err)
+	}
+	return cmd
 }
 
-func TestRefreshKeepsPermsAndOwner(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Now()
+func mustAcquire(t *testing.T, path string, now time.Time) *Lock {
+	t.Helper()
 	l, err := AcquireLock(path, now)
 	if err != nil {
 		t.Fatal(err)
 	}
-	before, err := readInfo(path)
-	if err != nil {
-		t.Fatal(err)
+	return l
+}
+
+func wantLocked(t *testing.T, path string, now time.Time) {
+	t.Helper()
+	if !Locked(path, now) {
+		t.Fatal("Locked = false")
 	}
-	if err := l.refresh(now.Add(time.Second)); err != nil {
-		t.Fatal(err)
-	}
-	after, err := readInfo(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !after.Time.After(before.Time) || after.PID != before.PID {
-		t.Fatalf("refresh wrote %+v, was %+v", after, before)
-	}
-	st, err := os.Stat(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if perm := st.Mode().Perm(); perm != 0o600 && perm != 0o666 {
-		t.Fatalf("lock perms %v", perm)
-	}
-	if entries, err := os.ReadDir(filepath.Dir(path)); err != nil || len(entries) != 2 {
-		t.Fatalf("dir entries %v %v", entries, err)
-	}
-	if err := l.Release(); err != nil {
-		t.Fatal(err)
+	if l, err := AcquireLock(path, now); !errors.Is(err, ErrLocked) {
+		if l != nil {
+			_ = l.Release()
+		}
+		t.Fatalf("acquire = %v, want ErrLocked", err)
 	}
 }
 
-func TestRefreshOnStolenLockReportsLost(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Now()
-	l, err := AcquireLock(path, now)
-	if err != nil {
+func writeOldLock(t *testing.T, path string, pid int, at time.Time) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	thief := &Lock{path: path, info: lockInfo{PID: os.Getpid(), Time: now.Add(time.Hour).UTC()}}
-	if err := os.Remove(path); err != nil {
+	data := fmt.Sprintf(`{"pid":%d,"time":%q}`, pid, at.Format(time.RFC3339Nano))
+	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
 		t.Fatal(err)
-	}
-	if err := thief.create(); err != nil {
-		t.Fatal(err)
-	}
-	if err := l.refresh(time.Now()); !errors.Is(err, ErrLockLost) {
-		t.Fatalf("refresh = %v", err)
-	}
-	if err := l.Release(); err != nil {
-		t.Fatal(err)
-	}
-	if !Locked(path, now.Add(time.Hour)) {
-		t.Fatal("old holder released the thief lock")
-	}
-	if err := thief.Release(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestKeepaliveStopsAfterLoss(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Now()
-	l, tick := holdLock(t, path, now)
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
-	tick <- now.Add(lockRefresh)
-	if err := l.Release(); !errors.Is(err, ErrLockLost) {
-		t.Fatalf("release = %v", err)
-	}
-}
-
-func TestLostLockCancelsContext(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Now()
-	l, tick := holdLock(t, path, now)
-	if err := l.Context().Err(); err != nil || l.Err() != nil {
-		t.Fatalf("fresh lock ctx %v err %v", err, l.Err())
-	}
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
-	tick <- now.Add(lockRefresh)
-	select {
-	case <-l.Context().Done():
-	case <-time.After(5 * time.Second):
-		t.Fatal("context not cancelled after loss")
-	}
-	if !errors.Is(context.Cause(l.Context()), ErrLockLost) || !errors.Is(l.Err(), ErrLockLost) {
-		t.Fatalf("cause %v err %v", context.Cause(l.Context()), l.Err())
-	}
-	if err := l.Release(); !errors.Is(err, ErrLockLost) {
-		t.Fatalf("release = %v", err)
 	}
 }
 
 func TestReleaseCancelsContext(t *testing.T) {
 	t.Parallel()
-	l, err := AcquireLock(lockPath(t), time.Now())
-	if err != nil {
-		t.Fatal(err)
+	l := mustAcquire(t, lockPath(t), time.Now())
+	if l.Context().Err() != nil || l.Err() != nil {
+		t.Fatal("fresh lock already done")
 	}
 	if err := l.Release(); err != nil {
 		t.Fatal(err)
@@ -168,46 +103,111 @@ func TestReleaseCancelsContext(t *testing.T) {
 	if l.Context().Err() == nil {
 		t.Fatal("context alive after release")
 	}
-}
-
-func TestRefreshAfterLongPauseGivesUp(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	start := time.Now()
-	l, err := AcquireLock(path, start)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := l.refresh(start.Add(lockGrace + time.Second)); !errors.Is(err, ErrLockLost) {
-		t.Fatalf("refresh = %v", err)
-	}
-	info, err := readInfo(path)
-	if err != nil || !info.Time.Equal(start.UTC()) {
-		t.Fatalf("lock rewritten %+v %v", info, err)
-	}
 	if err := l.Release(); err != nil {
-		t.Fatal(err)
+		t.Fatalf("second release: %v", err)
 	}
 }
 
-func TestReaderDoesNotBreakHolder(t *testing.T) {
+func TestHolderKeepsLockPastStale(t *testing.T) {
 	t.Parallel()
 	path := lockPath(t)
 	now := time.Now()
-	l, tick := holdLock(t, path, now)
-	f, err := os.Open(filepath.Clean(path))
-	if err != nil {
-		t.Fatal(err)
-	}
-	beat(tick, now.Add(lockRefresh))
-	if err := f.Close(); err != nil {
-		t.Fatal(err)
-	}
-	beat(tick, now.Add(2*lockRefresh))
-	if err := l.Context().Err(); err != nil {
-		t.Fatalf("holder cancelled by a reader: %v", context.Cause(l.Context()))
-	}
+	l := mustAcquire(t, path, now)
+	wantLocked(t, path, now.Add(10*LockStale))
 	if err := l.Release(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestChildHolderBlocksUntilKilled(t *testing.T) {
+	t.Parallel()
+	path := lockPath(t)
+	cmd := startLockHolder(t, path)
+	wantLocked(t, path, time.Now())
+	wantLocked(t, path, time.Now().Add(10*LockStale))
+	if err := cmd.Process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	_ = cmd.Wait()
+	if err := mustAcquire(t, path, time.Now()).Release(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOldFormatLiveHolderBlocks(t *testing.T) {
+	t.Parallel()
+	path := lockPath(t)
+	now := time.Now()
+	writeOldLock(t, path, os.Getppid(), now)
+	wantLocked(t, path, now)
+	if err := mustAcquire(t, path, now.Add(LockStale)).Release(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOldFormatDeadOrStaleDoesNotBlock(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	for name, info := range map[string]lockInfo{
+		"dead pid":    {PID: deadPID(t), Time: now},
+		"stale time":  {PID: os.Getppid(), Time: now.Add(-LockStale)},
+		"future time": {PID: os.Getppid(), Time: now.Add(LockStale)},
+		"own pid":     {PID: os.Getpid(), Time: now},
+	} {
+		path := lockPath(t)
+		writeOldLock(t, path, info.PID, info.Time)
+		if Locked(path, now) {
+			t.Fatalf("%s: Locked = true", name)
+		}
+		if err := mustAcquire(t, path, now).Release(); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+	}
+}
+
+func TestReleaseRemovesOnlyItsOwnFile(t *testing.T) {
+	t.Parallel()
+	path := lockPath(t)
+	now := time.Now()
+	l := mustAcquire(t, path, now)
+	if err := l.Release(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("sync.lock left: %v", err)
+	}
+	l = mustAcquire(t, path, now)
+	writeOldLock(t, path, os.Getppid(), now)
+	if err := l.Release(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("foreign sync.lock removed: %v", err)
+	}
+}
+
+func TestProbesDoNotBlockAcquire(t *testing.T) {
+	t.Parallel()
+	path := lockPath(t)
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Go(func() {
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					Locked(path, time.Now())
+					time.Sleep(time.Millisecond)
+				}
+			}
+		})
+	}
+	defer func() { close(stop); wg.Wait() }()
+	for range 20 {
+		if err := mustAcquire(t, path, time.Now()).Release(); err != nil {
+			t.Fatal(err)
+		}
 	}
 }

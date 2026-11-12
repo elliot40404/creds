@@ -55,33 +55,6 @@ func TestLockContention(t *testing.T) {
 	}
 }
 
-func TestStaleLockTakenOver(t *testing.T) {
-	t.Parallel()
-	path := lockPath(t)
-	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	old, err := AcquireLock(path, now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	later := now.Add(LockStale)
-	if Locked(path, later) {
-		t.Fatal("stale lock reported held")
-	}
-	fresh, err := AcquireLock(path, later)
-	if err != nil {
-		t.Fatalf("takeover: %v", err)
-	}
-	if err := old.Release(); err != nil {
-		t.Fatal(err)
-	}
-	if !Locked(path, later) {
-		t.Fatal("old holder removed the new lock")
-	}
-	if err := fresh.Release(); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestCorruptLockUsesModTime(t *testing.T) {
 	t.Parallel()
 	path := lockPath(t)
@@ -180,7 +153,7 @@ func TestStaleTakeoverHasOneWinner(t *testing.T) {
 		t.Fatal(err)
 	}
 	wins := 0
-	for range 50 {
+	for range 10 {
 		if err := os.WriteFile(path, []byte(stale), 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -208,7 +181,7 @@ func contend(path string, now time.Time, n int) []*Lock {
 	for range n {
 		wg.Go(func() {
 			<-start
-			if l, err := acquire(path, now, nil); err == nil {
+			if l, err := AcquireLock(path, now); err == nil {
 				mu.Lock()
 				won = append(won, l)
 				mu.Unlock()

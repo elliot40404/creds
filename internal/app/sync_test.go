@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -77,7 +78,8 @@ func TestSyncQuietTakesStaleLock(t *testing.T) {
 	t.Parallel()
 	s, fp, c, _ := initVault(t)
 	withRemote(t, s)
-	if _, err := gitsync.AcquireLock(s.Paths.SyncLock(), c.t); err != nil {
+	stale := fmt.Sprintf(`{"pid":%d,"time":%q}`, os.Getppid(), c.t.Format(time.RFC3339Nano))
+	if err := os.WriteFile(s.Paths.SyncLock(), []byte(stale), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	c.t = c.t.Add(gitsync.LockStale)

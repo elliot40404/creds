@@ -16,22 +16,23 @@ import (
 const (
 	LockStale     = 3 * defaultTimeout
 	LockWait      = 2 * time.Minute
+	breakSuffix   = ".break"
+	holdTries     = 20
 	removeTries   = 100
 	removeBackoff = 5 * time.Millisecond
+	maxLockSize   = 4 << 10
 )
 
 var ErrLocked = errors.New("gitsync: sync already running")
 
 type Lock struct {
-	path    string
-	info    lockInfo
-	mu      sync.Mutex
-	ctx     context.Context
-	cancel  context.CancelCauseFunc
-	err     error
-	done    chan struct{}
-	stopped chan struct{}
-	untick  func()
+	path   string
+	info   lockInfo
+	held   *fsutil.Held
+	ctx    context.Context
+	cancel context.CancelFunc
+	once   sync.Once
+	err    error
 }
 
 type lockInfo struct {
@@ -40,29 +41,24 @@ type lockInfo struct {
 }
 
 func AcquireLock(path string, now time.Time) (*Lock, error) {
-	t := time.NewTicker(lockRefresh)
-	l, err := acquire(path, now, t.C)
-	if err != nil {
-		t.Stop()
+	if err := fsutil.EnsureDir(filepath.Dir(path)); err != nil {
 		return nil, err
 	}
-	l.untick = t.Stop
-	return l, nil
-}
-
-func acquire(path string, now time.Time, tick <-chan time.Time) (*Lock, error) {
-	l := &Lock{path: path, info: lockInfo{PID: os.Getpid(), Time: now.UTC()}}
-	err := l.create()
-	if errors.Is(err, fs.ErrExist) && !Locked(path, now) {
-		err = withBreak(path, func() error { return l.takeover(now) })
-	}
-	if errors.Is(err, fs.ErrExist) {
-		return nil, ErrLocked
+	held, err := fsutil.Hold(path+breakSuffix, holdTries)
+	if errors.Is(err, fsutil.ErrBusy) {
+		return nil, errors.Join(ErrLocked, err)
 	}
 	if err != nil {
 		return nil, err
 	}
-	l.start(tick)
+	if oldHolder(path, now) {
+		return nil, errors.Join(ErrLocked, held.Close())
+	}
+	l := &Lock{path: path, info: lockInfo{PID: os.Getpid(), Time: now.UTC()}, held: held}
+	if err := l.write(); err != nil {
+		return nil, errors.Join(err, held.Close())
+	}
+	l.ctx, l.cancel = context.WithCancel(context.Background())
 	return l, nil
 }
 
@@ -87,6 +83,18 @@ func WaitLock(ctx context.Context, path string, now func() time.Time, every time
 }
 
 func Locked(path string, now time.Time) bool {
+	held, err := fsutil.TryHold(path + breakSuffix)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	if err != nil {
+		return true
+	}
+	_ = held.Close()
+	return oldHolder(path, now)
+}
+
+func oldHolder(path string, now time.Time) bool {
 	held, pid, err := readLock(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return false
@@ -94,28 +102,18 @@ func Locked(path string, now time.Time) bool {
 	if err != nil {
 		return true
 	}
-	if pid > 0 && !processAlive(pid) {
+	if age := now.Sub(held); age >= LockStale || age <= -LockStale {
 		return false
 	}
-	age := now.Sub(held)
-	return age < LockStale && age > -LockStale
-}
-
-func (l *Lock) takeover(now time.Time) error {
-	if Locked(l.path, now) {
-		return fs.ErrExist
-	}
-	if err := remove(l.path); err != nil {
-		return err
-	}
-	return l.create()
+	return pid <= 0 || (pid != os.Getpid() && processAlive(pid))
 }
 
 func (l *Lock) Release() error {
-	held := l.stop()
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	return errors.Join(held, withBreak(l.path, l.removeOwn))
+	l.once.Do(func() {
+		l.cancel()
+		l.err = errors.Join(l.removeOwn(), l.held.Close())
+	})
+	return l.err
 }
 
 func (l *Lock) removeOwn() error {
@@ -141,26 +139,12 @@ func remove(path string) error {
 	return err
 }
 
-func (l *Lock) create() error {
+func (l *Lock) write() error {
 	data, err := json.Marshal(l.info)
 	if err != nil {
 		return err
 	}
-	if err := fsutil.EnsureDir(filepath.Dir(l.path)); err != nil {
-		return err
-	}
-	f, err := os.OpenFile(l.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, fsutil.FilePerm)
-	if err != nil {
-		return err
-	}
-	_, err = f.Write(data)
-	if cerr := f.Close(); err == nil {
-		err = cerr
-	}
-	if err != nil {
-		return errors.Join(err, os.Remove(l.path))
-	}
-	return nil
+	return fsutil.WriteFileAtomic(l.path, data)
 }
 
 func readLock(path string) (time.Time, int, error) {
@@ -168,7 +152,12 @@ func readLock(path string) (time.Time, int, error) {
 	if err == nil {
 		return info.Time, info.PID, nil
 	}
-	st, serr := os.Stat(path)
+	root, rerr := os.OpenRoot(filepath.Dir(path))
+	if rerr != nil {
+		return time.Time{}, 0, rerr
+	}
+	defer func() { _ = root.Close() }()
+	st, serr := root.Stat(filepath.Base(path))
 	if serr != nil {
 		return time.Time{}, 0, serr
 	}
@@ -177,7 +166,7 @@ func readLock(path string) (time.Time, int, error) {
 
 func readInfo(path string) (lockInfo, error) {
 	var info lockInfo
-	data, err := os.ReadFile(filepath.Clean(path))
+	data, err := fsutil.ReadFileLimit(path, maxLockSize)
 	if err != nil {
 		return info, err
 	}
