@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -86,7 +87,7 @@ func newService(t *testing.T) (*Service, *fakePrompter, *clock) {
 	return s, fp, c
 }
 
-func initVault(t *testing.T) (*Service, *fakePrompter, *clock, string) {
+func freshVault(t *testing.T) (*Service, *fakePrompter, *clock, string) {
 	t.Helper()
 	s, fp, c := newService(t)
 	fp.passwords = []string{mainWord, mainWord}
@@ -97,6 +98,17 @@ func initVault(t *testing.T) (*Service, *fakePrompter, *clock, string) {
 	}
 	s.Prompter = fp
 	return s, fp, c, code
+}
+
+func (f *fakePrompter) clone() *fakePrompter {
+	return &fakePrompter{
+		passwords: slices.Clone(f.passwords),
+		confirms:  slices.Clone(f.confirms),
+		inputs:    slices.Clone(f.inputs),
+		shown:     slices.Clone(f.shown),
+		prompts:   slices.Clone(f.prompts),
+		warned:    slices.Clone(f.warned),
+	}
 }
 
 type codeEcho struct {
