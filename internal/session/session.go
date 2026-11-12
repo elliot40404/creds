@@ -29,11 +29,17 @@ var (
 )
 
 type Store struct {
-	Path string
-	Idle time.Duration
-	Hard time.Duration
-	Now  func() time.Time
-	Keys keystore.Store
+	Path  string
+	Idle  time.Duration
+	Hard  time.Duration
+	Now   func() time.Time
+	Keys  keystore.Store
+	Plain bool
+}
+
+type Info struct {
+	Left   time.Duration
+	Method string
 }
 
 type record struct {
@@ -89,14 +95,19 @@ func (s *Store) Load() (string, error) {
 }
 
 func (s *Store) Left() (time.Duration, error) {
+	info, err := s.Info()
+	return info.Left, err
+}
+
+func (s *Store) Info() (Info, error) {
 	now := s.now()
 	r, _, err := s.live(now)
 	if err != nil {
-		return 0, err
+		return Info{}, err
 	}
 	idle := s.Idle - now.Sub(r.LastUsed)
 	hard := s.Hard - now.Sub(r.Created)
-	return min(idle, hard), nil
+	return Info{Left: min(idle, hard), Method: r.method()}, nil
 }
 
 func (s *Store) live(now time.Time) (record, []byte, error) {

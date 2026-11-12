@@ -21,7 +21,7 @@ var (
 
 func (s *Store) protect(identity string) (record, error) {
 	plain := record{Version: version, Method: methodPlain, Identity: identity}
-	if s.Keys == nil {
+	if s.Keys == nil || s.Plain {
 		return plain, nil
 	}
 	secret := []byte(identity)
@@ -54,7 +54,7 @@ func (s *Store) reveal(r record) (string, error) {
 }
 
 func (s *Store) upgradable(r record) bool {
-	return s.Keys != nil && !r.sealed()
+	return s.Keys != nil && !s.Plain && !r.sealed()
 }
 
 func (s *Store) forget() error {
@@ -71,6 +71,13 @@ func (s *Store) account() string {
 	}
 	sum := sha256.Sum256([]byte("creds session\x00" + path))
 	return hex.EncodeToString(sum[:])
+}
+
+func (r record) method() string {
+	if r.Method == "" {
+		return methodPlain
+	}
+	return r.Method
 }
 
 func (r record) sealed() bool {

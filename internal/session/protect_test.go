@@ -274,3 +274,43 @@ func TestExpiryForgets(t *testing.T) {
 		t.Fatalf("forgets %v", keys.forgets)
 	}
 }
+
+func TestPlainSkipsSealingButForgets(t *testing.T) {
+	s, _, keys := protectedStore(t)
+	if err := s.Save(secretID); err != nil {
+		t.Fatal(err)
+	}
+	s.Plain = true
+	if id, err := s.Load(); err != nil || id != secretID {
+		t.Fatalf("sealed session after protect off %q %v", id, err)
+	}
+	if err := s.Save(secretID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if r := readRecord(t, s.Path); r.Method != methodPlain || r.Identity != secretID || keys.seals != 1 {
+		t.Fatalf("got %+v seals %d", r, keys.seals)
+	}
+	if err := s.Delete(); err != nil || len(keys.forgets) != 1 {
+		t.Fatalf("forgets %v %v", keys.forgets, err)
+	}
+}
+
+func TestInfoMethod(t *testing.T) {
+	s, _, _ := protectedStore(t)
+	if _, err := s.Info(); !errors.Is(err, ErrNoSession) {
+		t.Fatalf("err = %v", err)
+	}
+	writeV1(t, s)
+	if info, err := s.Info(); err != nil || info.Method != methodPlain || info.Left <= 0 {
+		t.Fatalf("v1 %+v %v", info, err)
+	}
+	if err := s.Save(secretID); err != nil {
+		t.Fatal(err)
+	}
+	if info, err := s.Info(); err != nil || info.Method != "fake" || info.Left != s.Idle {
+		t.Fatalf("sealed %+v %v", info, err)
+	}
+}
