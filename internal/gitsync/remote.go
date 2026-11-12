@@ -113,6 +113,31 @@ func (r *Repo) rev(ctx context.Context, ref string) (string, error) {
 }
 
 func (r *Repo) heads(ctx context.Context) (string, string, error) {
+	out, err := r.git.Run(ctx, "for-each-ref", "--format=%(objecttype) %(objectname) %(refname)", localRef, remoteRef)
+	if err == nil {
+		if local, remote, ok := parseHeads(string(out)); ok {
+			return local, remote, nil
+		}
+	}
+	return r.revHeads(ctx)
+}
+
+func parseHeads(out string) (string, string, bool) {
+	got := map[string]string{}
+	for line := range strings.Lines(out) {
+		f := strings.Fields(line)
+		if len(f) != 3 || f[0] != "commit" || !isObjectID(f[1]) || (f[2] != localRef && f[2] != remoteRef) {
+			return "", "", false
+		}
+		if _, dup := got[f[2]]; dup {
+			return "", "", false
+		}
+		got[f[2]] = f[1]
+	}
+	return got[localRef], got[remoteRef], true
+}
+
+func (r *Repo) revHeads(ctx context.Context) (string, string, error) {
 	local, err := r.rev(ctx, localRef)
 	if err != nil {
 		return "", "", err
