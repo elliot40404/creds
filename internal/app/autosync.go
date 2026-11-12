@@ -1,17 +1,13 @@
 package app
 
 import (
-	"bytes"
-	"os"
-	"path/filepath"
+	"context"
 	"strings"
 	"time"
 
 	"github.com/elliot40404/creds/internal/config"
 	"github.com/elliot40404/creds/internal/gitsync"
 )
-
-var remoteSection = []byte(`[remote "` + gitsync.Remote + `"]`)
 
 const failureBackoff = 5
 
@@ -68,8 +64,7 @@ func (s *Service) spawn(now time.Time) {
 }
 
 func (s *Service) hasRemote() bool {
-	data, err := os.ReadFile(s.vaultFile(filepath.Join(gitDir, "config")))
-	return err == nil && bytes.Contains(data, remoteSection)
+	return gitsync.HasRemote(context.Background(), s.Paths.Vault())
 }
 
 func (s *Service) syncFailure(st gitsync.State) string {

@@ -26,6 +26,13 @@ type Status struct {
 }
 
 func (r *Repo) RemoteURL(ctx context.Context) (string, error) {
+	if url, st := readOrigin(r.Dir); st == originFound {
+		return url, nil
+	}
+	return r.gitRemoteURL(ctx)
+}
+
+func (r *Repo) gitRemoteURL(ctx context.Context) (string, error) {
 	out, err := r.git.Run(ctx, "config", "--get", "remote."+Remote+".url")
 	if exitCode(err) == 1 {
 		return "", nil
