@@ -23,10 +23,21 @@ const (
 type tree map[string]string
 
 func (r *Repo) readTree(ctx context.Context, rev string) (tree, error) {
-	t := tree{}
 	if rev == "" {
+		return tree{}, nil
+	}
+	if t, ok := r.cache.tree(rev); ok {
 		return t, nil
 	}
+	t, err := r.listTree(ctx, rev)
+	if err == nil {
+		r.cache.putTree(rev, t)
+	}
+	return t, err
+}
+
+func (r *Repo) listTree(ctx context.Context, rev string) (tree, error) {
+	t := tree{}
 	out, err := r.git.RunLimit(ctx, maxTreeOutput, "ls-tree output", "ls-tree", "-r", "-z", "-l", "--full-tree", rev)
 	if err != nil {
 		return nil, err

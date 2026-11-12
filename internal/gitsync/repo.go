@@ -21,7 +21,8 @@ type Repo struct {
 	Dir string
 	git *Git
 
-	hook func(stage string)
+	hook  func(stage string)
+	cache objCache
 }
 
 func Open(dir string) *Repo {
