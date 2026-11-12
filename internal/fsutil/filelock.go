@@ -53,7 +53,7 @@ func (h *Held) Close() error {
 }
 
 func WithFileLock(path string, fn func() error) (err error) {
-	h, err := holdWithRetry(path)
+	h, err := Hold(path, lockTries)
 	if err != nil {
 		return err
 	}
@@ -61,9 +61,9 @@ func WithFileLock(path string, fn func() error) (err error) {
 	return fn()
 }
 
-func holdWithRetry(path string) (*Held, error) {
+func Hold(path string, tries int) (*Held, error) {
 	var err error
-	for range lockTries {
+	for range max(tries, 1) {
 		var h *Held
 		if h, err = TryHold(path); !errors.Is(err, ErrBusy) {
 			return h, err
